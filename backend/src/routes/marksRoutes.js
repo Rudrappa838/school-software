@@ -1,0 +1,21 @@
+const express = require('express');
+const router = express.Router();
+const marksController = require('../controllers/marksController');
+const { authenticateToken } = require('../middleware/authMiddleware');
+
+router.use(authenticateToken);
+
+// Exam Types
+router.get('/exam-types', marksController.getExamTypes);
+router.post('/exam-types', marksController.createExamType);
+
+// Marks Management
+router.get('/my-marks', marksController.getMyMarks);
+router.get('/', marksController.getMarks);
+router.post('/save', marksController.saveMarks);
+
+// Marksheets
+router.get('/marksheet/student', marksController.getStudentMarksheet);
+router.get('/marksheet/all', marksController.getAllMarksheets);
+
+module.exports = router;

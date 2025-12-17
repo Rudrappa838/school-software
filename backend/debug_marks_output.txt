@@ -1,0 +1,248 @@
+--- Exam Types ---
+[
+  {
+    "id": 1,
+    "school_id": 1,
+    "name": "mid term",
+    "max_marks": 100,
+    "weightage": 0,
+    "created_at": "2025-12-14T07:10:33.700Z"
+  },
+  {
+    "id": 2,
+    "school_id": 1,
+    "name": "final",
+    "max_marks": 100,
+    "weightage": 0,
+    "created_at": "2025-12-14T07:31:48.950Z"
+  },
+  {
+    "id": 3,
+    "school_id": 1,
+    "name": "week1",
+    "max_marks": 100,
+    "weightage": 0,
+    "created_at": "2025-12-14T08:29:21.378Z"
+  },
+  {
+    "id": 6,
+    "school_id": 1,
+    "name": "week2",
+    "max_marks": 100,
+    "weightage": 0,
+    "created_at": "2025-12-14T10:33:20.697Z"
+  }
+]
+Using Exam Type ID: 1
+--- Exam Components ---
+[]
+--- Classes ---
+[
+  {
+    "id": 11,
+    "school_id": 1,
+    "name": "Class 1",
+    "created_at": "2025-12-13T21:13:37.192Z"
+  },
+  {
+    "id": 12,
+    "school_id": 1,
+    "name": "delopama",
+    "created_at": "2025-12-13T22:44:49.564Z"
+  },
+  {
+    "id": 13,
+    "school_id": 1,
+    "name": "Class 2",
+    "created_at": "2025-12-14T04:50:57.179Z"
+  }
+]
+--- Sections for Class 11 ---
+[
+  {
+    "id": 4,
+    "class_id": 11,
+    "name": "A",
+    "class_teacher_id": 4
+  },
+  {
+    "id": 5,
+    "class_id": 11,
+    "name": "B",
+    "class_teacher_id": null
+  },
+  {
+    "id": 6,
+    "class_id": 11,
+    "name": "C",
+    "class_teacher_id": null
+  },
+  {
+    "id": 7,
+    "class_id": 11,
+    "name": "F",
+    "class_teacher_id": null
+  }
+]
+--- Fetching Marks for Class 11, Section 4 ---
+Found 8 mark entries.
+Mark ID: 1, Student: Rudrappa Machakanur, Subject ID: 4, Marks: 80.00
+  Components:
+[]
+Mark ID: 2, Student: Rudrappa Machakanur, Subject ID: 5, Marks: 60.00
+  Components:
+[]
+Mark ID: 3, Student: Rudrappa Machakanur, Subject ID: 6, Marks: 90.00
+  Components:
+[]
+Mark ID: 4, Student: Rudrappa Machakanur, Subject ID: 7, Marks: 90.00
+  Components:
+[]
+Mark ID: 9, Student: rudru, Subject ID: 4, Marks: 90.00
+  Components:
+[]
+Mark ID: 10, Student: rudru, Subject ID: 5, Marks: 89.00
+  Components:
+[]
+Mark ID: 11, Student: rudru, Subject ID: 6, Marks: 59.00
+  Components:
+[]
+Mark ID: 12, Student: rudru, Subject ID: 7, Marks: 60.00
+  Components:
+[]
+--- Checking Students Table Columns ---
+[
+  "id",
+  "school_id",
+  "name",
+  "admission_no",
+  "gender",
+  "dob",
+  "class_id",
+  "section_id",
+  "parent_name",
+  "contact_number",
+  "address",
+  "created_at",
+  "father_name",
+  "mother_name",
+  "email",
+  "age",
+  "attendance_id",
+  "roll_number",
+  "admission_date",
+  "first_name",
+  "last_name"
+]
+--- Exam Types ---
+[
+  {
+    "id": 1,
+    "school_id": 1,
+    "name": "mid term",
+    "max_marks": 100,
+    "weightage": 0,
+    "created_at": "2025-12-14T07:10:33.700Z"
+  },
+  {
+    "id": 2,
+    "school_id": 1,
+    "name": "final",
+    "max_marks": 100,
+    "weightage": 0,
+    "created_at": "2025-12-14T07:31:48.950Z"
+  },
+  {
+    "id": 3,
+    "school_id": 1,
+    "name": "week1",
+    "max_marks": 100,
+    "weightage": 0,
+    "created_at": "2025-12-14T08:29:21.378Z"
+  },
+  {
+    "id": 6,
+    "school_id": 1,
+    "name": "week2",
+    "max_marks": 100,
+    "weightage": 0,
+    "created_at": "2025-12-14T10:33:20.697Z"
+  }
+]
+Using Exam Type ID: 1
+--- Exam Components ---
+[]
+--- Classes ---
+[
+  {
+    "id": 11,
+    "school_id": 1,
+    "name": "Class 1",
+    "created_at": "2025-12-13T21:13:37.192Z"
+  },
+  {
+    "id": 12,
+    "school_id": 1,
+    "name": "delopama",
+    "created_at": "2025-12-13T22:44:49.564Z"
+  },
+  {
+    "id": 13,
+    "school_id": 1,
+    "name": "Class 2",
+    "created_at": "2025-12-14T04:50:57.179Z"
+  }
+]
+--- Sections for Class 11 ---
+[
+  {
+    "id": 4,
+    "class_id": 11,
+    "name": "A",
+    "class_teacher_id": 4
+  },
+  {
+    "id": 5,
+    "class_id": 11,
+    "name": "B",
+    "class_teacher_id": null
+  },
+  {
+    "id": 6,
+    "class_id": 11,
+    "name": "C",
+    "class_teacher_id": null
+  },
+  {
+    "id": 7,
+    "class_id": 11,
+    "name": "F",
+    "class_teacher_id": null
+  }
+]
+--- Fetching Marks for Class 11, Section 4 ---
+Found 8 mark entries.
+Mark ID: 1, Student: Rudrappa Machakanur, Subject ID: 4, Marks: 80.00
+  Components:
+[]
+Mark ID: 2, Student: Rudrappa Machakanur, Subject ID: 5, Marks: 60.00
+  Components:
+[]
+Mark ID: 3, Student: Rudrappa Machakanur, Subject ID: 6, Marks: 90.00
+  Components:
+[]
+Mark ID: 4, Student: Rudrappa Machakanur, Subject ID: 7, Marks: 90.00
+  Components:
+[]
+Mark ID: 9, Student: rudru, Subject ID: 4, Marks: 90.00
+  Components:
+[]
+Mark ID: 10, Student: rudru, Subject ID: 5, Marks: 89.00
+  Components:
+[]
+Mark ID: 11, Student: rudru, Subject ID: 6, Marks: 59.00
+  Components:
+[]
+Mark ID: 12, Student: rudru, Subject ID: 7, Marks: 60.00
+  Components:
+[]

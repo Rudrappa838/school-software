@@ -1,0 +1,9 @@
+=== Latest Student Created ===
+Name: Demo Student
+ID: 5
+Admission No: ADM001
+Email (in Students table): student@demo.com
+=== User Credentials ===
+Login Email: student@demo.com
+Role: STUDENT
+Default Password: 123456

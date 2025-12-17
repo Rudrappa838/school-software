@@ -1,0 +1,521 @@
+import React, { useState, useEffect } from 'react';
+import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import {
+    Users, Calendar, BarChart3, LogOut, Check, ChevronRight, ChevronDown, User, DollarSign,
+    LayoutDashboard, Settings, Bell, Search, Menu, Book, Home, Clock, Megaphone, Bus, UserPlus, Shield, ScanLine
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+
+// Student Components
+import Overview from '../components/dashboard/Overview';
+import StudentManagement from '../components/dashboard/students/StudentManagement';
+import StudentAttendanceMarking from '../components/dashboard/students/StudentAttendanceMarking';
+import DailyAttendanceStatus from '../components/dashboard/students/DailyAttendanceStatus';
+import StudentAttendanceReports from '../components/dashboard/students/StudentAttendanceReports';
+
+// Teacher Components
+import TeacherManagement from '../components/dashboard/teachers/TeacherManagement';
+import TeacherAttendanceMarking from '../components/dashboard/teachers/TeacherAttendanceMarking';
+import TeacherDailyStatus from '../components/dashboard/teachers/TeacherDailyStatus';
+import TeacherAttendanceReports from '../components/dashboard/teachers/TeacherAttendanceReports';
+
+// Staff Components
+import StaffManagement from '../components/dashboard/staff/StaffManagement';
+import StaffAttendanceMarking from '../components/dashboard/staff/StaffAttendanceMarking';
+import StaffDailyStatus from '../components/dashboard/staff/StaffDailyStatus';
+import StaffAttendanceReports from '../components/dashboard/staff/StaffAttendanceReports';
+
+// Fee Components
+import FeeConfiguration from '../components/dashboard/fees/FeeConfiguration';
+import FeeCollection from '../components/dashboard/fees/FeeCollection';
+import ExpenditureManagement from '../components/dashboard/finance/ExpenditureManagement';
+
+// Library Components
+import LibraryOverview from '../components/dashboard/library/LibraryOverview';
+import BookManagement from '../components/dashboard/library/BookManagement';
+import IssueReturn from '../components/dashboard/library/IssueReturn';
+
+// Calendar Components
+import SchoolCalendar from '../components/dashboard/calendar/SchoolCalendar';
+import Announcements from '../components/dashboard/calendar/Announcements';
+
+// Salary Components
+import SalaryManagement from '../components/dashboard/salary/SalaryManagement';
+
+// Leave Components
+import LeaveManagement from '../components/dashboard/leaves/LeaveManagement';
+
+// Academic Components
+import TimetableManagement from '../components/dashboard/academics/TimetableManagement';
+import MarksManagement from '../components/dashboard/academics/MarksManagement';
+import ExamSchedule from '../components/dashboard/academics/ExamSchedule';
+import QuestionPaperGenerator from '../components/dashboard/academics/question-paper/QuestionPaperGenerator';
+
+// Hostel Components
+import HostelOverview from '../components/dashboard/hostel/HostelOverview';
+import RoomManagement from '../components/dashboard/hostel/RoomManagement';
+import RoomAllocation from '../components/dashboard/hostel/RoomAllocation';
+import HostelFinance from '../components/dashboard/hostel/HostelFinance';
+
+// Certificate Component
+import CertificateGenerator from '../components/dashboard/certificates/CertificateGenerator';
+// Transport Component
+import TransportManagement from '../components/dashboard/transport/TransportManagement';
+// Admissions Component
+import AdmissionCRM from '../components/dashboard/admissions/AdmissionCRM';
+// Biometric Component
+import BiometricManagement from '../components/dashboard/biometric/BiometricManagement';
+
+const SchoolAdminDashboard = () => {
+    const { logout, user } = useAuth();
+    const navigate = useNavigate();
+    const [academicConfig, setAcademicConfig] = useState({ classes: [] });
+    const [activeTab, setActiveTab] = useState('overview'); // Default to overview
+    const [activeTabState, setActiveTabState] = useState(null); // Data passed between tabs
+
+    // Sidebar Expansion States
+    const [expandedSections, setExpandedSections] = useState({
+        students: true,
+        teachers: false,
+        staff: false,
+        fees: false,
+        library: false,
+        salary: false,
+        academics: false,
+        hostel: false,
+        calendar: false,
+        admissions: false,
+        biometric: false
+    });
+
+    const toggleSection = (section) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
+
+    useEffect(() => { fetchSchoolConfig(); }, []);
+
+    const fetchSchoolConfig = async () => {
+        try {
+            const res = await api.get('/schools/my-school');
+            setAcademicConfig(res.data);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to load school configuration');
+        }
+    };
+
+    const handleLogout = () => { logout(); navigate('/'); };
+
+    return (
+        <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
+            {/* Sidebar - Vibrant Modern Design */}
+            <aside className="w-72 bg-[#0f172a] text-slate-300 flex flex-col shadow-2xl z-20 transition-all duration-300 hidden md:flex sticky top-0 h-screen overflow-y-auto custom-scrollbar print:hidden">
+                {/* Brand Area */}
+                <div className="p-6 flex items-center gap-3 border-b border-slate-800/50">
+                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20">
+                        <Users className="text-white w-6 h-6" />
+                    </div>
+                    <div className="w-full">
+                        <h1 className="text-xl font-serif font-black italic text-white tracking-wide leading-tight drop-shadow-md">{academicConfig.name || 'School Admin'}</h1>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Admin Portal</p>
+                    </div>
+                </div>
+
+                {/* Navigation */}
+                <nav className="p-4 space-y-1 flex-1">
+                    <p className="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-2">Main</p>
+                    <NavButton
+                        active={activeTab === 'overview'}
+                        onClick={() => setActiveTab('overview')}
+                        icon={LayoutDashboard}
+                        label="Dashboard Overview"
+                    />
+
+                    <p className="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6">Management</p>
+
+                    {/* Students Group */}
+                    <NavGroup
+                        label="Students"
+                        icon={Users}
+                        expanded={expandedSections.students}
+                        onToggle={() => toggleSection('students')}
+                    >
+                        <NavSubButton active={activeTab === 'student-list'} onClick={() => setActiveTab('student-list')} label="Admission List" />
+                        <NavSubButton active={activeTab === 'student-attendance'} onClick={() => setActiveTab('student-attendance')} label="Take Attendance" />
+                        <NavSubButton active={activeTab === 'student-daily-status'} onClick={() => setActiveTab('student-daily-status')} label="Daily Status" />
+                        <NavSubButton active={activeTab === 'student-report'} onClick={() => setActiveTab('student-report')} label="Reports" />
+                    </NavGroup>
+
+                    {/* Admissions Group - NEW Top Level */}
+                    <NavGroup
+                        label="Admissions"
+                        icon={UserPlus}
+                        expanded={expandedSections.admissions}
+                        onToggle={() => toggleSection('admissions')}
+                    >
+                        <NavSubButton active={activeTab === 'admissions-crm'} onClick={() => setActiveTab('admissions-crm')} label="Enquiry CRM" />
+                    </NavGroup>
+
+                    {/* Teachers Group */}
+                    <NavGroup
+                        label="Teachers"
+                        icon={User}
+                        expanded={expandedSections.teachers}
+                        onToggle={() => toggleSection('teachers')}
+                    >
+                        <NavSubButton active={activeTab === 'teacher-list'} onClick={() => setActiveTab('teacher-list')} label="Teacher List" />
+                        <NavSubButton active={activeTab === 'teacher-attendance'} onClick={() => setActiveTab('teacher-attendance')} label="Mark Attendance" />
+                        <NavSubButton active={activeTab === 'teacher-daily-status'} onClick={() => setActiveTab('teacher-daily-status')} label="Daily Status" />
+                        <NavSubButton active={activeTab === 'teacher-report'} onClick={() => setActiveTab('teacher-report')} label="Reports" />
+                    </NavGroup>
+
+                    {/* Staff Group */}
+                    <NavGroup
+                        label="Staff"
+                        icon={User}
+                        expanded={expandedSections.staff}
+                        onToggle={() => toggleSection('staff')}
+                    >
+                        <NavSubButton active={activeTab === 'staff-list'} onClick={() => setActiveTab('staff-list')} label="Staff List" />
+                        <NavSubButton active={activeTab === 'staff-attendance'} onClick={() => setActiveTab('staff-attendance')} label="Mark Attendance" />
+                        <NavSubButton active={activeTab === 'staff-daily-status'} onClick={() => setActiveTab('staff-daily-status')} label="Daily Status" />
+                        <NavSubButton active={activeTab === 'staff-report'} onClick={() => setActiveTab('staff-report')} label="Reports" />
+                    </NavGroup>
+
+                    <p className="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6">Finance</p>
+
+                    {/* Fees Group */}
+                    <NavGroup
+                        label="Fees & Accounts"
+                        icon={DollarSign}
+                        expanded={expandedSections.fees}
+                        onToggle={() => toggleSection('fees')}
+                    >
+                        <NavSubButton active={activeTab === 'fee-config'} onClick={() => setActiveTab('fee-config')} label="Fee Structure" />
+                        <NavSubButton active={activeTab === 'fee-collection'} onClick={() => setActiveTab('fee-collection')} label="Collection Board" />
+                        <NavSubButton active={activeTab === 'expenditures'} onClick={() => setActiveTab('expenditures')} label="Expenditures" />
+                    </NavGroup>
+
+                    {/* Library Group */}
+                    <NavGroup
+                        label="Library"
+                        icon={Book}
+                        expanded={expandedSections.library}
+                        onToggle={() => toggleSection('library')}
+                    >
+                        <NavSubButton active={activeTab === 'library-overview'} onClick={() => setActiveTab('library-overview')} label="Overview" />
+                        <NavSubButton active={activeTab === 'library-books'} onClick={() => setActiveTab('library-books')} label="Books Catalog" />
+                        <NavSubButton active={activeTab === 'library-issue-return'} onClick={() => setActiveTab('library-issue-return')} label="Issue / Return" />
+                    </NavGroup>
+
+                    {/* Salary Group */}
+                    <NavGroup
+                        label="Salary"
+                        icon={DollarSign}
+                        expanded={expandedSections.salary}
+                        onToggle={() => toggleSection('salary')}
+                    >
+                        <NavSubButton active={activeTab === 'salary-management'} onClick={() => setActiveTab('salary-management')} label="Salary Management" />
+                    </NavGroup>
+
+                    {/* Academics Group */}
+                    <NavGroup
+                        label="Academics"
+                        icon={BarChart3}
+                        expanded={expandedSections.academics}
+                        onToggle={() => toggleSection('academics')}
+                    >
+                        <NavSubButton active={activeTab === 'timetable'} onClick={() => setActiveTab('timetable')} label="Timetable" />
+                        <NavSubButton active={activeTab === 'marks'} onClick={() => setActiveTab('marks')} label="Marks" />
+                        <NavSubButton active={activeTab === 'exam-schedule'} onClick={() => setActiveTab('exam-schedule')} label="Exam Schedule" />
+                        <NavSubButton active={activeTab === 'question-generator'} onClick={() => setActiveTab('question-generator')} label="AI Question Paper" />
+                    </NavGroup>
+
+                    {/* Hostel Group */}
+                    <NavGroup
+                        label="Hostel"
+                        icon={Home}
+                        expanded={expandedSections.hostel}
+                        onToggle={() => toggleSection('hostel')}
+                    >
+                        <NavSubButton active={activeTab === 'hostel-overview'} onClick={() => setActiveTab('hostel-overview')} label="Hostel Overview" />
+                        <NavSubButton active={activeTab === 'hostel-rooms'} onClick={() => setActiveTab('hostel-rooms')} label="Room Management" />
+                        <NavSubButton active={activeTab === 'hostel-allocation'} onClick={() => setActiveTab('hostel-allocation')} label="Room Allocation" />
+                        <NavSubButton active={activeTab === 'hostel-finance'} onClick={() => setActiveTab('hostel-finance')} label="Hostel Finance" />
+                    </NavGroup>
+
+                    {/* Calendar Group */}
+                    <NavGroup
+                        label="Calendar & Events"
+                        icon={Calendar}
+                        expanded={expandedSections.calendar}
+                        onToggle={() => toggleSection('calendar')}
+                    >
+                        <NavSubButton active={activeTab === 'school-calendar'} onClick={() => setActiveTab('school-calendar')} label="School Calendar" />
+                    </NavGroup>
+
+                    <div className="mt-2 space-y-1">
+                        <NavButton
+                            active={activeTab === 'announcements'}
+                            onClick={() => setActiveTab('announcements')}
+                            icon={Megaphone}
+                            label="Announcements"
+                        />
+                        <NavButton
+                            active={activeTab === 'leave-management'}
+                            onClick={() => setActiveTab('leave-management')}
+                            icon={Clock}
+                            label="Leave Requests"
+                        />
+                    </div>
+
+                    <p className="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6">Logistics</p>
+                    <div className="mt-2 text-slate-100">
+                        <NavButton
+                            active={activeTab === 'transport-management'}
+                            onClick={() => setActiveTab('transport-management')}
+                            icon={Bus}
+                            label="Transport"
+                        />
+                    </div>
+
+                    <p className="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6">Documents</p>
+                    <div className="mt-2 text-slate-100">
+                        <NavButton
+                            active={activeTab === 'certificates-generator'}
+                            onClick={() => setActiveTab('certificates-generator')}
+                            icon={Book}
+                            label="Certificates"
+                        />
+                    </div>
+
+                    <p className="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6">Biometric & Access</p>
+                    <div className="mt-2 text-slate-100">
+                        <NavGroup
+                            label="Access Control"
+                            icon={Shield}
+                            expanded={expandedSections.biometric}
+                            onToggle={() => toggleSection('biometric')}
+                        >
+                            <NavSubButton active={activeTab === 'biometric-access'} onClick={() => setActiveTab('biometric-access')} label="Manage Devices" />
+                        </NavGroup>
+                    </div>
+                </nav>
+
+                {/* Footer User Profile */}
+                <div className="p-4 border-t border-slate-800/50 bg-[#0f172a]">
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-colors cursor-pointer group">
+                        <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold">
+                            {user?.email?.[0].toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">{user?.email}</p>
+                            <p className="text-xs text-slate-400">School Administrator</p>
+                        </div>
+                        <button onClick={handleLogout} className="text-slate-400 hover:text-red-400 transition-colors">
+                            <LogOut size={18} />
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#f1f5f9]">
+                {/* Header */}
+                <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm print:hidden">
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                            {getTabTitle(activeTab)}
+                        </h2>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className="relative hidden md:block group">
+                            <Search className="absolute left-3 top-2.5 text-slate-400 w-4 h-4 group-focus-within:text-indigo-500 transition-colors" />
+                            <input
+                                placeholder="Search..."
+                                className="bg-slate-100 border-none rounded-full py-2 pl-10 pr-4 text-sm w-64 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all"
+                            />
+                        </div>
+                        <button className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-full hover:bg-indigo-50">
+                            <Bell size={20} />
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                        </button>
+                    </div>
+                </header>
+
+                {/* Scrollable Page Content */}
+                <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                    <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
+                        {activeTab === 'overview' && <Overview config={academicConfig} />}
+                        {activeTab === 'student-list' && <StudentManagement config={academicConfig} prefillData={activeTabState} />}
+                        {activeTab === 'admissions-crm' && <AdmissionCRM onNavigate={(tab, data) => { setActiveTab(tab); setActiveTabState(data); }} />}
+                        {activeTab === 'student-attendance' && <StudentAttendanceMarking config={academicConfig} />}
+                        {activeTab === 'student-daily-status' && <DailyAttendanceStatus config={academicConfig} />}
+                        {activeTab === 'student-report' && <StudentAttendanceReports config={academicConfig} />}
+
+                        {activeTab === 'teacher-list' && <TeacherManagement config={academicConfig} />}
+                        {activeTab === 'teacher-attendance' && <TeacherAttendanceMarking />}
+                        {activeTab === 'teacher-daily-status' && <TeacherDailyStatus />}
+                        {activeTab === 'teacher-report' && <TeacherAttendanceReports />}
+
+                        {activeTab === 'staff-list' && <StaffManagement />}
+                        {activeTab === 'staff-attendance' && <StaffAttendanceMarking />}
+                        {activeTab === 'staff-daily-status' && <StaffDailyStatus />}
+                        {activeTab === 'staff-report' && <StaffAttendanceReports />}
+
+                        {activeTab === 'fee-config' && <FeeConfiguration config={academicConfig} />}
+                        {activeTab === 'fee-collection' && <FeeCollection config={academicConfig} />}
+                        {activeTab === 'expenditures' && <ExpenditureManagement />}
+
+                        {activeTab === 'library-overview' && <LibraryOverview />}
+                        {activeTab === 'library-books' && <BookManagement />}
+                        {activeTab === 'library-issue-return' && <IssueReturn />}
+
+                        {activeTab === 'salary-management' && <SalaryManagement />}
+
+                        {activeTab === 'timetable' && <TimetableManagement config={academicConfig} />}
+                        {activeTab === 'marks' && <MarksManagement config={academicConfig} />}
+                        {activeTab === 'exam-schedule' && <ExamSchedule />}
+                        {activeTab === 'question-generator' && <QuestionPaperGenerator config={academicConfig} />}
+
+                        {activeTab === 'hostel-overview' && <HostelOverview />}
+                        {activeTab === 'hostel-rooms' && <RoomManagement />}
+                        {activeTab === 'hostel-allocation' && <RoomAllocation />}
+                        {activeTab === 'hostel-finance' && <HostelFinance />}
+
+                        {activeTab === 'school-calendar' && <SchoolCalendar />}
+                        {activeTab === 'announcements' && <Announcements />}
+                        {activeTab === 'leave-management' && <LeaveManagement />}
+                        {activeTab === 'certificates-generator' && <CertificateGenerator />}
+                        {activeTab === 'transport-management' && <TransportManagement />}
+                        {activeTab === 'biometric-access' && <BiometricManagement />}
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
+};
+
+// UI Components for Sidebar
+const NavButton = ({ active, onClick, icon: Icon, label }) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${active
+            ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30 translate-x-1'
+            : 'text-slate-400 hover:bg-white/5 hover:text-white hover:translate-x-1'
+            }`}
+    >
+        <Icon size={18} className={`${active ? 'text-indigo-100' : 'text-slate-500 group-hover:text-indigo-400 px-0'}`} />
+        <span>{label}</span>
+        {active && <ChevronRight size={14} className="ml-auto opacity-50" />}
+    </button>
+);
+
+const NavGroup = ({ label, icon: Icon, expanded, onToggle, children }) => (
+    <div className="space-y-1">
+        <button
+            onClick={onToggle}
+            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${expanded ? 'text-white bg-white/5' : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                }`}
+        >
+            <div className="flex items-center gap-3">
+                <Icon size={18} className={`${expanded ? 'text-indigo-400' : 'text-slate-500 group-hover:text-indigo-400'}`} />
+                {label}
+            </div>
+            <ChevronDown size={14} className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
+        </button>
+        {expanded && (
+            <div className="pl-4 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                {children}
+            </div>
+        )}
+    </div>
+);
+
+// UI SubComponent
+const NavSubButton = ({ active, onClick, label }) => (
+    <button
+        onClick={onClick}
+        className={`w-full text-left px-4 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-center gap-2 ${active
+            ? 'text-white bg-indigo-500/20 border border-indigo-500/30 shadow-sm'
+            : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+    >
+        <span className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${active ? 'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.6)]' : 'bg-slate-600'
+            }`}></span>
+        {label}
+    </button>
+);
+
+
+const getTabTitle = (tab) => {
+    const titles = {
+        'overview': 'Dashboard Overview',
+        'student-list': 'Student Admission List',
+        'admissions-crm': 'Admissions Enquiry CRM',
+        'student-attendance': 'Student Attendance',
+        'student-daily-status': 'Daily Attendance Status',
+        'student-report': 'Attendance Reports',
+        'teacher-list': 'Teacher Management',
+        'teacher-attendance': 'Teacher Attendance',
+        'teacher-daily-status': 'Teacher Status',
+        'teacher-report': 'Teacher Reports',
+        'staff-list': 'Staff Management',
+        'staff-attendance': 'Staff Attendance',
+        'staff-daily-status': 'Staff Status',
+        'staff-report': 'Staff Reports',
+        'fee-config': 'Fee Structure Configuration',
+        'fee-collection': 'Fee Collection & Dues',
+        'expenditures': 'Office Expenditures',
+        'library-overview': 'Library Information',
+        'library-books': 'Book Management',
+        'library-issue-return': 'Circulation Desk',
+        'salary-management': 'Salary Management',
+        'timetable': 'Timetable Management',
+        'marks': 'Marks Management',
+        'exam-schedule': 'Exam Schedule',
+        'question-generator': 'AI Question Paper Generator',
+        'hostel-overview': 'Hostel Management',
+        'hostel-rooms': 'Room Configuration',
+        'hostel-allocation': 'Student Allocation',
+        'hostel-finance': 'Hostel Fees & Mess',
+        'school-calendar': 'School Calendar',
+        'announcements': 'Announcements & Notice Board',
+        'leave-management': 'Leave Management',
+        'certificates-generator': 'Certificate Generator',
+        'transport-management': 'Transport & Live Tracking',
+        'biometric-access': 'Biometric & Access Control'
+    };
+    return titles[tab] || 'Dashboard';
+}
+
+const styles = `
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    aside .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    aside .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+    
+    .label {font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.25rem; display: block;}
+    .input {width: 100%; padding: 0.6rem 0.85rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; font-size: 0.875rem; outline: none; transition: all 0.2s; background: white;}
+    .input:focus {border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);}
+    .btn-primary {background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);}
+    .btn-primary:hover {transform: translateY(-1px); box-shadow: 0 8px 12px -1px rgba(79, 70, 229, 0.3);}
+    .btn-secondary {background-color: white; color: #475569; padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-weight: 600; border: 1px solid #e2e8f0; transition: all 0.2s;}
+    .btn-secondary:hover {background-color: #f8fafc; border-color: #cbd5e1;}
+`;
+
+export default function WrappedSchoolAdminDashboard() {
+    return (
+        <>
+            <style>{styles}</style>
+            <SchoolAdminDashboard />
+        </>
+    );
+};

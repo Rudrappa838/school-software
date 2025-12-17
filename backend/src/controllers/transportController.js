@@ -1,0 +1,280 @@
+const { pool } = require('../config/db');
+
+// Get all vehicles
+exports.getVehicles = async (req, res) => {
+    try {
+        const school_id = req.user.schoolId;
+        const result = await pool.query('SELECT * FROM transport_vehicles WHERE school_id = $1 ORDER BY id DESC', [school_id]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error fetching vehicles' });
+    }
+};
+
+// Add a new vehicle
+exports.addVehicle = async (req, res) => {
+    try {
+        const { vehicle_number, vehicle_model, driver_name, driver_phone, capacity } = req.body;
+        const school_id = req.user.schoolId;
+
+        const result = await pool.query(
+            `INSERT INTO transport_vehicles (school_id, vehicle_number, vehicle_model, driver_name, driver_phone, capacity)
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+            [school_id, vehicle_number, vehicle_model, driver_name, driver_phone, capacity]
+        );
+
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error adding vehicle' });
+    }
+};
+
+// Update vehicle details
+exports.updateVehicle = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { vehicle_number, vehicle_model, driver_name, driver_phone, capacity, status } = req.body;
+        const school_id = req.user.schoolId;
+
+        const result = await pool.query(
+            `UPDATE transport_vehicles 
+             SET vehicle_number = $1, vehicle_model = $2, driver_name = $3, driver_phone = $4, capacity = $5, status = $6
+             WHERE id = $7 AND school_id = $8 RETURNING *`,
+            [vehicle_number, vehicle_model, driver_name, driver_phone, capacity, status, id, school_id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Vehicle not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error updating vehicle' });
+    }
+};
+
+// Delete vehicle
+exports.deleteVehicle = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const school_id = req.user.schoolId;
+
+        const result = await pool.query(
+            'DELETE FROM transport_vehicles WHERE id = $1 AND school_id = $2 RETURNING *',
+            [id, school_id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Vehicle not found' });
+        }
+
+        res.json({ message: 'Vehicle deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error deleting vehicle' });
+    }
+};
+
+// Get all routes with stops
+exports.getRoutes = async (req, res) => {
+    try {
+        const school_id = req.user.schoolId;
+
+        // Fetch routes with assigned vehicle details
+        const routesResult = await pool.query(`
+            SELECT r.*, v.vehicle_number, v.driver_name, v.current_lat, v.current_lng, v.status as vehicle_status
+            FROM transport_routes r
+            LEFT JOIN transport_vehicles v ON r.vehicle_id = v.id
+            WHERE r.school_id = $1 ORDER BY r.id ASC
+        `, [school_id]);
+
+        const routes = routesResult.rows;
+
+        // Fetch stops for these routes
+        for (let route of routes) {
+            const stopsResult = await pool.query(
+                'SELECT * FROM transport_stops WHERE route_id = $1 ORDER BY stop_order ASC',
+                [route.id]
+            );
+            route.stops = stopsResult.rows;
+        }
+
+        res.json(routes);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error fetching routes' });
+    }
+};
+
+// Add a new route
+exports.addRoute = async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { route_name, start_point, end_point, start_time, vehicle_id, stops } = req.body;
+        const school_id = req.user.schoolId;
+
+        await client.query('BEGIN');
+
+        const routeRes = await client.query(
+            `INSERT INTO transport_routes (school_id, vehicle_id, route_name, start_point, end_point, start_time)
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+            [school_id, vehicle_id, route_name, start_point, end_point, start_time]
+        );
+        const routeId = routeRes.rows[0].id;
+
+        if (stops && stops.length > 0) {
+            for (let i = 0; i < stops.length; i++) {
+                const stop = stops[i];
+                await client.query(
+                    `INSERT INTO transport_stops (route_id, stop_name, stop_order, lat, lng, pickup_time)
+                     VALUES ($1, $2, $3, $4, $5, $6)`,
+                    [routeId, stop.name, i + 1, stop.lat || 0, stop.lng || 0, stop.time]
+                );
+            }
+        }
+
+        await client.query('COMMIT');
+        res.status(201).json({ message: 'Route created successfully', routeId });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error(error);
+        res.status(500).json({ message: 'Server error adding route' });
+    } finally {
+        client.release();
+    }
+};
+
+// Update Vehicle Location (Simulation)
+exports.updateLocation = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { lat, lng } = req.body;
+        const school_id = req.user.schoolId;
+
+        const result = await pool.query(
+            `UPDATE transport_vehicles SET current_lat = $1, current_lng = $2 
+             WHERE id = $3 AND school_id = $4 RETURNING *`,
+            [lat, lng, id, school_id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Vehicle not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error updating location' });
+    }
+};
+
+// Hardware GPS Webhook (Unprotected or API Key protected)
+exports.handleGpsWebhook = async (req, res) => {
+    try {
+        // Expected payload from standard GPS trackers often varies.
+        // We will support a generic JSON payload: { "imei": "12345", "lat": 12.34, "lng": 77.12 }
+        const { imei, lat, lng } = req.body;
+
+        if (!imei || !lat || !lng) {
+            return res.status(400).json({ message: 'Invalid Format. Required: imei, lat, lng' });
+        }
+
+        // Removed last_updated as we didn't add that column explicitly yet
+        const result = await pool.query(
+            `UPDATE transport_vehicles 
+             SET current_lat = $1, current_lng = $2
+             WHERE gps_device_id = $3 RETURNING *`,
+            [lat, lng, imei]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Device IMEI not registered' });
+        }
+
+        res.json({ message: 'Location updated via GPS Hardware' });
+    } catch (error) {
+        console.error('GPS Webhook Error:', error);
+        res.status(500).json({ message: 'Server error processing GPS data' });
+    }
+};
+
+// Get My Transport Route (For Students/Drivers)
+// Get My Transport Route (For Students/Drivers)
+exports.getMyRoute = async (req, res) => {
+    try {
+        const { id, role, email, schoolId, linkedId } = req.user;
+        let route_id = null;
+        let pickup_point = 'School';
+
+        if (role === 'STUDENT') {
+            if (linkedId) {
+                // Optimized Path: PK Lookup
+                const sY = await pool.query('SELECT route_id, pickup_point FROM students WHERE id = $1', [linkedId]);
+                if (sY.rows.length > 0) {
+                    route_id = sY.rows[0].route_id;
+                    pickup_point = sY.rows[0].pickup_point || 'School';
+                }
+            } else {
+                // Fallback Path
+                let studentRes = await pool.query(
+                    'SELECT route_id, pickup_point FROM students WHERE school_id = $1 AND LOWER(email) = LOWER($2)',
+                    [schoolId, email]
+                );
+                if (studentRes.rows.length === 0) {
+                    const prefix = email.split('@')[0];
+                    studentRes = await pool.query(
+                        'SELECT route_id, pickup_point FROM students WHERE school_id = $1 AND LOWER(admission_no) = LOWER($2)',
+                        [schoolId, prefix]
+                    );
+                }
+                if (studentRes.rows.length > 0) {
+                    route_id = studentRes.rows[0].route_id;
+                    pickup_point = studentRes.rows[0].pickup_point || 'School';
+                }
+            }
+        }
+
+        if (!route_id) {
+            return res.status(404).json({ message: 'No transport route assigned' });
+        }
+
+        // Fetch Route Details
+        const routeResult = await pool.query(`
+            SELECT r.*, v.vehicle_number, v.driver_name, v.driver_phone, v.current_lat, v.current_lng, v.status as vehicle_status
+            FROM transport_routes r
+            LEFT JOIN transport_vehicles v ON r.vehicle_id = v.id
+            WHERE r.id = $1 AND r.school_id = $2
+        `, [route_id, schoolId]);
+
+        if (routeResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Route not found' });
+        }
+
+        const route = routeResult.rows[0];
+        route.route_id = route.id; // Alias for Mobile
+        route.pickup_point = pickup_point; // Attach pickup point
+
+        // Mock Times/Data needed for Mobile App
+        route.pickup_time = '07:30 AM';
+        route.drop_time = '03:30 PM';
+        route.is_tracking = true;
+        route.monthly_fee = 2500;
+        route.payment_status = 'Pending';
+
+        // Fetch Stops
+        const stopsResult = await pool.query(
+            'SELECT * FROM transport_stops WHERE route_id = $1 ORDER BY stop_order ASC',
+            [route_id]
+        );
+        route.stops = stopsResult.rows;
+
+        res.json(route);
+
+    } catch (error) {
+        console.error('Error fetching my route:', error);
+        res.status(500).json({ message: 'Server error fetching route' });
+    }
+};

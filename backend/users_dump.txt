@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "email": "admin@school.com",
+    "role": "SUPER_ADMIN",
+    "school_id": null
+  },
+  {
+    "id": 2,
+    "email": "rudrappam789@gmail.com",
+    "role": "SCHOOL_ADMIN",
+    "school_id": 1
+  }
+]

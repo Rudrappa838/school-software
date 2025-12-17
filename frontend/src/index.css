@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #4f46e5;
+  --color-secondary: #ec4899;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+}
+
+@media print {
+  @page {
+    margin: 0.5cm;
+  }
+
+  body {
+    margin: 1cm;
+  }
+}
+
+@keyframes marquee-ltr {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100vw);
+  }
+}
+
+.animate-marquee-ltr {
+  animation: marquee-ltr 15s linear infinite;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.animate-marquee-fast {
+  animation: marquee-ltr 20s linear infinite;
+  white-space: nowrap;
+  display: inline-block;
+}

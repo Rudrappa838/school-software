@@ -1,0 +1,7 @@
+=== Student Found ===
+Name: Rudrappa Machakanur
+ID: 1
+Admission No: DA9970
+Email (in Students table): rudru888@gmail.com
+
+!!! No User Login Found for this student !!!

@@ -1,0 +1,15 @@
+=== Teacher Credentials ===
+
+[Teacher 1]
+Name: Demo Teacher
+Login Email: teacher@demo.com
+Role: TEACHER
+Employee ID: EMP001
+Default Password: 123456
+
+[Teacher 2]
+Name: Rudrappa Machakanur
+Login Email: rudru8888@gmail.com
+Role: TEACHER
+Employee ID: 320816
+Default Password: 123456

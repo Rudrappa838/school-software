@@ -1,0 +1,48 @@
+--- Checking Active Allocations ---
+Active Allocations Found: 1
+Sample Allocation:
+{
+  "id": 1,
+  "room_id": 1,
+  "student_id": 1,
+  "allocation_date": "2025-12-14T18:30:00.000Z",
+  "vacating_date": null,
+  "status": "Active",
+  "created_at": "2025-12-14T20:39:38.867Z"
+}
+
+--- Checking Hostel Payments ---
+[
+  {
+    "id": 1,
+    "student_id": 1,
+    "amount": "25000.00",
+    "payment_date": "2025-12-14T18:30:00.000Z",
+    "payment_type": "Mess Bill",
+    "related_bill_id": 1,
+    "remarks": "Bill Payment",
+    "created_at": "2025-12-14T23:35:09.378Z"
+  }
+]
+
+--- Checking All Mess Bills ---
+[
+  {
+    "id": 1,
+    "student_id": 1,
+    "month": "December",
+    "year": 2025,
+    "amount": "25000.00",
+    "status": "Paid",
+    "generated_date": "2025-12-14T18:30:00.000Z"
+  },
+  {
+    "id": 2,
+    "student_id": 1,
+    "month": "November",
+    "year": 2025,
+    "amount": "2100.00",
+    "status": "Pending",
+    "generated_date": "2025-12-14T18:30:00.000Z"
+  }
+]

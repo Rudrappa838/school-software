@@ -1,0 +1,2 @@
+Found User: ID=10, Role=TEACHER, School=1
+Password reset to 123456 successfully.

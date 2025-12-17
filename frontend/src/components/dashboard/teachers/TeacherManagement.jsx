@@ -1,0 +1,235 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../../../api/axios';
+
+const TeacherManagement = ({ config }) => {
+    const [teachers, setTeachers] = useState([]);
+    const [dbSubjects, setDbSubjects] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isClassTeacher, setIsClassTeacher] = useState(false);
+
+    // Form Data
+    const [formData, setFormData] = useState({
+        name: '', email: '', phone: '', subject_specialization: '',
+        gender: '', address: '', join_date: new Date().toISOString().split('T')[0],
+        assign_class_id: '', assign_section_id: '', salary_per_day: ''
+    });
+    const [selectedId, setSelectedId] = useState(null);
+
+    // Derived State
+    const assignSections = config?.classes?.find(c => c.class_id === parseInt(formData.assign_class_id))?.sections || [];
+
+    useEffect(() => {
+        fetchTeachers();
+        fetchSubjects();
+    }, []);
+
+    const fetchSubjects = async () => {
+        try { const res = await api.get('/teachers/subjects'); setDbSubjects(res.data); }
+        catch (e) { console.error(e); }
+    };
+
+    const fetchTeachers = async () => {
+        try { const res = await api.get('/teachers'); setTeachers(res.data); }
+        catch (e) { toast.error('Failed to load teachers'); }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = { ...formData };
+            if (!isClassTeacher) {
+                delete payload.assign_class_id;
+                delete payload.assign_section_id;
+            }
+
+            if (isEditing) {
+                await api.put(`/teachers/${selectedId}`, payload);
+                toast.success('Teacher updated');
+            } else {
+                await api.post('/teachers', payload);
+                toast.success('Teacher added');
+            }
+            setShowModal(false);
+            fetchTeachers();
+        } catch (e) { toast.error('Failed to save teacher'); }
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('Delete teacher?')) return;
+        try { await api.delete(`/teachers/${id}`); toast.success('Deleted'); fetchTeachers(); }
+        catch (e) { toast.error('Failed to delete'); }
+    };
+
+    const openAddModal = () => {
+        setIsEditing(false);
+        setFormData(prev => ({
+            name: '', email: '', phone: '', subject_specialization: '',
+            gender: '', address: '', join_date: new Date().toISOString().split('T')[0],
+            assign_class_id: prev.assign_class_id,
+            assign_section_id: prev.assign_section_id,
+            salary_per_day: ''
+        }));
+        setShowModal(true);
+    };
+
+    // Render Subject Options
+    const commonSubjects = dbSubjects.length > 0 ? dbSubjects : (config?.subjects || []);
+
+    return (
+        <div className="space-y-6 animate-in fade-in">
+            <div className="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <div>
+                    <h2 className="text-xl font-bold text-slate-800">Teacher Management</h2>
+                    <p className="text-slate-500 text-sm">Manage teaching staff and allocations</p>
+                </div>
+                <button onClick={openAddModal} className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95"><Plus size={20} /> Add Teacher</button>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[11px] tracking-wider border-b border-slate-100">
+                            <tr>
+                                <th className="p-4 pl-6">ID</th>
+                                <th className="p-4">Name & Subject</th>
+                                <th className="p-4">Assigned Class</th>
+                                <th className="p-4">Salary/Day</th>
+                                <th className="p-4">Contact</th>
+                                <th className="p-4 text-right pr-6">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {teachers.map(t => (
+                                <tr key={t.id} className="group hover:bg-slate-50/50 transition-colors">
+                                    <td className="p-4 pl-6 font-mono text-slate-400 text-xs">{t.employee_id || '-'}</td>
+                                    <td className="p-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                                                {t.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-slate-700">{t.name}</div>
+                                                <div className="text-xs text-slate-500 font-medium bg-slate-100 inline-block px-1.5 py-0.5 rounded mt-0.5">{t.subject_specialization}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="p-4">
+                                        {t.class_name ? (
+                                            <span className="px-3 py-1 bg-violet-50 text-violet-700 rounded-lg text-xs font-bold border border-violet-100 inline-flex items-center gap-1 shadow-sm">
+                                                {t.class_name} - {t.section_name}
+                                            </span>
+                                        ) : <span className="text-slate-300 text-xs italic">Not Assigned</span>}
+                                    </td>
+                                    <td className="p-4">
+                                        <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-bold text-xs border border-emerald-100">
+                                            ₹{t.salary_per_day || 0}
+                                        </span>
+                                    </td>
+                                    <td className="p-4">
+                                        <div className="text-slate-600 text-sm">{t.phone}</div>
+                                        <div className="text-slate-400 text-xs">{t.email}</div>
+                                    </td>
+                                    <td className="p-4 pr-6 text-right">
+                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => { setIsEditing(true); setSelectedId(t.id); setFormData({ ...t, assign_class_id: t.assigned_class_id || '', assign_section_id: t.assigned_section_id || '' }); setIsClassTeacher(!!t.assigned_class_id); setShowModal(true); }} className="text-indigo-500 hover:bg-indigo-50 p-2 rounded-lg transition-colors"><Edit2 size={18} /></button>
+                                            <button onClick={() => handleDelete(t.id)} className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-colors"><Trash2 size={18} /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            {teachers.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="p-12 text-center text-slate-400">
+                                        No teachers found. Add one to get started.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {showModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
+                    <div className="bg-white rounded-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold mb-4">{isEditing ? 'Edit Teacher' : 'Add Teacher'}</h3>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <input className="input" placeholder="Full Name" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+
+                            {/* Subject Selection */}
+                            <div>
+                                <label className="label">Subject Specialization</label>
+                                <div className="relative">
+                                    <input list="subjects-list" className="input" placeholder="Select or Type Subject" value={formData.subject_specialization} onChange={e => setFormData({ ...formData, subject_specialization: e.target.value })} />
+                                    <datalist id="subjects-list">
+                                        {commonSubjects.map(s => <option key={s} value={s} />)}
+                                    </datalist>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <input className="input" placeholder="Phone" required maxLength={10} value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} />
+                                <input className="input" placeholder="Email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <select className="input" value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
+                                    <option value="">Gender</option><option value="Male">Male</option><option value="Female">Female</option>
+                                </select>
+                                <input className="input" type="date" value={formData.join_date ? formData.join_date.split('T')[0] : ''} onChange={e => setFormData({ ...formData, join_date: e.target.value })} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-1">
+                                    <label className="label">Salary Per Day</label>
+                                    <input className="input" type="number" min="0" placeholder="0.00" value={formData.salary_per_day} onChange={e => setFormData({ ...formData, salary_per_day: e.target.value })} />
+                                </div>
+                            </div>
+                            <textarea className="input" placeholder="Address" rows="2" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })}></textarea>
+
+                            {/* Class Teacher Assignment */}
+                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" className="w-4 h-4 text-indigo-600 rounded" checked={isClassTeacher} onChange={e => setIsClassTeacher(e.target.checked)} />
+                                    <span className="font-bold text-gray-700 text-sm">Assign as Class Teacher</span>
+                                </label>
+
+                                {isClassTeacher && (
+                                    <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2">
+                                        <div>
+                                            <label className="label">Class</label>
+                                            <select className="input" required={isClassTeacher} value={formData.assign_class_id} onChange={e => setFormData({ ...formData, assign_class_id: e.target.value, assign_section_id: '' })}>
+                                                <option value="">Select Class</option>
+                                                {config?.classes?.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="label">Section</label>
+                                            {assignSections.length > 0 ? (
+                                                <select className="input" required={isClassTeacher} value={formData.assign_section_id} onChange={e => setFormData({ ...formData, assign_section_id: e.target.value })}>
+                                                    <option value="">Select Section</option>
+                                                    {assignSections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                                </select>
+                                            ) : (
+                                                <div className="py-2 text-sm text-gray-400 font-medium italic">
+                                                    {formData.assign_class_id ? 'No sections found' : 'Select a class first'}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-end gap-2 mt-4">
+                                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancel</button>
+                                <button type="submit" className="btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default TeacherManagement;

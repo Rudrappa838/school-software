@@ -1,0 +1,203 @@
+const { pool } = require('../config/db');
+
+const getLeaves = async (req, res) => {
+    const { schoolId } = req.user;
+    const { status, role } = req.query;
+
+    try {
+        // Auto-cleanup: Delete leaves older than 1 month (based on end_date)
+        await pool.query("DELETE FROM leaves WHERE end_date < CURRENT_DATE - INTERVAL '1 month'");
+
+        let query = `
+            SELECT l.*, 
+                   CASE 
+                       WHEN l.role = 'Student' THEN s.name 
+                       WHEN l.role = 'Teacher' THEN t.name 
+                       WHEN l.role = 'Staff' THEN st.name 
+                   END as applicant_name,
+                   CASE
+                        WHEN l.role = 'Student' THEN s.admission_no
+                        WHEN l.role = 'Teacher' THEN t.email
+                        WHEN l.role = 'Staff' THEN st.email
+                   END as applicant_id_code
+            FROM leaves l
+            LEFT JOIN students s ON l.user_id = s.id AND l.role = 'Student'
+            LEFT JOIN teachers t ON l.user_id = t.id AND l.role = 'Teacher'
+            LEFT JOIN staff st ON l.user_id = st.id AND l.role = 'Staff'
+            WHERE l.school_id = $1
+        `;
+
+        const params = [schoolId];
+        let paramIndex = 2;
+
+        if (status && status !== 'All') {
+            query += ` AND l.status = $${paramIndex}`;
+            params.push(status);
+            paramIndex++;
+        }
+
+        if (role && role !== 'All') {
+            query += ` AND l.role = $${paramIndex}`;
+            params.push(role);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY l.created_at DESC`;
+
+        const result = await pool.query(query, params);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching leaves:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const createLeave = async (req, res) => {
+    const { schoolId } = req.user;
+    const { user_id, role, leave_type, start_date, end_date, reason } = req.body;
+
+    // For manual entry by admin, we trust the IDs provided. 
+    // Ideally, validation should check if ID exists.
+
+    try {
+        const result = await pool.query(
+            `INSERT INTO leaves (school_id, user_id, role, leave_type, start_date, end_date, reason)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             RETURNING *`,
+            [schoolId, user_id, role, leave_type, start_date, end_date, reason]
+        );
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error creating leave:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const updateLeaveStatus = async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    try {
+        const result = await pool.query(
+            `UPDATE leaves SET status = $1 WHERE id = $2 RETURNING *`,
+            [status, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Leave not found' });
+        }
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating leave:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const deleteLeave = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM leaves WHERE id = $1', [id]);
+        res.json({ message: 'Leave record deleted' });
+    } catch (error) {
+        console.error('Error deleting leave:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+// Get leaves for logged-in user
+const getMyLeaves = async (req, res) => {
+    // const { schoolId } = req; // Remove this as we get it from req.user
+    const { email, role, schoolId } = req.user; // role from token is usually UPPERCASE (TEACHER, STUDENT)
+
+    try {
+        // Need to get the correct user_id based on role and email
+        let user_id;
+        let roleString; // The string format stored in DB (e.g. 'Teacher', 'Student')
+
+        if (role === 'TEACHER') {
+            const tRes = await pool.query('SELECT id FROM teachers WHERE email = $1 AND school_id = $2', [email, schoolId]);
+            if (tRes.rows.length === 0) return res.status(404).json({ message: 'Profile not found' });
+            user_id = tRes.rows[0].id;
+            roleString = 'Teacher';
+        } else if (role === 'STUDENT') {
+            let sRes = await pool.query('SELECT id FROM students WHERE LOWER(email) = LOWER($1) AND school_id = $2', [email, schoolId]);
+            if (sRes.rows.length === 0) {
+                const emailParts = email.split('@');
+                if (emailParts.length === 2) {
+                    sRes = await pool.query('SELECT id FROM students WHERE LOWER(admission_no) = LOWER($1) AND school_id = $2', [emailParts[0], schoolId]);
+                }
+            }
+            if (sRes.rows.length === 0) return res.status(404).json({ message: 'Profile not found' });
+            user_id = sRes.rows[0].id;
+            roleString = 'Student';
+        } else if (role === 'STAFF' || role === 'DRIVER') {
+            const stRes = await pool.query('SELECT id FROM staff WHERE email = $1 AND school_id = $2', [email, schoolId]);
+            if (stRes.rows.length === 0) return res.status(404).json({ message: 'Profile not found' });
+            user_id = stRes.rows[0].id;
+            roleString = 'Staff';
+        } else {
+            return res.status(400).json({ message: 'Invalid role for leave application' });
+        }
+
+        const result = await pool.query(
+            `SELECT * FROM leaves WHERE school_id = $1 AND user_id = $2 AND role = $3 ORDER BY created_at DESC`,
+            [schoolId, user_id, roleString]
+        );
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching my leaves:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// Apply for leave (Logged-in user)
+const applyLeave = async (req, res) => {
+    // const { schoolId } = req;
+    const { email, role, schoolId } = req.user;
+    const { leave_type, start_date, end_date, reason } = req.body;
+
+    try {
+        let user_id;
+        let roleString;
+
+        if (role === 'TEACHER') {
+            const tRes = await pool.query('SELECT id FROM teachers WHERE email = $1 AND school_id = $2', [email, schoolId]);
+            if (tRes.rows.length === 0) return res.status(404).json({ message: 'Profile not found' });
+            user_id = tRes.rows[0].id;
+            roleString = 'Teacher';
+        } else if (role === 'STUDENT') {
+            let sRes = await pool.query('SELECT id FROM students WHERE LOWER(email) = LOWER($1) AND school_id = $2', [email, schoolId]);
+            if (sRes.rows.length === 0) {
+                const emailParts = email.split('@');
+                if (emailParts.length === 2) {
+                    sRes = await pool.query('SELECT id FROM students WHERE LOWER(admission_no) = LOWER($1) AND school_id = $2', [emailParts[0], schoolId]);
+                }
+            }
+            if (sRes.rows.length === 0) return res.status(404).json({ message: 'Profile not found' });
+            user_id = sRes.rows[0].id;
+            roleString = 'Student';
+        } else if (role === 'STAFF' || role === 'DRIVER') {
+            const stRes = await pool.query('SELECT id FROM staff WHERE email = $1 AND school_id = $2', [email, schoolId]);
+            if (stRes.rows.length === 0) return res.status(404).json({ message: 'Profile not found' });
+            user_id = stRes.rows[0].id;
+            roleString = 'Staff';
+        } else {
+            return res.status(400).json({ message: 'Invalid role type' });
+        }
+
+        const result = await pool.query(
+            `INSERT INTO leaves (school_id, user_id, role, leave_type, start_date, end_date, reason)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             RETURNING *`,
+            [schoolId, user_id, roleString, leave_type, start_date, end_date, reason]
+        );
+        res.json(result.rows[0]);
+
+    } catch (error) {
+        console.error('Error applying leave:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+module.exports = { getLeaves, createLeave, updateLeaveStatus, deleteLeave, getMyLeaves, applyLeave };
