@@ -84,4 +84,33 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { login };
+const setupSuperAdmin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // 1. Check if Super Admin already exists
+        const check = await pool.query("SELECT * FROM users WHERE role = 'SUPER_ADMIN'");
+        if (check.rows.length > 0) {
+            return res.status(400).json({ message: 'Super Admin already exists. Cannot create another one via this public route.' });
+        }
+
+        // 2. Create Password Hash
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 3. Insert User
+        const newUser = await pool.query(
+            `INSERT INTO users (email, password, role, school_id) 
+             VALUES ($1, $2, 'SUPER_ADMIN', NULL) 
+             RETURNING id, email, role`,
+            [email, hashedPassword]
+        );
+
+        res.json({ message: 'Super Admin created successfully!', user: newUser.rows[0] });
+
+    } catch (error) {
+        console.error('Setup error:', error);
+        res.status(500).json({ message: 'Server error during setup: ' + error.message });
+    }
+};
+
+module.exports = { login, setupSuperAdmin };
