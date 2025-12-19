@@ -167,14 +167,14 @@ const Login = () => {
 
                             <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-100 inline-block mb-4">
                                 <QRCode
-                                    value="http://10.60.101.164:5173/app.apk"
+                                    value={`${window.location.origin}/app.apk`}
                                     size={200}
                                     level="H"
                                 />
                             </div>
 
                             <p className="text-xs text-slate-400 break-all bg-slate-50 p-2 rounded">
-                                http://10.60.101.164:5173/app.apk
+                                {window.location.origin}/app.apk
                             </p>
 
                             <a
