@@ -37,6 +37,8 @@ const StudentAttendanceReports = ({ config }) => {
             if (filterSection) params.section_id = filterSection;
 
             const res = await api.get('/students/attendance', { params });
+            console.log('Raw attendance data:', res.data); // Debug
+
             // Process data for grid: keys: student_id, values: { name, attendance: { date: status } }
             const processed = {};
             res.data.forEach(row => {
@@ -57,9 +59,12 @@ const StudentAttendanceReports = ({ config }) => {
                     processed[row.student_id].workingDays++;
                 }
             });
-            setReport(Object.values(processed));
+
+            const finalReport = Object.values(processed);
+            console.log('Processed report:', finalReport); // Debug
+            setReport(finalReport);
         } catch (error) {
-            console.error('Failed to load report');
+            console.error('Failed to load report:', error);
         }
     };
 
@@ -182,19 +187,14 @@ const StudentAttendanceReports = ({ config }) => {
                         <table className="w-full text-xs border-collapse">
                             <thead>
                                 <tr>
-                                    <th className="p-3 border-b border-slate-200 text-left min-w-[200px] sticky left-0 bg-slate-50 z-20 font-bold text-slate-600 uppercase tracking-wider shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Student Name</th>
+                                    <th className="p-2 border-b border-slate-200 text-left min-w-[150px] sticky left-0 bg-slate-50 z-20 font-bold text-slate-600 uppercase tracking-wider shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] text-xs">Student Name</th>
                                     {dates.map(d => (
-                                        <th key={d} className={`p-2 border-b border-l border-slate-100 min-w-[32px] text-center font-semibold ${
-                                            // Highlight weekends slightly if we had day data, but simplified here
-                                            'text-slate-500 bg-slate-50/50'
-                                            }`}>
-                                            <div className="flex flex-col items-center gap-1">
-                                                <span>{d}</span>
-                                            </div>
+                                        <th key={d} className="p-1 border-b border-l border-slate-100 min-w-[24px] w-[24px] text-center font-semibold text-slate-500 bg-slate-50/50 text-[10px]">
+                                            {d}
                                         </th>
                                     ))}
-                                    <th className="p-2 border-b border-l border-slate-200 bg-emerald-50 text-emerald-700 font-bold w-12 text-center sticky right-12 z-10">P</th>
-                                    <th className="p-2 border-b border-slate-200 bg-rose-50 text-rose-700 font-bold w-12 text-center sticky right-0 z-10">A</th>
+                                    <th className="p-1 border-b border-l border-slate-200 bg-emerald-50 text-emerald-700 font-bold w-8 text-center sticky right-8 z-10 text-xs">P</th>
+                                    <th className="p-1 border-b border-slate-200 bg-rose-50 text-rose-700 font-bold w-8 text-center sticky right-0 z-10 text-xs">A</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -234,8 +234,8 @@ const StudentAttendanceReports = ({ config }) => {
                                                 </td>
                                             );
                                         })}
-                                        <td className="border-l border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/30 sticky right-12 z-10 backdrop-blur-sm">{student.totalP}</td>
-                                        <td className="border-l border-slate-100 text-center font-bold text-rose-600 bg-rose-50/30 sticky right-0 z-10 backdrop-blur-sm">{student.totalA}</td>
+                                        <td className="border-l border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/30 sticky right-8 z-10 backdrop-blur-sm text-xs p-1">{student.totalP || 0}</td>
+                                        <td className="border-l border-slate-100 text-center font-bold text-rose-600 bg-rose-50/30 sticky right-0 z-10 backdrop-blur-sm text-xs p-1">{student.totalA || 0}</td>
                                     </tr>
                                 ))}
                                 {report.length === 0 && (
