@@ -10,7 +10,21 @@ exports.addTeacher = async (req, res) => {
 
         await client.query('BEGIN');
 
-        // 1. Generate 6-Digit Employee ID
+        // 1. Check if phone number already exists
+        if (phone) {
+            const phoneCheck = await client.query(
+                'SELECT id, name FROM teachers WHERE phone = $1 AND school_id = $2',
+                [phone, school_id]
+            );
+            if (phoneCheck.rows.length > 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    message: `Phone number already exists for teacher: ${phoneCheck.rows[0].name}`
+                });
+            }
+        }
+
+        // 2. Generate 6-Digit Employee ID
         let employee_id;
         let isUnique = false;
         while (!isUnique) {
@@ -97,6 +111,20 @@ exports.updateTeacher = async (req, res) => {
         const { name, email, phone, subject_specialization, gender, address, join_date, assign_class_id, assign_section_id, salary_per_day } = req.body;
 
         await client.query('BEGIN');
+
+        // Check if phone number already exists for another teacher
+        if (phone) {
+            const phoneCheck = await client.query(
+                'SELECT id, name FROM teachers WHERE phone = $1 AND school_id = $2 AND id != $3',
+                [phone, school_id, id]
+            );
+            if (phoneCheck.rows.length > 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    message: `Phone number already exists for teacher: ${phoneCheck.rows[0].name}`
+                });
+            }
+        }
 
         const result = await client.query(
             `UPDATE teachers SET name = $1, email = $2, phone = $3, subject_specialization = $4, gender = $5, address = $6, join_date = $7, salary_per_day = $8

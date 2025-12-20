@@ -10,7 +10,21 @@ exports.addStaff = async (req, res) => {
 
         await client.query('BEGIN');
 
-        // 1. Generate 6-Digit Staff ID
+        // 1. Check if phone number already exists
+        if (phone) {
+            const phoneCheck = await client.query(
+                'SELECT id, name FROM staff WHERE phone = $1 AND school_id = $2',
+                [phone, school_id]
+            );
+            if (phoneCheck.rows.length > 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    message: `Phone number already exists for staff: ${phoneCheck.rows[0].name}`
+                });
+            }
+        }
+
+        // 2. Generate 6-Digit Staff ID
         let employee_id;
         let isUnique = false;
         while (!isUnique) {
@@ -87,10 +101,27 @@ exports.getStaff = async (req, res) => {
 
 // Update Staff
 exports.updateStaff = async (req, res) => {
+    const client = await pool.connect();
     try {
         const school_id = req.user.schoolId;
         const { id } = req.params;
         const { name, email, phone, role, gender, address, join_date, salary_per_day } = req.body;
+
+        await client.query('BEGIN');
+
+        // Check if phone number already exists for another staff member
+        if (phone) {
+            const phoneCheck = await client.query(
+                'SELECT id, name FROM staff WHERE phone = $1 AND school_id = $2 AND id != $3',
+                [phone, school_id, id]
+            );
+            if (phoneCheck.rows.length > 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    message: `Phone number already exists for staff: ${phoneCheck.rows[0].name}`
+                });
+            }
+        }
 
         const result = await pool.query(
             `UPDATE staff SET name = $1, email = $2, phone = $3, role = $4, gender = $5, address = $6, join_date = $7, salary_per_day = $8
@@ -98,11 +129,19 @@ exports.updateStaff = async (req, res) => {
             [name, email, phone, role, gender, address, join_date, salary_per_day || 0, id, school_id]
         );
 
-        if (result.rows.length === 0) return res.status(404).json({ message: 'Staff member not found' });
+        if (result.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ message: 'Staff member not found' });
+        }
+
+        await client.query('COMMIT');
         res.json(result.rows[0]);
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error(error);
         res.status(500).json({ message: 'Server error updating staff' });
+    } finally {
+        client.release();
     }
 };
 
