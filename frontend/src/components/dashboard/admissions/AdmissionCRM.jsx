@@ -21,9 +21,21 @@ const AdmissionCRM = ({ onNavigate }) => {
         notes: ''
     });
 
+    const [classes, setClasses] = useState([]);
+
     useEffect(() => {
         fetchEnquiries();
+        fetchClasses();
     }, []);
+
+    const fetchClasses = async () => {
+        try {
+            const res = await api.get('/classes');
+            setClasses(res.data);
+        } catch (error) {
+            console.error('Failed to load classes', error);
+        }
+    };
 
     const fetchEnquiries = async () => {
         try {
@@ -255,21 +267,31 @@ const AdmissionCRM = ({ onNavigate }) => {
                                 placeholder="Student Name"
                                 className="w-full p-2 border rounded-lg"
                                 value={formData.student_name}
-                                onChange={e => setFormData({ ...formData, student_name: e.target.value })}
+                                onChange={e => setFormData({ ...formData, student_name: e.target.value.replace(/\d/g, '') })}
+                                onCopy={e => e.preventDefault()}
+                                onPaste={e => e.preventDefault()}
                             />
                             <div className="grid grid-cols-2 gap-4">
-                                <input
+                                <select
                                     required
-                                    placeholder="Class Applying For"
-                                    className="w-full p-2 border rounded-lg"
+                                    className="w-full p-2 border rounded-lg bg-white"
                                     value={formData.class_applying_for}
                                     onChange={e => setFormData({ ...formData, class_applying_for: e.target.value })}
-                                />
+                                    onCopy={e => e.preventDefault()}
+                                    onPaste={e => e.preventDefault()}
+                                >
+                                    <option value="">Select Class Applying For</option>
+                                    {classes.map(c => (
+                                        <option key={c.class_id} value={c.class_name}>{c.class_name}</option>
+                                    ))}
+                                </select>
                                 <input
                                     placeholder="Previous School"
                                     className="w-full p-2 border rounded-lg"
                                     value={formData.previous_school}
                                     onChange={e => setFormData({ ...formData, previous_school: e.target.value })}
+                                    onCopy={e => e.preventDefault()}
+                                    onPaste={e => e.preventDefault()}
                                 />
                             </div>
                             <input
@@ -277,7 +299,9 @@ const AdmissionCRM = ({ onNavigate }) => {
                                 placeholder="Parent/Guardian Name"
                                 className="w-full p-2 border rounded-lg"
                                 value={formData.parent_name}
-                                onChange={e => setFormData({ ...formData, parent_name: e.target.value })}
+                                onChange={e => setFormData({ ...formData, parent_name: e.target.value.replace(/\d/g, '') })}
+                                onCopy={e => e.preventDefault()}
+                                onPaste={e => e.preventDefault()}
                             />
                             <div className="grid grid-cols-2 gap-4">
                                 <input
@@ -292,12 +316,16 @@ const AdmissionCRM = ({ onNavigate }) => {
                                     }}
                                     pattern="\d{10}"
                                     title="Please enter exactly 10 digits"
+                                    onCopy={e => e.preventDefault()}
+                                    onPaste={e => e.preventDefault()}
                                 />
                                 <input
                                     placeholder="Email (Optional)"
                                     className="w-full p-2 border rounded-lg"
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                    onCopy={e => e.preventDefault()}
+                                    onPaste={e => e.preventDefault()}
                                 />
                             </div>
                             <textarea
@@ -305,6 +333,8 @@ const AdmissionCRM = ({ onNavigate }) => {
                                 className="w-full p-2 border rounded-lg h-24"
                                 value={formData.notes}
                                 onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                                onCopy={e => e.preventDefault()}
+                                onPaste={e => e.preventDefault()}
                             />
                             <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700">
                                 Save Enquiry

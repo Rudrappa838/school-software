@@ -183,24 +183,24 @@ const StudentAttendanceReports = ({ config }) => {
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 {filterClass && (filterSection || availableSections.length === 0) ? (
-                    <div className="overflow-x-auto custom-scrollbar pb-2">
-                        <table className="w-full text-xs border-collapse">
+                    <div className="w-full">
+                        <table className="w-full text-xs border-collapse table-fixed">
                             <thead>
                                 <tr>
-                                    <th className="p-2 border-b border-slate-200 text-left min-w-[150px] sticky left-0 bg-slate-50 z-20 font-bold text-slate-600 uppercase tracking-wider shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] text-xs">Student Name</th>
+                                    <th className="p-2 border-b border-slate-200 text-left w-40 bg-slate-50 font-bold text-slate-600 uppercase tracking-wider text-[10px]">Student Name</th>
                                     {dates.map(d => (
-                                        <th key={d} className="p-1 border-b border-l border-slate-100 min-w-[24px] w-[24px] text-center font-semibold text-slate-500 bg-slate-50/50 text-[10px]">
+                                        <th key={d} className="border-b border-l border-slate-100 text-center font-semibold text-slate-500 bg-slate-50/50 text-[9px] p-0.5">
                                             {d}
                                         </th>
                                     ))}
-                                    <th className="p-1 border-b border-l border-slate-200 bg-emerald-50 text-emerald-700 font-bold w-8 text-center sticky right-8 z-10 text-xs">P</th>
-                                    <th className="p-1 border-b border-slate-200 bg-rose-50 text-rose-700 font-bold w-8 text-center sticky right-0 z-10 text-xs">A</th>
+                                    <th className="border-b border-l border-slate-200 bg-emerald-50 text-emerald-700 font-bold w-8 text-center text-[10px] p-0.5">P</th>
+                                    <th className="border-b border-slate-200 bg-rose-50 text-rose-700 font-bold w-8 text-center text-[10px] p-0.5">A</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {report.map((student, idx) => (
                                     <tr key={idx} className="group hover:bg-slate-50 transition-colors">
-                                        <td className="p-3 border-b border-slate-100 font-medium text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <td className="p-2 border-b border-slate-100 font-medium text-slate-700 text-[11px] truncate" title={student.name}>
                                             {student.name}
                                         </td>
                                         {dates.map(d => {
@@ -227,15 +227,15 @@ const StudentAttendanceReports = ({ config }) => {
                                             }
 
                                             return (
-                                                <td key={d} className="border-l border-slate-100 p-1 text-center h-10 w-8">
-                                                    <div className={`w-6 h-6 mx-auto rounded flex items-center justify-center font-bold text-[10px] ${bg} ${text}`}>
+                                                <td key={d} className="border-l border-slate-100 text-center h-8 p-0">
+                                                    <div className={`w-full h-full flex items-center justify-center font-bold text-[9px] ${bg} ${text}`}>
                                                         {content}
                                                     </div>
                                                 </td>
                                             );
                                         })}
-                                        <td className="border-l border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/30 sticky right-8 z-10 backdrop-blur-sm text-xs p-1">{student.totalP || 0}</td>
-                                        <td className="border-l border-slate-100 text-center font-bold text-rose-600 bg-rose-50/30 sticky right-0 z-10 backdrop-blur-sm text-xs p-1">{student.totalA || 0}</td>
+                                        <td className="border-l border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/30 text-[10px] p-0.5">{student.totalP || 0}</td>
+                                        <td className="border-l border-slate-100 text-center font-bold text-rose-600 bg-rose-50/30 text-[10px] p-0.5">{student.totalA || 0}</td>
                                     </tr>
                                 ))}
                                 {report.length === 0 && (

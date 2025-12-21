@@ -7,12 +7,14 @@ console.log('🔗 API Base URL:', baseURL);
 
 const api = axios.create({
     baseURL: baseURL,
+    timeout: 15000, // 15 seconds timeout
 });
 
 // Add a request interceptor to add the JWT token to headers
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        // Updated to use sessionStorage to match AuthContext
+        const token = sessionStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -20,5 +22,45 @@ api.interceptors.request.use(
     },
     (error) => Promise.reject(error)
 );
+
+// Response interceptor for global error handling and retries
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const config = error.config;
+
+        // If config does not exist or the retry option is set to false, reject
+        if (!config || !config.retry) {
+            return Promise.reject(error);
+        }
+
+        // Set the variable for keeping track of the retry count
+        config.__retryCount = config.__retryCount || 0;
+
+        // Check if we've maxed out the total number of retries
+        if (config.__retryCount >= config.retry) {
+            return Promise.reject(error);
+        }
+
+        // Increase the retry count
+        config.__retryCount += 1;
+
+        // Create new promise to handle exponential backoff
+        const backoff = new Promise(function (resolve) {
+            setTimeout(function () {
+                resolve();
+            }, config.retryDelay || 1000);
+        });
+
+        // Return the promise in which recalls axios to retry the request
+        return backoff.then(function () {
+            return api(config);
+        });
+    }
+);
+
+// Set default retry config
+api.defaults.retry = 3;
+api.defaults.retryDelay = 1000;
 
 export default api;

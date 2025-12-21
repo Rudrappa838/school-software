@@ -34,12 +34,15 @@ const Login = () => {
         }
     };
 
+    // Check if the user is on the mobile app
+    const isMobileApp = new URLSearchParams(window.location.search).get('is_mobile_app') === 'true';
+
     const roles = [
         { id: 'SCHOOL_ADMIN', label: 'School Admin', icon: School },
         { id: 'TEACHER', label: 'Teacher', icon: Users },
         { id: 'STUDENT', label: 'Student', icon: GraduationCap },
         { id: 'STAFF', label: 'Staff', icon: Briefcase },
-    ];
+    ].filter(role => !isMobileApp || role.id !== 'SCHOOL_ADMIN'); // Hide Admin on Mobile App
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">

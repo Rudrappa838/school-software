@@ -33,7 +33,7 @@ const TeacherAttendanceMarking = () => {
             <div className="flex flex-wrap justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-slate-200 gap-4">
                 <div className="flex items-center gap-4">
                     <h2 className="text-xl font-bold text-slate-800 hidden md:block">Mark Teacher Attendance</h2>
-                    <input type="date" className="input max-w-[150px] bg-slate-50 border-slate-200" value={date} onChange={e => setDate(e.target.value)} />
+                    <input type="date" max={new Date().toISOString().split('T')[0]} className="input max-w-[150px] bg-slate-50 border-slate-200" value={date} onChange={e => setDate(e.target.value)} />
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
                     <button className="flex-1 md:flex-none text-xs font-bold text-emerald-600 bg-emerald-50 px-4 py-2.5 rounded-xl hover:bg-emerald-100 transition-colors"
