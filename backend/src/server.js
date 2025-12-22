@@ -37,4 +37,16 @@ const startServer = async () => {
     }
 };
 
+// Global Error Handlers to prevent crash
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION! 💥 Shutting down gracefully...');
+    console.error(err.name, err.message, err.stack);
+    // process.exit(1); // Do NOT exit, keep running if possible, or restart. For "don't crash" request, we log.
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error('UNHANDLED REJECTION! 💥');
+    console.error(err.name, err.message);
+});
+
 startServer();
