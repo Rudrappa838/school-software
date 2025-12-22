@@ -7,13 +7,11 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Initial load
+    // Initial load - Strict Security: Do NOT restore session on refresh.
     useEffect(() => {
-        const storedUser = sessionStorage.getItem('user');
-        const token = sessionStorage.getItem('token');
-        if (storedUser && token) {
-            setUser(JSON.parse(storedUser));
-        }
+        // Clearing session storage to ensure clean state if it was there
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
         setLoading(false);
     }, []);
 
