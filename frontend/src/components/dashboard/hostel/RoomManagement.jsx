@@ -122,8 +122,8 @@ const RoomManagement = () => {
 
                             <div className="flex flex-col items-center text-center">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${parseInt(room.current_occupancy) >= room.capacity
-                                        ? 'bg-red-100 text-red-600'
-                                        : 'bg-green-100 text-green-600'
+                                    ? 'bg-red-100 text-red-600'
+                                    : 'bg-green-100 text-green-600'
                                     }`}>
                                     <LayoutGrid size={20} />
                                 </div>
@@ -132,7 +132,7 @@ const RoomManagement = () => {
                                     {room.current_occupancy} / {room.capacity} Occupied
                                 </div>
                                 <p className="mt-2 text-xs text-slate-500 font-medium">
-                                    ₹{room.cost_per_term}/term
+                                    ₹{parseFloat(room.cost_per_term).toLocaleString('en-IN')}/term
                                 </p>
                             </div>
 
@@ -140,8 +140,8 @@ const RoomManagement = () => {
                             <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full rounded-full ${parseInt(room.current_occupancy) >= room.capacity
-                                            ? 'bg-red-500'
-                                            : 'bg-green-500'
+                                        ? 'bg-red-500'
+                                        : 'bg-green-500'
                                         }`}
                                     style={{ width: `${(Math.min(parseInt(room.current_occupancy), room.capacity) / room.capacity) * 100}%` }}
                                 ></div>

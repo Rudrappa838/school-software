@@ -32,12 +32,12 @@ exports.getExpenditures = async (req, res) => {
 exports.addExpenditure = async (req, res) => {
     try {
         const school_id = req.user.schoolId;
-        const { title, amount, category, description, expense_date, payment_method } = req.body;
+        const { title, amount, category, description, expense_date, payment_method, transaction_id, upi_id } = req.body;
 
         const result = await pool.query(
-            `INSERT INTO expenditures (school_id, title, amount, category, description, expense_date, payment_method, created_by)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-            [school_id, title, amount, category, description, expense_date || new Date(), payment_method, req.user.id]
+            `INSERT INTO expenditures (school_id, title, amount, category, description, expense_date, payment_method, transaction_id, upi_id, created_by)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+            [school_id, title, amount, category, description, expense_date || new Date(), payment_method, transaction_id, upi_id, req.user.id]
         );
 
         res.status(201).json(result.rows[0]);

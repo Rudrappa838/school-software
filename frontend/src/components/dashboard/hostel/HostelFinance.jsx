@@ -230,7 +230,7 @@ const HostelFinance = () => {
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-3 text-slate-600">{item.period}</td>
-                                                        <td className="px-6 py-3 text-right font-bold text-slate-800">₹{parseFloat(item.amount).toFixed(2)}</td>
+                                                        <td className="px-6 py-3 text-right font-bold text-slate-800">₹{parseFloat(item.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                                                         <td className="px-6 py-3 text-center">
                                                             <button
                                                                 onClick={(e) => {
@@ -325,7 +325,7 @@ const HostelFinance = () => {
                                     <h3 className="text-2xl font-bold text-slate-800">{dashboardStats.mess.paidCount} <span className="text-sm text-slate-400 font-normal">/ {dashboardStats.mess.totalBills}</span></h3>
                                 </div>
                             </div>
-                            <p className="mt-4 text-xs font-bold text-green-600 bg-green-50 inline-block px-2 py-1 rounded"> Collected: ₹{parseFloat(dashboardStats.mess.paidAmount).toFixed(2)}</p>
+                            <p className="mt-4 text-xs font-bold text-green-600 bg-green-50 inline-block px-2 py-1 rounded"> Collected: ₹{parseFloat(dashboardStats.mess.paidAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                         </div>
 
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -338,7 +338,7 @@ const HostelFinance = () => {
                                     <h3 className="text-2xl font-bold text-slate-800">{dashboardStats.mess.pendingCount}</h3>
                                 </div>
                             </div>
-                            <p className="mt-4 text-xs font-bold text-orange-600 bg-orange-50 inline-block px-2 py-1 rounded"> Total Due: ₹{parseFloat(dashboardStats.mess.pendingAmount).toFixed(2)}</p>
+                            <p className="mt-4 text-xs font-bold text-orange-600 bg-orange-50 inline-block px-2 py-1 rounded"> Total Due: ₹{parseFloat(dashboardStats.mess.pendingAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                         </div>
                     </div>
 
@@ -348,23 +348,23 @@ const HostelFinance = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div>
                                 <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Room Rent (Expected)</h4>
-                                <div className="text-3xl font-bold text-indigo-900">₹{parseFloat(dashboardStats.rent.expectedTermRent).toFixed(2)}</div>
+                                <div className="text-3xl font-bold text-indigo-900">₹{parseFloat(dashboardStats.rent.expectedTermRent).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
                                 <p className="text-xs text-slate-400 mt-1">Total expected revenue from active allocations per term.</p>
                             </div>
                             <div>
                                 <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Mess Financials</h4>
                                 <div className="text-3xl font-bold text-slate-800">
                                     <span className="text-sm text-slate-400 font-normal block mb-1">Billed (This Month)</span>
-                                    ₹{parseFloat(dashboardStats.mess.totalBilledAmount).toFixed(2)}
+                                    ₹{parseFloat(dashboardStats.mess.totalBilledAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                 </div>
                                 <div className="flex gap-4 mt-2 text-sm">
                                     <span className="text-green-600 font-bold block">
                                         <span className="text-xs text-slate-400 font-normal">Collected (This Month): </span>
-                                        ₹{parseFloat(dashboardStats.mess.paidAmount).toFixed(2)}
+                                        ₹{parseFloat(dashboardStats.mess.paidAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                     </span>
                                     <span className="text-orange-600 font-bold block">
                                         <span className="text-xs text-slate-400 font-normal">Total Pending (All Time): </span>
-                                        ₹{parseFloat(dashboardStats.mess.pendingAmount).toFixed(2)}
+                                        ₹{parseFloat(dashboardStats.mess.pendingAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                     </span>
                                 </div>
                             </div>
@@ -433,7 +433,7 @@ const HostelFinance = () => {
                                 </div>
                                 <div className="bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10 min-w-[200px]">
                                     <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Room Rent / Term</p>
-                                    <p className="text-2xl font-bold text-white">₹{parseFloat(studentData.cost_per_term).toFixed(2)}</p>
+                                    <p className="text-2xl font-bold text-white">₹{parseFloat(studentData.cost_per_term).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                                 </div>
                             </div>
 
@@ -468,16 +468,16 @@ const HostelFinance = () => {
                                             <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
                                                 <div className="flex justify-between text-sm mb-2">
                                                     <span className="text-slate-500">Total Due</span>
-                                                    <span className="font-bold">₹{parseFloat(studentData.cost_per_term).toFixed(2)}</span>
+                                                    <span className="font-bold">₹{parseFloat(studentData.cost_per_term).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                                 </div>
                                                 <div className="flex justify-between text-sm mb-2">
                                                     <span className="text-slate-500">Paid so far</span>
-                                                    <span className="font-bold text-green-600">₹{totalRentPaid.toFixed(2)}</span>
+                                                    <span className="font-bold text-green-600">₹{totalRentPaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                                                 </div>
                                                 <div className="border-t border-slate-200 my-2 pt-2 flex justify-between font-bold">
                                                     <span className="text-slate-700">Balance Pending</span>
                                                     <span className={`${rentDue > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                                        ₹{(rentDue > 0 ? rentDue : 0).toFixed(2)}
+                                                        ₹{(rentDue > 0 ? rentDue : 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                     </span>
                                                 </div>
                                             </div>
@@ -527,7 +527,7 @@ const HostelFinance = () => {
                                                         <td className="px-4 py-3">{new Date(p.payment_date).toLocaleDateString()}</td>
                                                         <td className="px-4 py-3">{p.payment_type}</td>
                                                         <td className="px-4 py-3 text-slate-500">{p.remarks || '-'}</td>
-                                                        <td className="px-4 py-3 text-right font-medium text-green-600">+₹{parseFloat(p.amount).toFixed(2)}</td>
+                                                        <td className="px-4 py-3 text-right font-medium text-green-600">+₹{parseFloat(p.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                                                     </tr>
                                                 ))}
                                                 {studentData.payments.filter(p => p.payment_type === 'Room Rent').length === 0 && (
@@ -564,7 +564,7 @@ const HostelFinance = () => {
 
                                                 <div className="mb-4">
                                                     <p className="text-slate-500 text-sm font-medium uppercase tracking-wide">{bill.month} {bill.year}</p>
-                                                    <p className="text-2xl font-bold text-slate-800 mt-1">₹{parseFloat(bill.amount).toFixed(2)}</p>
+                                                    <p className="text-2xl font-bold text-slate-800 mt-1">₹{parseFloat(bill.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                                                 </div>
 
                                                 {bill.status !== 'Paid' ? (

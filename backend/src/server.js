@@ -18,6 +18,14 @@ const startServer = async () => {
         const client = await pool.connect();
         console.log('✅ Connected to PostgreSQL database');
 
+        // Auto-run migrations (Schema Updates)
+        await client.query(`
+            ALTER TABLE expenditures 
+            ADD COLUMN IF NOT EXISTS transaction_id VARCHAR(100),
+            ADD COLUMN IF NOT EXISTS upi_id VARCHAR(100);
+        `);
+        console.log('✅ Database schema verified.');
+
         // Auto-run migrations if needed (simple check)
         const check = await client.query("SELECT to_regclass('public.users')");
         if (!check.rows[0].to_regclass) {
@@ -32,8 +40,9 @@ const startServer = async () => {
             console.log(`🚀 Server running on port ${PORT}`);
         });
     } catch (error) {
-        console.error('❌ Database connection failed:', error);
-        process.exit(1);
+        console.error('❌ Database connection failed:', error.message);
+        console.log('🔄 Retrying in 5 seconds...');
+        setTimeout(startServer, 5000);
     }
 };
 

@@ -37,7 +37,7 @@ app.use(express.json()); // Parse JSON bodies
 // Rate Limiter (Prevent Crashing from DoS/Spam)
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 300, // Limit each IP to 300 requests per windowMs
+    max: 1000, // Increased limit to prevent false positives
     message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
@@ -81,6 +81,15 @@ app.get('/download-app', (req, res) => {
 // Basic Health Check Route
 app.get('/', (req, res) => {
     res.json({ message: 'School Management System API is running 🚀' });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error('🔥 Global Error Handler:', err);
+    res.status(500).json({
+        message: 'Something went wrong on the server',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 });
 
 module.exports = app;

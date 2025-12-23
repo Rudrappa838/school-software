@@ -64,7 +64,7 @@ const StudentHostel = () => {
                     </div>
                     <div className="p-4 bg-slate-50 rounded-xl">
                         <p className="text-xs text-slate-500 uppercase font-bold mb-1">Cost Per Term</p>
-                        <p className="text-lg font-bold text-slate-800">₹{hostelData.cost_per_term}</p>
+                        <p className="text-lg font-bold text-slate-800">₹{parseFloat(hostelData.cost_per_term).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                     </div>
                     <div className="p-4 bg-slate-50 rounded-xl">
                         <p className="text-xs text-slate-500 uppercase font-bold mb-1">Warden Contact</p>
@@ -89,7 +89,7 @@ const StudentHostel = () => {
                                         <p className="text-xs text-slate-500">Mess Charges</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-slate-800">₹{bill.amount}</p>
+                                        <p className="font-bold text-slate-800">₹{parseFloat(bill.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                                         <span className={`text-xs font-bold px-2 py-0.5 rounded ${bill.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' :
                                             bill.status === 'Partial' ? 'bg-amber-100 text-amber-700' :
                                                 'bg-rose-100 text-rose-700'
@@ -118,7 +118,7 @@ const StudentHostel = () => {
                                         <p className="font-bold text-slate-800">{pay.payment_type}</p>
                                         <p className="text-xs text-slate-500">{new Date(pay.payment_date).toLocaleDateString()}</p>
                                     </div>
-                                    <p className="font-bold text-emerald-600">+₹{pay.amount}</p>
+                                    <p className="font-bold text-emerald-600">+₹{parseFloat(pay.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
                                 </div>
                             ))
                         ) : (

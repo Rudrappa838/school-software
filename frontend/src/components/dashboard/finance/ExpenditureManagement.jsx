@@ -17,7 +17,9 @@ const ExpenditureManagement = () => {
         category: 'Maintenance',
         description: '',
         expense_date: new Date().toISOString().split('T')[0],
-        payment_method: 'Cash'
+        payment_method: 'Cash',
+        transaction_id: '',
+        upi_id: ''
     });
 
     useEffect(() => {
@@ -64,7 +66,9 @@ const ExpenditureManagement = () => {
                 category: 'Maintenance',
                 description: '',
                 expense_date: new Date().toISOString().split('T')[0],
-                payment_method: 'Cash'
+                payment_method: 'Cash',
+                transaction_id: '',
+                upi_id: ''
             });
             fetchExpenditures();
             fetchStats();
@@ -156,7 +160,10 @@ const ExpenditureManagement = () => {
                                 <td>${item.title}</td>
                                 <td>${item.category}</td>
                                 <td>${item.description || '-'}</td>
-                                <td>${item.payment_method}</td>
+                                <td>
+                                    ${item.payment_method}
+                                    ${item.payment_method !== 'Cash' ? `<div style="font-size:10px; color:#666;">${item.transaction_id ? 'Ref: ' + item.transaction_id : ''} ${item.upi_id ? '<br>UPI: ' + item.upi_id : ''}</div>` : ''}
+                                </td>
                                 <td class="amount">₹${parseFloat(item.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                             </tr>
                         `).join('')}
@@ -213,7 +220,7 @@ const ExpenditureManagement = () => {
                         </div>
                         <div>
                             <p className="text-slate-500 text-sm font-medium">Today's Expense</p>
-                            <h3 className="text-2xl font-bold text-slate-800">₹{stats.today.toLocaleString()}</h3>
+                            <h3 className="text-2xl font-bold text-slate-800">₹{stats.today.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h3>
                         </div>
                     </div>
                 </div>
@@ -224,7 +231,7 @@ const ExpenditureManagement = () => {
                         </div>
                         <div>
                             <p className="text-slate-500 text-sm font-medium">Monthly Expense</p>
-                            <h3 className="text-2xl font-bold text-slate-800">₹{stats.month.toLocaleString()}</h3>
+                            <h3 className="text-2xl font-bold text-slate-800">₹{stats.month.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h3>
                         </div>
                     </div>
                 </div>
@@ -235,7 +242,7 @@ const ExpenditureManagement = () => {
                         </div>
                         <div>
                             <p className="text-slate-500 text-sm font-medium">Yearly Expense</p>
-                            <h3 className="text-2xl font-bold text-slate-800">₹{stats.year.toLocaleString()}</h3>
+                            <h3 className="text-2xl font-bold text-slate-800">₹{stats.year.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h3>
                         </div>
                     </div>
                 </div>
@@ -280,6 +287,7 @@ const ExpenditureManagement = () => {
                             <tr>
                                 <th className="px-6 py-3 font-semibold">Title</th>
                                 <th className="px-6 py-3 font-semibold">Category</th>
+                                <th className="px-6 py-3 font-semibold">Payment Method</th>
                                 <th className="px-6 py-3 font-semibold">Date</th>
                                 <th className="px-6 py-3 font-semibold">Amount</th>
                                 <th className="px-6 py-3 font-semibold text-right">Actions</th>
@@ -299,10 +307,19 @@ const ExpenditureManagement = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-3 text-slate-500">
+                                            {item.payment_method}
+                                            {item.payment_method !== 'Cash' && (
+                                                <div className="text-xs text-slate-400 mt-1">
+                                                    {item.transaction_id && <div>Ref: {item.transaction_id}</div>}
+                                                    {item.upi_id && <div>UPI: {item.upi_id}</div>}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-3 text-slate-500">
                                             {new Date(item.expense_date).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-3 font-bold text-red-600">
-                                            -₹{parseFloat(item.amount).toLocaleString()}
+                                            -₹{parseFloat(item.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                         </td>
                                         <td className="px-6 py-3 text-right">
                                             <button
@@ -327,106 +344,138 @@ const ExpenditureManagement = () => {
             </div>
 
             {/* Add Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-100">
-                            <h3 className="text-lg font-bold text-slate-800">Add New Expenditure</h3>
+            {
+                showModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in zoom-in-95 duration-200">
+                            <div className="p-6 border-b border-slate-100">
+                                <h3 className="text-lg font-bold text-slate-800">Add New Expenditure</h3>
+                            </div>
+                            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Title</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                        value={formData.title}
+                                        onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                        placeholder="e.g. Office Supplies"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Amount</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                            value={formData.amount}
+                                            onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Date</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                            value={formData.expense_date}
+                                            max={new Date().toISOString().split('T')[0]}
+                                            onChange={e => setFormData({ ...formData, expense_date: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Category</label>
+                                        <select
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                            value={formData.category}
+                                            onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                        >
+                                            <option value="Maintenance">Maintenance</option>
+                                            <option value="Supplies">Supplies</option>
+                                            <option value="Utilities">Utilities</option>
+                                            <option value="Salary">Salary</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-1">Payment Method</label>
+                                        <select
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                            value={formData.payment_method}
+                                            onChange={e => setFormData({ ...formData, payment_method: e.target.value })}
+                                        >
+                                            <option value="Cash">Cash</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="UPI">UPI</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {formData.payment_method !== 'Cash' && (
+                                    <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-1">
+                                                {formData.payment_method === 'Cheque' ? 'Cheque Number' : 'Transaction ID / UTR'}
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                                value={formData.transaction_id}
+                                                onChange={e => setFormData({ ...formData, transaction_id: e.target.value })}
+                                                placeholder="e.g. TXN12345678"
+                                            />
+                                        </div>
+                                        {formData.payment_method === 'UPI' && (
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 mb-1">UPI ID</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                                    value={formData.upi_id}
+                                                    onChange={e => setFormData({ ...formData, upi_id: e.target.value })}
+                                                    placeholder="e.g. name@upi"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Description</label>
+                                    <textarea
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                        rows="3"
+                                        value={formData.description}
+                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                        placeholder="Optional details..."
+                                    ></textarea>
+                                </div>
+                                <div className="flex justify-end gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowModal(false)}
+                                        className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold"
+                                    >
+                                        Save Expenditure
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-1">Title</label>
-                                <input
-                                    type="text"
-                                    required
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                                    value={formData.title}
-                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                    placeholder="e.g. Office Supplies"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Amount</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                                        value={formData.amount}
-                                        onChange={e => setFormData({ ...formData, amount: e.target.value })}
-                                        placeholder="0.00"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Date</label>
-                                    <input
-                                        type="date"
-                                        required
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                                        value={formData.expense_date}
-                                        onChange={e => setFormData({ ...formData, expense_date: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Category</label>
-                                    <select
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                                        value={formData.category}
-                                        onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                    >
-                                        <option value="Maintenance">Maintenance</option>
-                                        <option value="Supplies">Supplies</option>
-                                        <option value="Utilities">Utilities</option>
-                                        <option value="Salary">Salary</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Payment Method</label>
-                                    <select
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                                        value={formData.payment_method}
-                                        onChange={e => setFormData({ ...formData, payment_method: e.target.value })}
-                                    >
-                                        <option value="Cash">Cash</option>
-                                        <option value="Bank Transfer">Bank Transfer</option>
-                                        <option value="Cheque">Cheque</option>
-                                        <option value="UPI">UPI</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-1">Description</label>
-                                <textarea
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                                    rows="3"
-                                    value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Optional details..."
-                                ></textarea>
-                            </div>
-                            <div className="flex justify-end gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold"
-                                >
-                                    Save Expenditure
-                                </button>
-                            </div>
-                        </form>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 
