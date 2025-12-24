@@ -52,7 +52,7 @@ jobs:
       - name: Install Pods (Explicit)
         run: |
           cd ios/App
-          pod install
+          pod install --repo-update
 
       - name: List Files (Debug)
         run: |
