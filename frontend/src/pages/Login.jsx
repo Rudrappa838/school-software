@@ -170,13 +170,23 @@ const Login = () => {
                             <h3 className="text-lg font-bold text-slate-800 mb-2">Get the Mobile App</h3>
                             <p className="text-sm text-slate-500 mb-6">Choose your platform to download</p>
 
-                            <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-100 inline-block mb-4">
-                                <QRCode
-                                    value={`${window.location.protocol}//${window.location.host}/SchoolApp.apk`}
-                                    size={180}
-                                    level="H"
-                                />
-                                <p className="text-[10px] text-slate-400 mt-2 font-mono">Scan for Android APK</p>
+                            <div className="flex flex-col md:flex-row gap-4 justify-center mb-4">
+                                <div className="bg-white p-3 rounded-xl shadow-inner border border-slate-100">
+                                    <QRCode
+                                        value={`${window.location.protocol}//${window.location.host}/SchoolApp.apk`}
+                                        size={140}
+                                        level="H"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-2 font-mono">Android APK</p>
+                                </div>
+                                <div className="bg-white p-3 rounded-xl shadow-inner border border-slate-100">
+                                    <QRCode
+                                        value={`${window.location.protocol}//${window.location.host}`}
+                                        size={140}
+                                        level="H"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-2 font-mono">iOS (Web Version)</p>
+                                </div>
                             </div>
 
                             <div className="space-y-3">
