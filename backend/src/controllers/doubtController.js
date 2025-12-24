@@ -18,10 +18,25 @@ exports.createDoubt = async (req, res) => {
     try {
         const school_id = req.user.schoolId;
         const email = req.user.email;
-        const { teacher_id, subject_id, question } = req.body;
+        let { teacher_id, subject_id, question } = req.body;
 
         const student_id = await getStudentId(email, school_id);
         if (!student_id) return res.status(404).json({ message: 'Student profile not found' });
+
+        // If subject_id is missing, try to resolve it from Teacher's Specialization
+        if (!subject_id) {
+            const teacherRes = await pool.query('SELECT subject_specialization FROM teachers WHERE id = $1', [teacher_id]);
+            if (teacherRes.rows.length > 0) {
+                const specialization = teacherRes.rows[0].subject_specialization;
+                if (specialization) {
+                    // Try to find subject by name
+                    const subjectRes = await pool.query('SELECT id FROM subjects WHERE lower(name) = lower($1) AND school_id = $2', [specialization, school_id]);
+                    if (subjectRes.rows.length > 0) {
+                        subject_id = subjectRes.rows[0].id;
+                    }
+                }
+            }
+        }
 
         const result = await pool.query(
             `INSERT INTO doubts (student_id, teacher_id, subject_id, question) 
