@@ -57,7 +57,7 @@ const Login = () => {
                     <div className="bg-gradient-to-br from-indigo-600 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/30 transform rotate-3 hover:rotate-6 transition-transform">
                         <School className="text-white w-8 h-8" />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome Back</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome to School Portal</h1>
                     <p className="text-slate-500 mt-1 text-sm font-medium">Sign in to your dashboard</p>
                 </div>
 
