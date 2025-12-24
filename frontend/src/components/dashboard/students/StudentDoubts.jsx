@@ -74,6 +74,7 @@ const StudentDoubts = () => {
 
             const payload = {
                 teacher_id: formData.teacher_id,
+                subject_id: formData.subject_id,
                 question: formData.question
             };
 
@@ -116,7 +117,17 @@ const StudentDoubts = () => {
                                 <select
                                     className="w-full p-3 border rounded-lg bg-slate-50"
                                     value={formData.teacher_id}
-                                    onChange={e => setFormData({ ...formData, teacher_id: e.target.value })}
+                                    onChange={e => {
+                                        const tId = e.target.value;
+                                        const selectedTeacher = teachers.find(t => t.id == tId);
+                                        // Attempt to get subject_id if it exists on teacher object, else null
+                                        const sId = selectedTeacher?.subject_id || null;
+                                        setFormData({
+                                            ...formData,
+                                            teacher_id: tId,
+                                            subject_id: sId
+                                        });
+                                    }}
                                     required
                                 >
                                     <option value="">-- Choose Teacher --</option>
@@ -125,7 +136,6 @@ const StudentDoubts = () => {
                                     ))}
                                 </select>
                             </div>
-                            {/* Subject Selection - Optional for now as we lack IDs */}
                         </div>
 
                         <div>
