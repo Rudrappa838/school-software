@@ -3,7 +3,7 @@
   "appName": "SchoolApp",
   "webDir": "dist",
   "server": {
-    "url": "https://school-software-frontend-rust.vercel.app",
+    "url": "https://school-software-tan.vercel.app",
     "cleartext": true
   }
 }
