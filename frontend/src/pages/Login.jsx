@@ -1,6 +1,10 @@
+import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { School, ShieldCheck, User, Users, GraduationCap, Briefcase, Bus, Eye, EyeOff, X, Smartphone } from 'lucide-react';
+import QRCode from 'react-qr-code';
 import { Capacitor } from '@capacitor/core';
-
-// ... (existing imports)
 
 const Login = () => {
     // ... (existing state)
