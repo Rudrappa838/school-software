@@ -18,6 +18,16 @@ const StudentLeaves = () => {
 
     const [submitting, setSubmitting] = useState(false);
 
+    // Format date to DD/MM/YY
+    const formatDateToDDMMYY = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2);
+        return `${day}/${month}/${year}`;
+    };
+
     useEffect(() => {
         fetchLeaves();
     }, []);
@@ -126,7 +136,7 @@ const StudentLeaves = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">From Date</label>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">From Date <span className="text-xs text-slate-400">(DD/MM/YY)</span></label>
                                     <input
                                         type="date"
                                         required
@@ -136,7 +146,7 @@ const StudentLeaves = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">To Date</label>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">To Date <span className="text-xs text-slate-400">(DD/MM/YY)</span></label>
                                     <input
                                         type="date"
                                         required
@@ -206,15 +216,15 @@ const StudentLeaves = () => {
                                         </span>
                                     </div>
                                     <div className="text-sm text-slate-500 flex items-center gap-2">
-                                        <span>{new Date(leave.start_date).toLocaleDateString()}</span>
+                                        <span>{formatDateToDDMMYY(leave.start_date)}</span>
                                         <span>➔</span>
-                                        <span>{new Date(leave.end_date).toLocaleDateString()}</span>
+                                        <span>{formatDateToDDMMYY(leave.end_date)}</span>
                                         <span className="text-slate-300">|</span>
                                         <span className="italic">"{leave.reason}"</span>
                                     </div>
                                 </div>
                                 <div className="text-xs text-slate-400 font-medium">
-                                    Applied on {new Date(leave.created_at).toLocaleDateString()}
+                                    Applied on {formatDateToDDMMYY(leave.created_at)}
                                 </div>
                             </div>
                         ))}
