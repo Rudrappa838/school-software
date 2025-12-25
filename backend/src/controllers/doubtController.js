@@ -35,16 +35,22 @@ const getStudentId = async (email, school_id) => {
 // Create a new doubt (Student Only)
 exports.createDoubt = async (req, res) => {
     try {
+        // Log the entire user object from JWT to debug
+        console.log('=== DOUBT CREATION DEBUG ===');
+        console.log('Full req.user:', JSON.stringify(req.user, null, 2));
+
         // Handle both camelCase (schoolId) and snake_case (school_id) from JWT
         const school_id = req.user.schoolId || req.user.school_id;
         const email = req.user.email;
+        const role = req.user.role;
         let { teacher_id, subject_id, question } = req.body;
 
-        console.log('Creating doubt - User info:', { email, school_id, role: req.user.role });
+        console.log('Extracted values:', { email, school_id, role });
 
         if (!school_id) {
-            console.error('school_id is missing from JWT token');
-            return res.status(400).json({ message: 'School information is missing. Please log in again.' });
+            console.error('❌ school_id is missing from JWT token');
+            console.error('Available keys in req.user:', Object.keys(req.user));
+            return res.status(400).json({ message: 'School information is missing. Please log out and log in again.' });
         }
 
         if (!question || !question.trim()) {
@@ -52,15 +58,17 @@ exports.createDoubt = async (req, res) => {
         }
 
         // Get student_id using email and school_id
+        console.log('Looking up student with:', { email, school_id });
         const student_id = await getStudentId(email, school_id);
+
         if (!student_id) {
-            console.error(`Student not found - email: ${email}, school_id: ${school_id}`);
+            console.error(`❌ Student not found - email: ${email}, school_id: ${school_id}`);
             return res.status(404).json({
                 message: `Student profile not found. Your login email (${email}) doesn't match any student records. Please contact your administrator.`
             });
         }
 
-        console.log('Found student_id:', student_id);
+        console.log('✅ Found student_id:', student_id);
 
         // If subject_id is missing but request has 'subject' name (Mobile App case)
         if (!subject_id && req.body.subject) {
