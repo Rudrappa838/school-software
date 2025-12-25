@@ -54,32 +54,15 @@ const StudentDoubts = () => {
         }
 
         try {
-            // Find subject ID if we only have name (the endpoint returns names)
-            // For now, let's assume subject_id is creating a mismatch if we just send names?
-            // Wait, database expects IDs.
-            // The /teachers endpoint returns objects with ID.
-            // The /teachers/subjects endpoint returns NAMES string array.
-            // I need a way to get Subject IDs. 
-            // Currently, let's assume subject is optional or handle it loosely. 
-            // OR I can just map subject name to an ID if I had them. 
-            // For now, I'll send null for subject_id if I can't map it, or improved backend later.
-            // Actually, let's just send teacher_id and question. Subject is implicit via teacher usually.
-
-            // The backend likely expects a subject_id. Since we don't have it, we will try to omit it or send a dummy if needed.
-            // Best guess: The backend might look up subject from teacher or allow null. 
-            // If it fails, it's likely because subject_id is required. 
-            // For now, let's remove subject_id from the payload if it is causing issues, or send the teacher's subject name as a fallback if the API was updated to support names.
-            // But I cannot see backend code.
-            // I will try to sending just teacher_id and question, assuming the backend can handle it.
-
             const payload = {
                 teacher_id: formData.teacher_id,
-                subject_id: formData.subject_id,
                 question: formData.question
             };
 
-            // Validate payload before sending
-            if (!payload.teacher_id || !payload.question) throw new Error("Missing fields");
+            // Only include subject_id if it has a value
+            if (formData.subject_id) {
+                payload.subject_id = formData.subject_id;
+            }
 
             await api.post('/doubts', payload);
 
