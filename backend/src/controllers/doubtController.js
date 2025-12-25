@@ -35,20 +35,33 @@ const getStudentId = async (email, school_id) => {
 // Create a new doubt (Student Only)
 exports.createDoubt = async (req, res) => {
     try {
-        const school_id = req.user.school_id;
+        const school_id = req.user.schoolId || req.user.school_id; // Handle both camelCase and snake_case
+        const user_id = req.user.id;
         const email = req.user.email;
         let { teacher_id, subject_id, question } = req.body;
 
-        console.log('Creating doubt:', { email, school_id, teacher_id, subject_id, question: question?.substring(0, 50) });
+        console.log('Creating doubt - User:', { user_id, email, school_id, teacher_id, subject_id });
 
         if (!question || !question.trim()) {
             return res.status(400).json({ message: 'Question is required' });
         }
 
-        const student_id = await getStudentId(email, school_id);
-        if (!student_id) {
-            console.error(`Doubt Error: Student not found for email ${email} school ${school_id}`);
-            return res.status(404).json({ message: `Student profile not found. Please ensure you're logged in with the correct account.` });
+        // Get student_id from users table based on the logged-in user's ID
+        const userRes = await pool.query('SELECT id FROM students WHERE user_id = $1', [user_id]);
+        let student_id;
+
+        if (userRes.rows.length > 0) {
+            student_id = userRes.rows[0].id;
+            console.log('Found student by user_id:', student_id);
+        } else {
+            // Fallback: Try the old method
+            student_id = await getStudentId(email, school_id);
+            if (!student_id) {
+                console.error(`Doubt Error: Student not found for user_id ${user_id} or email ${email}`);
+                return res.status(404).json({
+                    message: `Student profile not found. Please contact your administrator.`
+                });
+            }
         }
 
         // If subject_id is missing but request has 'subject' name (Mobile App case)
@@ -59,7 +72,6 @@ exports.createDoubt = async (req, res) => {
                 subject_id = subRes.rows[0].id;
 
                 // Find a teacher for this subject
-                // Check exact specialization match first
                 let teacherRes = await pool.query('SELECT id FROM teachers WHERE lower(subject_specialization) = lower($1) AND school_id = $2 LIMIT 1', [subjectName, school_id]);
                 if (teacherRes.rows.length > 0) {
                     teacher_id = teacherRes.rows[0].id;
@@ -73,7 +85,6 @@ exports.createDoubt = async (req, res) => {
             if (teacherRes.rows.length > 0) {
                 const specialization = teacherRes.rows[0].subject_specialization;
                 if (specialization) {
-                    // Try to find subject by name
                     const subjectRes = await pool.query('SELECT id FROM subjects WHERE lower(name) = lower($1) AND school_id = $2', [specialization, school_id]);
                     if (subjectRes.rows.length > 0) {
                         subject_id = subjectRes.rows[0].id;
