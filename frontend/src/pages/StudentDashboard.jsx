@@ -27,6 +27,7 @@ const StudentDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [studentData, setStudentData] = useState(null);
     const [schoolName, setSchoolName] = useState('');
+    const [leaveNotifications, setLeaveNotifications] = useState([]);
     const [overviewStats, setOverviewStats] = useState({
         attendance: { percentage: 0, present: 0, total: 0 },
         library: { active: 0, overdue: 0 },
@@ -146,9 +147,31 @@ const StudentDashboard = () => {
                 console.error("Unexpected error in dashboard fetch", err);
             }
         };
+
+        const fetchLeaveNotifications = async () => {
+            try {
+                const res = await api.get('/leaves/my-leaves');
+                // Filter only recently approved/rejected leaves (last 7 days)
+                const recent = res.data.filter(leave => {
+                    if (leave.status === 'Pending') return false;
+                    const updatedDate = new Date(leave.updated_at || leave.created_at);
+                    const daysSince = (new Date() - updatedDate) / (1000 * 60 * 60 * 24);
+                    return daysSince <= 7;
+                });
+                setLeaveNotifications(recent);
+            } catch (error) {
+                console.error('Failed to fetch leave notifications', error);
+            }
+        };
+
         fetchSchoolInfo();
         fetchProfile();
         fetchData();
+        fetchLeaveNotifications();
+
+        // Poll for new notifications every 2 minutes
+        const interval = setInterval(fetchLeaveNotifications, 120000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleLogout = () => { logout(); navigate('/'); };
@@ -193,7 +216,13 @@ const StudentDashboard = () => {
                     <NavButton active={activeTab === 'overview'} onClick={() => handleTabChange('overview')} icon={LayoutDashboard} label="Dashboard" />
                     <NavButton active={activeTab === 'academics'} onClick={() => handleTabChange('academics')} icon={BookOpen} label="Academics & Exams" />
                     <NavButton active={activeTab === 'doubts'} onClick={() => handleTabChange('doubts')} icon={MessageSquare} label="Ask Doubts" />
-                    <NavButton active={activeTab === 'leaves'} onClick={() => handleTabChange('leaves')} icon={Calendar} label="Apply Leave" />
+                    <NavButton
+                        active={activeTab === 'leaves'}
+                        onClick={() => handleTabChange('leaves')}
+                        icon={Calendar}
+                        label="Apply Leave"
+                        badge={leaveNotifications.length}
+                    />
                     <NavButton active={activeTab === 'attendance'} onClick={() => handleTabChange('attendance')} icon={Clock} label="Attendance" />
                     <NavButton active={activeTab === 'library'} onClick={() => handleTabChange('library')} icon={FileText} label="Library Books" />
                     <NavButton active={activeTab === 'hostel'} onClick={() => handleTabChange('hostel')} icon={Home} label="Hostel Rooms" />
@@ -227,9 +256,17 @@ const StudentDashboard = () => {
                         </div>
                     </div>
                     <div className="flex gap-4">
-                        <button className="p-2 bg-white border border-slate-200 rounded-full text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-all relative">
+                        <button
+                            onClick={() => setActiveTab('leaves')}
+                            className="p-2 bg-white border border-slate-200 rounded-full text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-all relative"
+                            title={leaveNotifications.length > 0 ? `${leaveNotifications.length} leave update(s)` : 'No new notifications'}
+                        >
                             <Bell size={20} />
-                            {/* <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span> */}
+                            {leaveNotifications.length > 0 && (
+                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-xs font-bold rounded-full border-2 border-white flex items-center justify-center animate-pulse">
+                                    {leaveNotifications.length}
+                                </span>
+                            )}
                         </button>
                         <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold border-2 border-white shadow-sm">
                             {user?.name?.[0]}
@@ -326,13 +363,18 @@ const StudentOverview = ({ schoolName, stats }) => (
 
 
 // Helper Component
-const NavButton = ({ active, onClick, icon: Icon, label }) => (
+const NavButton = ({ active, onClick, icon: Icon, label, badge }) => (
     <button
         onClick={onClick}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm mb-1 ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
     >
         <Icon size={18} />
-        {label}
+        <span className="flex-1 text-left">{label}</span>
+        {badge > 0 && (
+            <span className="bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {badge}
+            </span>
+        )}
     </button>
 );
 
