@@ -3,11 +3,12 @@ import { Check, X, Clock, Filter, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../api/axios';
 
-const LeaveManagement = () => {
+const LeaveManagement = ({ onAction }) => {
     const [leaves, setLeaves] = useState([]);
     const [filterStatus, setFilterStatus] = useState('Pending'); // Pending, Approved, Rejected, All
     const [filterRole, setFilterRole] = useState('All'); // All, Student, Teacher, Staff
     const [loading, setLoading] = useState(false);
+    const [confirmDialog, setConfirmDialog] = useState({ show: false, id: null, status: null });
 
     useEffect(() => {
         fetchLeaves();
@@ -26,13 +27,24 @@ const LeaveManagement = () => {
         }
     };
 
-    const handleStatusUpdate = async (id, newStatus) => {
-        if (!window.confirm(`Mark this leave as ${newStatus}?`)) return;
+    const handleStatusUpdate = async () => {
+        const { id, status: newStatus } = confirmDialog;
+        setConfirmDialog({ show: false, id: null, status: null });
+
         try {
             await api.put(`/leaves/${id}`, { status: newStatus });
             toast.success(`Leave ${newStatus}`);
-            fetchLeaves();
+
+            // Optimistic update: Remove the item from list immediately if we are in 'Pending' view
+            if (filterStatus === 'Pending') {
+                setLeaves(prev => prev.filter(l => l.id !== id));
+            } else {
+                fetchLeaves();
+            }
+
+            if (onAction) onAction();
         } catch (error) {
+            console.error('Update failed', error);
             toast.error('Failed to update status');
         }
     };
@@ -130,14 +142,14 @@ const LeaveManagement = () => {
                                             {leave.status === 'Pending' && (
                                                 <div className="flex justify-end gap-2">
                                                     <button
-                                                        onClick={() => handleStatusUpdate(leave.id, 'Approved')}
+                                                        onClick={(e) => { e.stopPropagation(); setConfirmDialog({ show: true, id: leave.id, status: 'Approved' }); }}
                                                         className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
                                                         title="Approve"
                                                     >
                                                         <Check size={18} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleStatusUpdate(leave.id, 'Rejected')}
+                                                        onClick={(e) => { e.stopPropagation(); setConfirmDialog({ show: true, id: leave.id, status: 'Rejected' }); }}
                                                         className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                                                         title="Reject"
                                                     >
@@ -161,6 +173,35 @@ const LeaveManagement = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Custom Confirmation Dialog */}
+                {confirmDialog.show && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">Confirm Action</h3>
+                            <p className="text-slate-600 mb-6">
+                                Are you sure you want to mark this leave as <span className="font-bold text-indigo-600">{confirmDialog.status}</span>?
+                            </p>
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    onClick={() => setConfirmDialog({ show: false, id: null, status: null })}
+                                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleStatusUpdate}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${confirmDialog.status === 'Approved'
+                                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                                        : 'bg-red-600 hover:bg-red-700 text-white'
+                                        }`}
+                                >
+                                    Confirm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

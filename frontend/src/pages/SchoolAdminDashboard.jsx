@@ -429,7 +429,7 @@ const SchoolAdminDashboard = () => {
 
                         {activeTab === 'school-calendar' && <SchoolCalendar />}
                         {activeTab === 'announcements' && <Announcements />}
-                        {activeTab === 'leave-management' && <LeaveManagement />}
+                        {activeTab === 'leave-management' && <LeaveManagement onAction={fetchPendingLeaves} />}
                         {activeTab === 'certificates-generator' && <CertificateGenerator />}
                         {activeTab === 'transport-management' && <TransportManagement />}
                         {activeTab === 'biometric-access' && <BiometricManagement />}
