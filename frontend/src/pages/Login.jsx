@@ -45,19 +45,19 @@ const Login = () => {
     ].filter(role => !isMobileApp || role.id !== 'SCHOOL_ADMIN'); // Hide Admin on Mobile App
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-sky-700 via-cyan-600 to-blue-800 flex items-center justify-center p-4 relative overflow-hidden">
 
             {/* Background Blobs */}
-            <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-x-1/2 -translate-y-1/2 animate-blob"></div>
-            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-32 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+            <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-x-1/2 -translate-y-1/2 animate-blob"></div>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-sky-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-32 left-20 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
 
-            <div className="bg-white/95 backdrop-blur-xl p-6 rounded-3xl shadow-2xl w-full max-w-sm border border-white/20 relative z-10 transition-all duration-300 hover:shadow-indigo-500/20">
+            <div className="bg-white/95 backdrop-blur-xl p-6 rounded-3xl shadow-2xl w-full max-w-sm border border-white/20 relative z-10 transition-all duration-300 hover:shadow-cyan-500/20">
                 <div className="text-center mb-6">
-                    <div className="bg-gradient-to-br from-indigo-600 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/30 transform rotate-3 hover:rotate-6 transition-transform">
+                    <div className="bg-gradient-to-br from-cyan-500 to-sky-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cyan-500/30 transform rotate-3 hover:rotate-6 transition-transform">
                         <School className="text-white w-8 h-8" />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome to School Portal</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Connect to Campus</h1>
                     <p className="text-slate-500 mt-1 text-sm font-medium">Sign in to your dashboard</p>
                 </div>
 
@@ -73,10 +73,10 @@ const Login = () => {
                                     onClick={() => setRole(r.id)}
                                     className={`p-2 rounded-lg text-[10px] font-bold transition-all flex flex-col items-center justify-center gap-1 h-16 border
                                         ${role === r.id
-                                            ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm transform scale-105'
+                                            ? 'bg-cyan-50 border-cyan-500 text-cyan-700 shadow-sm transform scale-105'
                                             : 'bg-slate-50 border-transparent text-slate-400 hover:bg-white hover:border-slate-200 hover:shadow-sm'}`}
                                 >
-                                    <r.icon size={20} className={role === r.id ? 'text-indigo-600' : 'text-slate-400'} />
+                                    <r.icon size={20} className={role === r.id ? 'text-cyan-600' : 'text-slate-400'} />
                                     {r.label}
                                 </button>
                             ))}
@@ -91,7 +91,7 @@ const Login = () => {
                             <input
                                 type="text"
                                 required
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-0 outline-none transition-all font-semibold text-sm text-slate-700 placeholder:text-slate-400"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-cyan-500 focus:ring-0 outline-none transition-all font-semibold text-sm text-slate-700 placeholder:text-slate-400"
                                 placeholder={['STUDENT', 'TEACHER', 'STAFF'].includes(role) ? 'e.g. STU1234 or email@school.com' : 'admin@school.com'}
                                 value={email}
                                 onChange={(e) => { setEmail(e.target.value); setErrorMessage(''); }}
@@ -101,13 +101,13 @@ const Login = () => {
                         <div>
                             <div className="flex justify-between items-center mb-1 ml-1">
                                 <label className="block text-xs font-bold text-slate-700">Password</label>
-                                <Link to="/forgot-password" className="text-[10px] text-indigo-600 font-bold hover:underline">Forgot Password?</Link>
+                                <Link to="/forgot-password" className="text-[10px] text-cyan-600 font-bold hover:underline">Forgot Password?</Link>
                             </div>
                             <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     required
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-0 outline-none transition-all font-semibold text-sm text-slate-700 placeholder:text-slate-400 pr-10"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-cyan-500 focus:ring-0 outline-none transition-all font-semibold text-sm text-slate-700 placeholder:text-slate-400 pr-10"
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => { setPassword(e.target.value); setErrorMessage(''); }}
@@ -115,7 +115,7 @@ const Login = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-600 transition-colors"
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
@@ -125,7 +125,7 @@ const Login = () => {
 
                     <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 rounded-xl transition-all transform active:scale-[0.98] shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 text-sm"
+                        className="w-full bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-600 hover:to-sky-700 text-white font-bold py-3 rounded-xl transition-all transform active:scale-[0.98] shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 text-sm"
                     >
                         Access Portal
                     </button>
@@ -137,7 +137,7 @@ const Login = () => {
                     )}
 
                     <p className="text-center text-[10px] text-slate-400 mt-3">
-                        Having trouble? <a href="#" className="text-indigo-600 font-bold hover:underline">Contact Support</a>
+                        Having trouble? <a href="#" className="text-cyan-600 font-bold hover:underline">Contact Support</a>
                     </p>
                 </form>
 
@@ -146,7 +146,7 @@ const Login = () => {
                     <div className="mt-6 pt-6 border-t border-slate-100">
                         <button
                             onClick={() => setShowQR(true)}
-                            className="w-full flex items-center justify-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors text-xs font-semibold group"
+                            className="w-full flex items-center justify-center gap-2 text-slate-500 hover:text-cyan-600 transition-colors text-xs font-semibold group"
                         >
                             <Smartphone size={16} className="group-hover:scale-110 transition-transform" />
                             Download Mobile App
