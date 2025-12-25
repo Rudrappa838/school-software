@@ -46,7 +46,7 @@ const StudentLeaves = () => {
         }
 
         try {
-            await api.post('/leaves/apply', formData);
+            await api.post('/leaves/my-leaves', formData);
             toast.success("Leave application submitted successfully!");
             setShowForm(false);
             setFormData({ leave_type: 'Sick Leave', start_date: '', end_date: '', reason: '' });

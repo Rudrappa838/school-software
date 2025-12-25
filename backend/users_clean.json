@@ -1,0 +1,236 @@
+[
+  {
+    "id": 9,
+    "email": "driver@demo.com",
+    "role": "DRIVER",
+    "school_id": 1
+  },
+  {
+    "id": 1,
+    "email": "admin@school.com",
+    "role": "SUPER_ADMIN",
+    "school_id": null
+  },
+  {
+    "id": 24,
+    "email": "ab3337@student.school.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 10,
+    "email": "rudru8888@gmail.com",
+    "role": "TEACHER",
+    "school_id": 1
+  },
+  {
+    "id": 12,
+    "email": "school_admin@demo.com",
+    "role": "SCHOOL_ADMIN",
+    "school_id": 1
+  },
+  {
+    "id": 15,
+    "email": "admin@demo.com",
+    "role": "SCHOOL_ADMIN",
+    "school_id": 1
+  },
+  {
+    "id": 7,
+    "email": "teacher@demo.com",
+    "role": "TEACHER",
+    "school_id": 1
+  },
+  {
+    "id": 6,
+    "email": "student@demo.com",
+    "role": "STUDENT",
+    "school_id": 1
+  },
+  {
+    "id": 8,
+    "email": "staff@demo.com",
+    "role": "STAFF",
+    "school_id": 1
+  },
+  {
+    "id": 33,
+    "email": "997358@staff.school.com",
+    "role": "STAFF",
+    "school_id": 4
+  },
+  {
+    "id": 27,
+    "email": "q@gmail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 30,
+    "email": "198669@teacher.school.com",
+    "role": "TEACHER",
+    "school_id": 4
+  },
+  {
+    "id": 26,
+    "email": "ab6488@student.school.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 28,
+    "email": "ab2225@student.school.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 23,
+    "email": "a@gmail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 29,
+    "email": "ab3934@student.school.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 31,
+    "email": "b@gmail.com",
+    "role": "TEACHER",
+    "school_id": 4
+  },
+  {
+    "id": 36,
+    "email": "ajith@gmail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 39,
+    "email": "A@gamil.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 34,
+    "email": "da9040@student.school.com",
+    "role": "STUDENT",
+    "school_id": 1
+  },
+  {
+    "id": 14,
+    "email": "superadmin@example.com",
+    "role": "SUPER_ADMIN",
+    "school_id": null
+  },
+  {
+    "id": 22,
+    "email": "name@gmail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 25,
+    "email": "ab3044@student.school.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 35,
+    "email": "ab8298@student.school.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 37,
+    "email": "mma@gamail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 38,
+    "email": "r@gamil.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 21,
+    "email": "abc@gmail.com",
+    "role": "SCHOOL_ADMIN",
+    "school_id": 4
+  },
+  {
+    "id": 2,
+    "email": "rudrappam789@gmail.com",
+    "role": "SCHOOL_ADMIN",
+    "school_id": 1
+  },
+  {
+    "id": 11,
+    "email": "rudru888@gmail.com",
+    "role": "STUDENT",
+    "school_id": 1
+  },
+  {
+    "id": 40,
+    "email": "Sujath@ganil.com",
+    "role": "STAFF",
+    "school_id": 1
+  },
+  {
+    "id": 13,
+    "email": "mrudru7@gmail.com",
+    "role": "STAFF",
+    "school_id": 1
+  },
+  {
+    "id": 32,
+    "email": "279855@staff.school.com",
+    "role": "STAFF",
+    "school_id": 4
+  },
+  {
+    "id": 41,
+    "email": "ram@gmail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 42,
+    "email": "rada@gmail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 43,
+    "email": "sachin@gmail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 44,
+    "email": "sandeep@gmail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 45,
+    "email": "Ajith@gmail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 46,
+    "email": "aas@gmail.com",
+    "role": "STUDENT",
+    "school_id": 4
+  },
+  {
+    "id": 47,
+    "email": "r@gmail.com",
+    "role": "TEACHER",
+    "school_id": 4
+  }
+]

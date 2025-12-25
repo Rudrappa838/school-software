@@ -26,8 +26,24 @@ exports.createDoubt = async (req, res) => {
             return res.status(404).json({ message: `Student profile not found for ${email}. Please contact admin.` });
         }
 
+        // If subject_id is missing but request has 'subject' name (Mobile App case)
+        if (!subject_id && req.body.subject) {
+            const subjectName = req.body.subject;
+            const subRes = await pool.query('SELECT id FROM subjects WHERE lower(name) = lower($1) AND school_id = $2', [subjectName, school_id]);
+            if (subRes.rows.length > 0) {
+                subject_id = subRes.rows[0].id;
+
+                // Find a teacher for this subject
+                // Check exact specialization match first
+                let teacherRes = await pool.query('SELECT id FROM teachers WHERE lower(subject_specialization) = lower($1) AND school_id = $2 LIMIT 1', [subjectName, school_id]);
+                if (teacherRes.rows.length > 0) {
+                    teacher_id = teacherRes.rows[0].id;
+                }
+            }
+        }
+
         // If subject_id is missing, try to resolve it from Teacher's Specialization
-        if (!subject_id) {
+        if (!subject_id && teacher_id) {
             const teacherRes = await pool.query('SELECT subject_specialization FROM teachers WHERE id = $1', [teacher_id]);
             if (teacherRes.rows.length > 0) {
                 const specialization = teacherRes.rows[0].subject_specialization;
@@ -44,7 +60,7 @@ exports.createDoubt = async (req, res) => {
         const result = await pool.query(
             `INSERT INTO doubts (student_id, teacher_id, subject_id, question) 
              VALUES ($1, $2, $3, $4) RETURNING *`,
-            [student_id, teacher_id, subject_id, question]
+            [student_id, teacher_id || null, subject_id || null, question]
         );
 
         res.status(201).json(result.rows[0]);

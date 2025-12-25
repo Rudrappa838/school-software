@@ -48,7 +48,14 @@ const StudentLeaves = ({ navigation }) => {
             return;
         }
 
-        const result = await studentService.submitLeave(newLeave);
+        const payload = {
+            leave_type: 'Sick Leave',
+            start_date: newLeave.startDate,
+            end_date: newLeave.endDate,
+            reason: newLeave.reason
+        };
+
+        const result = await studentService.submitLeave(payload);
         if (result.success) {
             setShowForm(false);
             setNewLeave({ startDate: '', endDate: '', reason: '' });

@@ -124,7 +124,7 @@ export const studentService = {
     // Get doubts
     getDoubts: async () => {
         try {
-            const response = await api.get(ENDPOINTS.STUDENT_DOUBTS);
+            const response = await api.get(ENDPOINTS.STUDENT_DOUBTS + '/student');
             return { success: true, data: response.data };
         } catch (error) {
             return { success: false, message: error.response?.data?.message || 'Failed to fetch doubts' };

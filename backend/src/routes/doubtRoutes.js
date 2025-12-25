@@ -4,8 +4,8 @@ const doubtController = require('../controllers/doubtController');
 const { authenticateToken, authorize } = require('../middleware/authMiddleware');
 
 // Student Routes
-router.post('/my-doubts', authenticateToken, authorize('STUDENT'), doubtController.createDoubt);
-router.get('/my-doubts', authenticateToken, authorize('STUDENT'), doubtController.getDoubtsForStudent);
+router.post('/', authenticateToken, authorize('STUDENT'), doubtController.createDoubt);
+router.get('/student', authenticateToken, authorize('STUDENT'), doubtController.getDoubtsForStudent);
 
 // Teacher Routes
 router.get('/teacher', authenticateToken, authorize('TEACHER'), doubtController.getDoubtsForTeacher);

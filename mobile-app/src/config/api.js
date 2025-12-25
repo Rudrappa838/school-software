@@ -40,7 +40,7 @@ export const ENDPOINTS = {
     STUDENT_HOSTEL: '/hostel/my-details',
     STUDENT_CERTIFICATES: '/certificates/my-certificates',
     STUDENT_LEAVES: '/leaves/my-leaves',
-    STUDENT_DOUBTS: '/doubts/my-doubts',
+    STUDENT_DOUBTS: '/doubts',
     STUDENT_CALENDAR: '/calendar/events',
 
     // Teachers
