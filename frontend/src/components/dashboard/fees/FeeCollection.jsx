@@ -7,6 +7,7 @@ const FeeCollection = ({ config }) => {
     const [selectedClass, setSelectedClass] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Data
     const [overview, setOverview] = useState(null);
@@ -352,8 +353,7 @@ argin: 10px 0; }
                                 <div>
                                     <label className="label">Amount</label>
                                     <div className="relative">
-                                        <IndianRupee size={16} className="absolute left-3 top-3 text-gray-400" />
-                                        <input className="input pl-10" type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required max={payModal.balance} />
+                                        <input className="input" type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required max={payModal.balance} />
                                     </div>
                                     <p className="text-xs text-right text-gray-500 mt-1">Max: ₹{formatCurrency(payModal.balance)}</p>
                                 </div>
@@ -448,9 +448,20 @@ argin: 10px 0; }
         <div className="space-y-6 animate-in fade-in">
             {/* Header / Filter */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 md:items-end">
-                <div className="flex-1 w-full">
+                <div className="flex-1 w-full relative">
                     <h2 className="text-lg font-bold text-gray-800 mb-1">Fee Collection Dashboard</h2>
-                    <p className="text-gray-500 text-sm">Select a Class & Section to view fee status</p>
+                    <p className="text-gray-500 text-sm mb-4">Select a Class & Section or Search</p>
+
+                    {/* SEARCH INPUT */}
+                    <div className="relative max-w-md">
+                        <input
+                            type="text"
+                            placeholder="Search by Student Name or ID..."
+                            className="input w-full bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                        />
+                    </div>
                 </div>
                 <div className="w-full md:w-auto">
                     <select className="input w-full md:min-w-[150px]" value={selectedClass} onChange={e => { setSelectedClass(e.target.value); setSelectedSection(''); }}>
@@ -558,8 +569,13 @@ argin: 10px 0; }
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {overview.students
-                                    .filter(s => statusFilter === 'All' || s.status === statusFilter)
-                                    .slice(0, statusFilter === 'Paid' ? 10 : undefined)
+                                    .filter(s => {
+                                        const matchesStatus = statusFilter === 'All' || s.status === statusFilter;
+                                        const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            s.admission_no.toLowerCase().includes(searchQuery.toLowerCase());
+                                        return matchesStatus && matchesSearch;
+                                    })
+                                    .slice(0, (statusFilter === 'Paid' && !searchQuery) ? 10 : undefined)
                                     .map(s => (
                                         <tr key={s.id} className="hover:bg-slate-50/80 transition-colors group">
                                             <td className="p-2 md:p-4 pl-4 md:pl-6">

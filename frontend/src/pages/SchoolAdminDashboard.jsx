@@ -397,13 +397,6 @@ const SchoolAdminDashboard = () => {
                         </h2>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="relative hidden md:block group">
-                            <Search className="absolute left-3 top-2.5 text-slate-400 w-4 h-4 group-focus-within:text-indigo-500 transition-colors" />
-                            <input
-                                placeholder="Search..."
-                                className="bg-slate-100 border-none rounded-full py-2 pl-10 pr-4 text-sm w-64 text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all placeholder-slate-400"
-                            />
-                        </div>
                         <button className="relative p-2 text-slate-500 hover:text-indigo-600 transition-colors rounded-full hover:bg-indigo-50">
                             <Bell size={20} />
                             {/* <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span> */}

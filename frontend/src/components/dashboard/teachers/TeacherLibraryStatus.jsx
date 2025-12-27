@@ -14,7 +14,7 @@ const TeacherLibraryStatus = () => {
     const fetchBooks = async () => {
         try {
             const res = await api.get('/library/my-books');
-            setBooks(res.data);
+            setBooks(res.data.books || []);
         } catch (error) {
             console.error(error);
             toast.error('Failed to fetch library books');

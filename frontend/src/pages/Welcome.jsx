@@ -14,7 +14,7 @@ const Welcome = ({ onComplete }) => {
     }, [onComplete]);
 
     return (
-        <div className="relative w-full h-screen bg-sky-300 overflow-hidden flex flex-col justify-between">
+        <div className="relative w-full h-[100dvh] bg-sky-300 overflow-hidden flex flex-col justify-between">
             {/* Sky Elements - Clouds */}
             <div className="absolute top-10 left-0 w-full h-full pointer-events-none">
                 <Cloud size={64} className="text-white opacity-80 absolute top-20 animate-fly-right-slow" style={{ animationDuration: '25s' }} />
@@ -73,7 +73,7 @@ const Welcome = ({ onComplete }) => {
             <div className="absolute bottom-0 w-full z-20">
 
                 {/* Traffic Signal - Moved to RIGHT end, facing Left - Behind Bus */}
-                <div className="absolute bottom-[40px] right-[5%] z-0 flex flex-col items-center">
+                <div className="absolute bottom-[40px] right-[5%] z-0 flex flex-col items-center transform scale-50 md:scale-100 origin-bottom-right">
                     <div className="absolute bottom-20 right-0 w-4 h-64 bg-slate-700"></div>
                     <div className="absolute bottom-80 right-0 w-32 h-4 bg-slate-700 rounded-l-lg"></div>
                     <div className="absolute bottom-[280px] right-[100px] w-16 h-40 bg-slate-900 rounded-lg border-4 border-slate-800 shadow-2xl flex flex-col items-center justify-around py-2">
@@ -91,7 +91,7 @@ const Welcome = ({ onComplete }) => {
 
                     {/* Yellow School Bus */}
                     <div className="absolute bottom-4 animate-drive-bus-sequence" style={{ animationDuration: '10s' }}>
-                        <div className="relative w-[400px] h-48 transform scale-[0.55] sm:scale-75 md:scale-100 origin-bottom">
+                        <div className="relative w-[400px] h-48 transform scale-[0.45] sm:scale-75 md:scale-100 origin-bottom">
                             {/* Body - Classic Yellow */}
                             <div className="w-full h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-[2rem] shadow-2xl relative overflow-hidden border-b-8 border-yellow-600">
                                 {/* Top Black Stripe / Roof Line */}

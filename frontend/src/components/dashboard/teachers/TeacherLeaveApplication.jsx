@@ -16,13 +16,15 @@ const TeacherLeaveApplication = () => {
         reason: ''
     });
 
+    const today = new Date().toISOString().split('T')[0];
+
     useEffect(() => {
         fetchLeaves();
     }, []);
 
     const fetchLeaves = async () => {
         try {
-            const res = await api.get('/leaves/my');
+            const res = await api.get('/leaves/my-leaves');
             setLeaves(res.data);
         } catch (error) {
             console.error("Failed to fetch leaves", error);
@@ -45,7 +47,7 @@ const TeacherLeaveApplication = () => {
         }
 
         try {
-            await api.post('/leaves/apply', formData);
+            await api.post('/leaves/my-leaves', formData);
             toast.success("Leave application submitted successfully!");
             setShowForm(false);
             setFormData({
@@ -122,6 +124,7 @@ const TeacherLeaveApplication = () => {
                                     value={formData.start_date}
                                     onChange={e => setFormData({ ...formData, start_date: e.target.value })}
                                     required
+                                    min={today}
                                 />
                             </div>
                             <div>
@@ -132,6 +135,7 @@ const TeacherLeaveApplication = () => {
                                     value={formData.end_date}
                                     onChange={e => setFormData({ ...formData, end_date: e.target.value })}
                                     required
+                                    min={formData.start_date || today}
                                 />
                             </div>
                         </div>

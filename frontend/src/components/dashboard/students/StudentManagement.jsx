@@ -10,6 +10,7 @@ const StudentManagement = ({ config, prefillData }) => {
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
+    const [searchQuery, setSearchQuery] = useState(''); // Added Search State
 
     const [formData, setFormData] = useState({
         admission_no: '',
@@ -350,7 +351,14 @@ const StudentManagement = ({ config, prefillData }) => {
                         </div>
                     )}
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-center">
+                    <input
+                        type="search"
+                        placeholder="Search Name/ID..."
+                        className="bg-slate-50 border border-slate-200 text-sm rounded-xl px-4 py-2.5 outline-none focus:border-indigo-400 w-40 md:w-56 transition-all"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                     <button
                         onClick={handlePrint}
                         disabled={students.length === 0}
@@ -400,7 +408,10 @@ const StudentManagement = ({ config, prefillData }) => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {students.map(student => (
+                            {students.filter(student =>
+                                (student.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                                (student.admission_no?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+                            ).map(student => (
                                 <tr key={student.id} className="group hover:bg-slate-50/50 transition-colors">
                                     <td className="p-4 pl-6">
                                         <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center font-bold font-mono text-xs border border-slate-200">

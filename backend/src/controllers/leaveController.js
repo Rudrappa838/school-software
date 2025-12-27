@@ -115,8 +115,12 @@ const getMyLeaves = async (req, res) => {
         let roleString; // The string format stored in DB (e.g. 'Teacher', 'Student')
 
         if (role === 'TEACHER') {
-            const tRes = await pool.query('SELECT id FROM teachers WHERE email = $1 AND school_id = $2', [email, schoolId]);
-            if (tRes.rows.length === 0) return res.status(404).json({ message: 'Profile not found' });
+            let tRes = await pool.query('SELECT id FROM teachers WHERE email = $1 AND school_id = $2', [email, schoolId]);
+            if (tRes.rows.length === 0) {
+                const parts = email.split('@');
+                tRes = await pool.query('SELECT id FROM teachers WHERE employee_id = $1 AND school_id = $2', [parts[0], schoolId]);
+            }
+            if (tRes.rows.length === 0) return res.status(404).json({ message: 'Teacher Profile not found' });
             user_id = tRes.rows[0].id;
             roleString = 'Teacher';
         } else if (role === 'STUDENT') {
@@ -162,8 +166,12 @@ const applyLeave = async (req, res) => {
         let roleString;
 
         if (role === 'TEACHER') {
-            const tRes = await pool.query('SELECT id FROM teachers WHERE email = $1 AND school_id = $2', [email, schoolId]);
-            if (tRes.rows.length === 0) return res.status(404).json({ message: 'Profile not found' });
+            let tRes = await pool.query('SELECT id FROM teachers WHERE email = $1 AND school_id = $2', [email, schoolId]);
+            if (tRes.rows.length === 0) {
+                const parts = email.split('@');
+                tRes = await pool.query('SELECT id FROM teachers WHERE employee_id = $1 AND school_id = $2', [parts[0], schoolId]);
+            }
+            if (tRes.rows.length === 0) return res.status(404).json({ message: 'Teacher Profile not found' });
             user_id = tRes.rows[0].id;
             roleString = 'Teacher';
         } else if (role === 'STUDENT') {
