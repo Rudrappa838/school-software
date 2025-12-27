@@ -62,7 +62,7 @@ const Welcome = ({ onComplete }) => {
             {/* Central Text */}
             <div className="relative z-10 flex-1 flex items-center justify-center pb-32">
                 <div className="text-center animate-fade-in-up">
-                    <h1 className="text-6xl md:text-8xl font-cursive text-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.3)] tracking-wide">
+                    <h1 className="text-4xl md:text-6xl lg:text-8xl font-cursive text-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.3)] tracking-wide px-4">
                         Connect to Campus
                     </h1>
                 </div>
@@ -72,8 +72,8 @@ const Welcome = ({ onComplete }) => {
             {/* Bottom Scene */}
             <div className="absolute bottom-0 w-full z-20">
 
-                {/* Traffic Signal - Moved to RIGHT end, facing Left */}
-                <div className="absolute bottom-[40px] right-[5%] z-30 flex flex-col items-center">
+                {/* Traffic Signal - Moved to RIGHT end, facing Left - Behind Bus */}
+                <div className="absolute bottom-[40px] right-[5%] z-0 flex flex-col items-center">
                     <div className="absolute bottom-20 right-0 w-4 h-64 bg-slate-700"></div>
                     <div className="absolute bottom-80 right-0 w-32 h-4 bg-slate-700 rounded-l-lg"></div>
                     <div className="absolute bottom-[280px] right-[100px] w-16 h-40 bg-slate-900 rounded-lg border-4 border-slate-800 shadow-2xl flex flex-col items-center justify-around py-2">
@@ -86,12 +86,12 @@ const Welcome = ({ onComplete }) => {
                 </div>
 
                 {/* Road */}
-                <div className="w-full h-32 bg-slate-800 border-t-8 border-slate-600 flex items-center justify-center relative">
+                <div className="w-full h-32 bg-slate-800 border-t-8 border-slate-600 flex items-center justify-center relative z-10">
                     <div className="w-full h-0 border-t-4 border-dashed border-yellow-400 opacity-60"></div>
 
                     {/* Yellow School Bus */}
                     <div className="absolute bottom-4 animate-drive-bus-sequence" style={{ animationDuration: '10s' }}>
-                        <div className="relative w-[400px] h-48 transform scale-90 md:scale-100">
+                        <div className="relative w-[400px] h-48 transform scale-[0.55] sm:scale-75 md:scale-100 origin-bottom">
                             {/* Body - Classic Yellow */}
                             <div className="w-full h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-[2rem] shadow-2xl relative overflow-hidden border-b-8 border-yellow-600">
                                 {/* Top Black Stripe / Roof Line */}
