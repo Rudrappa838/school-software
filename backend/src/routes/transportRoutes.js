@@ -13,7 +13,7 @@ router.post('/gps/webhook', handleGpsWebhook);
 router.use(authenticateToken);
 
 // Vehicle Routes
-router.get('/vehicles', authorize('SCHOOL_ADMIN', 'TRANSPORT_MANAGER'), getVehicles);
+router.get('/vehicles', authorize('SCHOOL_ADMIN', 'TRANSPORT_MANAGER', 'DRIVER'), getVehicles);
 router.post('/vehicles', authorize('SCHOOL_ADMIN'), addVehicle);
 router.put('/vehicles/:id', authorize('SCHOOL_ADMIN', 'TRANSPORT_MANAGER'), updateVehicle);
 router.delete('/vehicles/:id', authorize('SCHOOL_ADMIN'), deleteVehicle);
