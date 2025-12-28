@@ -31,11 +31,13 @@ const createBusIcon = () => {
 
 const RecenterMap = ({ lat, lng }) => {
     const map = useMap();
+    const [centered, setCentered] = useState(false);
     useEffect(() => {
-        if (lat && lng) {
-            map.flyTo([lat, lng], map.getZoom());
+        if (lat && lng && !centered) {
+            map.setView([lat, lng], 13);
+            setCentered(true);
         }
-    }, [lat, lng, map]);
+    }, [lat, lng, map, centered]);
     return null;
 };
 

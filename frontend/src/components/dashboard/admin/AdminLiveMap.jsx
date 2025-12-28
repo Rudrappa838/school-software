@@ -21,12 +21,15 @@ L.Marker.prototype.options.icon = DefaultIcon;
 // Internal component to fit bounds
 const FitBounds = ({ vehicles }) => {
     const map = useMap();
+    const [fitted, setFitted] = useState(false);
+
     useEffect(() => {
-        if (vehicles.length > 0) {
+        if (!fitted && vehicles.length > 0) {
             const bounds = L.latLngBounds(vehicles.map(v => [v.lat, v.lng]));
             map.fitBounds(bounds, { padding: [50, 50] });
+            setFitted(true);
         }
-    }, [vehicles, map]);
+    }, [vehicles, map, fitted]);
     return null;
 };
 
