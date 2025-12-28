@@ -337,7 +337,7 @@ const SchoolAdminDashboard = () => {
                     </div>
 
                     <NavGroup
-                        label="Logistics"
+                        label="Transport"
                         icon={Bus}
                         expanded={expandedSections.transport}
                         onToggle={() => toggleSection('transport')}
