@@ -451,8 +451,8 @@ const SchoolAdminDashboard = () => {
                         {activeTab === 'announcements' && <Announcements />}
                         {activeTab === 'leave-management' && <LeaveManagement onAction={fetchPendingLeaves} />}
                         {activeTab === 'certificates-generator' && <CertificateGenerator />}
-                        {activeTab === 'transport-vehicles' && <TransportManagement initialTab="vehicles" />}
-                        {activeTab === 'transport-routes' && <TransportManagement initialTab="routes" />}
+                        {activeTab === 'transport-vehicles' && <TransportManagement key="vehicles" initialTab="vehicles" />}
+                        {activeTab === 'transport-routes' && <TransportManagement key="routes" initialTab="routes" />}
                         {activeTab === 'transport-live' && <AdminLiveMap />}
                         {activeTab === 'biometric-access' && <BiometricManagement />}
                     </div>

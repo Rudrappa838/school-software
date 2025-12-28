@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Bus, MapPin, Navigation, Plus, Edit2, Trash2, Map as MapIcon, RotateCw } from 'lucide-react';
 import api from '../../../api/axios';
 import toast from 'react-hot-toast';
@@ -383,7 +384,7 @@ const TransportManagement = ({ initialTab }) => {
 
             {/* Add Vehicle Modal */}
             {
-                showVehicleModal && (
+                showVehicleModal && createPortal(
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
                         <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
                             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
@@ -473,12 +474,12 @@ const TransportManagement = ({ initialTab }) => {
                             </div>
                         </div>
                     </div>
-                )
+                    , document.body)
             }
 
             {/* Add Route Modal with Map */}
             {
-                showRouteModal && (
+                showRouteModal && createPortal(
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
                         <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden animate-in zoom-in-95 duration-200 h-[85vh] flex flex-col">
                             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
@@ -579,7 +580,7 @@ const TransportManagement = ({ initialTab }) => {
                             </div>
                         </div>
                     </div>
-                )
+                    , document.body)
             }
         </div >
     );
