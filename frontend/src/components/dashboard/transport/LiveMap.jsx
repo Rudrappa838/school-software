@@ -98,11 +98,8 @@ const LiveMap = ({ vehicles, routes }) => {
         <div className="w-full h-full relative">
             <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
                 <TileLayer
-                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                    attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                />
-                <TileLayer
-                    url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
 
                 {activeVehicles.map(vehicle => (
@@ -139,8 +136,12 @@ const LiveMap = ({ vehicles, routes }) => {
                 <div className="space-y-4 text-sm">
                     <div>
                         <div className="flex justify-between mb-1">
-                            <span className="text-slate-500">Active Buses</span>
-                            <span className="font-bold text-slate-800">{activeVehicles.length}</span>
+                            <span className="text-slate-500">Live (Signal)</span>
+                            <span className="font-bold text-emerald-600">{activeVehicles.length}</span>
+                        </div>
+                        <div className="flex justify-between mb-1">
+                            <span className="text-slate-500">Total Registered</span>
+                            <span className="font-bold text-slate-800">{liveVehicles.length}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-500">Total Routes</span>

@@ -88,8 +88,16 @@ const AdminLiveMap = () => {
                 <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                     <Navigation className="text-indigo-600" /> Live Fleet Tracking
                 </h2>
-                <div className="text-xs font-bold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
-                    Auto-updating every 5s
+                <div className="flex gap-4">
+                    <div className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                        Live Signal: {vehicles.filter(v => v.isLive).length}
+                    </div>
+                    <div className="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+                        Total Fleet: {vehicles.length}
+                    </div>
+                    <div className="text-xs font-bold text-indigo-500 bg-white px-3 py-1 rounded-full border border-indigo-200">
+                        Auto-updating every 5s
+                    </div>
                 </div>
             </div>
 
