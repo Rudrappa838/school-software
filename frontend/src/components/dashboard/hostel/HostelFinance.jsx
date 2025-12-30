@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../api/axios';
-import { Search, User, Home, DollarSign, Calendar, CheckCircle, AlertCircle, Plus } from 'lucide-react';
+import { Search, User, Home, DollarSign, Calendar, CheckCircle, AlertCircle, Plus, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const HostelFinance = () => {
@@ -25,6 +25,7 @@ const HostelFinance = () => {
 
     const [dashboardStats, setDashboardStats] = useState(null);
     const [viewMode, setViewMode] = useState('dashboard'); // 'dashboard' or 'student_search'
+    const [schoolConfig, setSchoolConfig] = useState(null);
 
     // Bulk Bill State
     const [showBulkModal, setShowBulkModal] = useState(false);
@@ -36,7 +37,17 @@ const HostelFinance = () => {
 
     useEffect(() => {
         fetchDashboardStats();
+        fetchSchoolConfig();
     }, []);
+
+    const fetchSchoolConfig = async () => {
+        try {
+            const res = await api.get('/schools/my-school');
+            setSchoolConfig(res.data);
+        } catch (error) {
+            console.error('Failed to load school config');
+        }
+    };
 
     const fetchDashboardStats = async () => {
         try {
@@ -160,6 +171,98 @@ const HostelFinance = () => {
         .reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
 
     const rentDue = (parseFloat(studentData?.cost_per_term) || 0) - totalRentPaid;
+
+    const handlePrintReceipt = (payment) => {
+        const schoolName = schoolConfig?.name || 'School Name';
+        const schoolAddress = schoolConfig?.address || '';
+        const receiptNo = payment.id.toString().padStart(6, '0'); // Simple receipt ID fallback
+
+        const receiptHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Hostel Fee Receipt - ${receiptNo}</title>
+                <style>
+                    body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: white; -webkit-print-color-adjust: exact; }
+                    .receipt { max-width: 80mm; margin: 0 auto; border: 1px solid #ddd; padding: 15px; position: relative; }
+                    .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                    .school-name { font-size: 20px; font-weight: 900; text-transform: uppercase; color: #1a1a1a; margin-bottom: 4px; }
+                    .school-info { font-size: 10px; color: #64748b; }
+                    .title { text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 1px; color: #475569; margin-bottom: 15px; text-transform: uppercase; }
+                    .row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; }
+                    .label { color: #64748b; font-weight: 600; }
+                    .value { color: #0f172a; font-weight: 700; text-align: right; }
+                    .amount-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px; margin: 15px 0; }
+                    .amount-label { font-size: 10px; color: #15803d; font-weight: 700; uppercase; }
+                    .amount-value { font-size: 18px; color: #16a34a; font-weight: 900; display: block; }
+                    .footer { text-align: center; margin-top: 20px; font-size: 9px; color: #94a3b8; }
+                    .signatures { margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+                    .sign-line { width: 60px; border-bottom: 1px solid #94a3b8; margin-bottom: 2px; }
+                    .sign-label { font-size: 8px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+                    
+                    @media print {
+                        body { padding: 0; }
+                        .receipt { border: none; width: 100%; max-width: 100%; padding: 5px; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+                    <button onclick="window.print()" style="background: #4f46e5; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">🖨️ Print</button>
+                </div>
+                <div class="receipt">
+                    <div class="header">
+                        <div class="school-name">${schoolName}</div>
+                        <div class="school-info">${schoolAddress}</div>
+                    </div>
+                    
+                    <div class="title">Hostel Fee Receipt</div>
+
+                    <div style="background: #f8fafc; padding: 8px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #e2e8f0;">
+                         <div class="row"><span class="label">Student</span> <span class="value">${studentData.name}</span></div>
+                         <div class="row"><span class="label">Adm ID</span> <span class="value">${studentData.admission_no}</span></div>
+                         <div class="row"><span class="label">Allocated Room</span> <span class="value">${studentData.room_number || 'N/A'}</span></div>
+                    </div>
+
+                    <div class="row"><span class="label">Date</span> <span class="value">${new Date(payment.payment_date).toLocaleDateString()}</span></div>
+                    <div class="row"><span class="label">Payment Type</span> <span class="value">${payment.payment_type}</span></div>
+                    <div class="row"><span class="label">Payment ID</span> <span class="value">#${payment.id}</span></div>
+                    ${payment.remarks ? `<div class="row"><span class="label">Remarks</span> <span class="value">${payment.remarks}</span></div>` : ''}
+
+                    <div class="amount-box">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="amount-label">AMOUNT PAID</span>
+                            <span class="amount-value">₹${parseFloat(payment.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                    </div>
+
+                    <div class="signatures">
+                        <div style="text-align: center;">
+                            <div class="sign-line"></div>
+                            <div class="sign-label">Depositor</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div class="sign-line"></div>
+                            <div class="sign-label">Warden / Cashier</div>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        Generated on ${new Date().toLocaleString()}
+                        <br/>Computer Generated Receipt
+                    </div>
+                </div>
+                <script>window.onload = function() { window.print(); }</script>
+            </body>
+            </html>
+        `;
+
+        const win = window.open('', '_blank');
+        win.document.write(receiptHTML);
+        win.document.close();
+    };
 
     const PendingBillsList = () => {
         const [pendingList, setPendingList] = useState([]);
@@ -519,6 +622,7 @@ const HostelFinance = () => {
                                                     <th className="px-4 py-3">Type</th>
                                                     <th className="px-4 py-3">Remarks</th>
                                                     <th className="px-4 py-3 text-right">Amount</th>
+                                                    <th className="px-4 py-3 text-center">Receipt</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
@@ -528,11 +632,20 @@ const HostelFinance = () => {
                                                         <td className="px-4 py-3">{p.payment_type}</td>
                                                         <td className="px-4 py-3 text-slate-500">{p.remarks || '-'}</td>
                                                         <td className="px-4 py-3 text-right font-medium text-green-600">+₹{parseFloat(p.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            <button
+                                                                onClick={() => handlePrintReceipt(p)}
+                                                                className="text-slate-400 hover:text-indigo-600 transition-colors"
+                                                                title="Print Receipt"
+                                                            >
+                                                                <Printer size={16} />
+                                                            </button>
+                                                        </td>
                                                     </tr>
                                                 ))}
                                                 {studentData.payments.filter(p => p.payment_type === 'Room Rent').length === 0 && (
                                                     <tr>
-                                                        <td colSpan="4" className="px-4 py-8 text-center text-slate-400">No rent payments recorded yet.</td>
+                                                        <td colSpan="5" className="px-4 py-8 text-center text-slate-400">No rent payments recorded yet.</td>
                                                     </tr>
                                                 )}
                                             </tbody>
@@ -586,6 +699,44 @@ const HostelFinance = () => {
                                                 No mess bills generated for this student.
                                             </div>
                                         )}
+                                    </div>
+                                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                        <div className="p-4 border-b border-slate-100 font-bold text-slate-700">Mess Payment History</div>
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-slate-50 text-slate-500 font-medium">
+                                                <tr>
+                                                    <th className="px-4 py-3">Date</th>
+                                                    <th className="px-4 py-3">Type</th>
+                                                    <th className="px-4 py-3">Remarks</th>
+                                                    <th className="px-4 py-3 text-right">Amount</th>
+                                                    <th className="px-4 py-3 text-center">Receipt</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {studentData.payments.filter(p => p.payment_type === 'Mess Bill').map(p => (
+                                                    <tr key={p.id}>
+                                                        <td className="px-4 py-3">{new Date(p.payment_date).toLocaleDateString()}</td>
+                                                        <td className="px-4 py-3">{p.payment_type}</td>
+                                                        <td className="px-4 py-3 text-slate-500">{p.remarks || '-'}</td>
+                                                        <td className="px-4 py-3 text-right font-medium text-green-600">+₹{parseFloat(p.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            <button
+                                                                onClick={() => handlePrintReceipt(p)}
+                                                                className="text-slate-400 hover:text-indigo-600 transition-colors"
+                                                                title="Print Receipt"
+                                                            >
+                                                                <Printer size={16} />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {studentData.payments.filter(p => p.payment_type === 'Mess Bill').length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="5" className="px-4 py-8 text-center text-slate-400">No mess payments recorded yet.</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             )}
