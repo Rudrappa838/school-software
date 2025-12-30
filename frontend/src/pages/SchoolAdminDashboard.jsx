@@ -363,6 +363,15 @@ const SchoolAdminDashboard = () => {
                         <NavSubButton active={activeTab === 'transport-vehicles'} onClick={() => handleTabChange('transport-vehicles')} label="Vehicle Manager" />
                         <NavSubButton active={activeTab === 'transport-routes'} onClick={() => handleTabChange('transport-routes')} label="Route Manager" />
                         <NavSubButton active={activeTab === 'transport-live'} onClick={() => handleTabChange('transport-live')} label="Live Fleet Map" />
+                        <div className="md:hidden mt-2 px-4 pb-2">
+                            <button
+                                onClick={() => navigate('/driver-tracking')}
+                                className="w-full flex items-center gap-2 p-3 bg-indigo-600/20 border border-indigo-400/30 rounded-xl text-indigo-100 text-xs font-bold hover:bg-indigo-600/40 transition-all"
+                            >
+                                <Navigation size={14} className="animate-pulse" />
+                                START DRIVER GPS MODE
+                            </button>
+                        </div>
                     </NavGroup>
 
                     <p className="px-4 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 mt-6">Documents</p>
