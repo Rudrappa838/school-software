@@ -52,25 +52,19 @@ const AdminLiveMap = () => {
     // Initial Fetch
     const fetchData = async () => {
         try {
-            // We fetch routes because routes contain the updated vehicle locations mostly
-            // But better to fetch vehicles directly if possible. 
-            // In our backend, both /vehicles and /routes return location data.
-            // Let's use /vehicles as it lists ALL vehicles, even those not strictly on a route.
             const res = await api.get('/transport/vehicles');
 
-            // Filter only vehicles that have valid lat/lng
-            const activeVehicles = res.data
-                .filter(v => v.current_lat && v.current_lng)
-                .map(v => ({
-                    id: v.id,
-                    lat: parseFloat(v.current_lat),
-                    lng: parseFloat(v.current_lng),
-                    number: v.vehicle_number,
-                    driver: v.driver_name,
-                    status: v.status || 'Active'
-                }));
+            const allVehicles = res.data.map(v => ({
+                id: v.id,
+                lat: v.current_lat ? parseFloat(v.current_lat) : null,
+                lng: v.current_lng ? parseFloat(v.current_lng) : null,
+                number: v.vehicle_number,
+                driver: v.driver_name,
+                status: v.status || 'Active',
+                isLive: !!(v.current_lat && v.current_lng)
+            }));
 
-            setVehicles(activeVehicles);
+            setVehicles(allVehicles);
         } catch (error) {
             console.error("Failed to load map data", error);
         } finally {
@@ -106,7 +100,7 @@ const AdminLiveMap = () => {
                     </div>
                 ) : (
                     <MapContainer
-                        center={vehicles.length > 0 ? [vehicles[0].lat, vehicles[0].lng] : defaultCenter}
+                        center={vehicles.find(v => v.isLive) ? [vehicles.find(v => v.isLive).lat, vehicles.find(v => v.isLive).lng] : defaultCenter}
                         zoom={13}
                         style={{ height: '600px', width: '100%' }}
                     >
@@ -117,7 +111,7 @@ const AdminLiveMap = () => {
 
                         <MapController focusTarget={focusTarget} />
 
-                        {vehicles.map(v => (
+                        {vehicles.filter(v => v.isLive).map(v => (
                             <Marker key={v.id} position={[v.lat, v.lng]}>
                                 <Popup>
                                     <div className="p-1">
@@ -131,7 +125,7 @@ const AdminLiveMap = () => {
                             </Marker>
                         ))}
 
-                        <FitBounds vehicles={vehicles} />
+                        <FitBounds vehicles={vehicles.filter(v => v.isLive)} />
                     </MapContainer>
                 )}
             </div>
@@ -140,13 +134,14 @@ const AdminLiveMap = () => {
                 {vehicles.map(v => (
                     <button
                         key={v.id}
-                        onClick={() => setFocusTarget({ lat: v.lat, lng: v.lng, id: v.id })}
-                        className={`p-3 rounded-xl border shadow-sm flex items-center gap-3 transition-all ${focusTarget?.id === v.id ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-200' : 'bg-white border-slate-200 hover:border-indigo-300'}`}
+                        onClick={() => v.isLive && setFocusTarget({ lat: v.lat, lng: v.lng, id: v.id })}
+                        disabled={!v.isLive}
+                        className={`p-3 rounded-xl border shadow-sm flex items-center gap-3 transition-all ${!v.isLive ? 'opacity-60 bg-slate-50 cursor-not-allowed grayscale' : focusTarget?.id === v.id ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-200' : 'bg-white border-slate-200 hover:border-indigo-300'}`}
                     >
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <div className={`w-2 h-2 rounded-full ${v.isLive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
                         <div className="text-left overflow-hidden w-full">
                             <div className="text-sm font-bold text-slate-800 truncate">{v.number}</div>
-                            <div className="text-xs text-slate-500 truncate">{v.driver}</div>
+                            <div className="text-xs text-slate-500 truncate">{v.isLive ? v.driver : 'Offline / No Signal'}</div>
                         </div>
                     </button>
                 ))}
