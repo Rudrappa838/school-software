@@ -438,7 +438,7 @@ const SchoolAdminDashboard = () => {
                 )}
 
                 {/* Scrollable Page Content */}
-                <main className={`flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar ${isMobileApp ? 'pt-20 pb-24' : ''}`}>
+                <main className={`flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar ${isMobileApp ? 'pt-[calc(4rem+env(safe-area-inset-top)+1rem)] pb-[calc(4rem+env(safe-area-inset-bottom)+1rem)]' : ''}`}>
                     <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
                         {activeTab === 'overview' && <Overview config={academicConfig} />}
                         {activeTab === 'student-list' && <StudentManagement config={academicConfig} prefillData={activeTabState} />}
