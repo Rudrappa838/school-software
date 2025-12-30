@@ -14,6 +14,7 @@ import SchoolAdminDashboard from './pages/SchoolAdminDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StaffDashboard from './pages/StaffDashboard';
+import DriverTracking from './components/dashboard/transport/DriverTracking';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, role }) => {
@@ -91,6 +92,14 @@ function App() {
                   element={
                     <ProtectedRoute role={["STAFF", "DRIVER"]}>
                       <StaffDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/driver-tracking"
+                  element={
+                    <ProtectedRoute role={["SCHOOL_ADMIN", "DRIVER", "STAFF"]}>
+                      <DriverTracking />
                     </ProtectedRoute>
                   }
                 />
