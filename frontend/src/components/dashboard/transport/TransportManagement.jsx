@@ -403,59 +403,67 @@ const TransportManagement = ({ initialTab }) => {
                                     value={vehicleForm.vehicle_model} onChange={e => setVehicleForm({ ...vehicleForm, vehicle_model: e.target.value })}
                                 />
 
-                                {/* Driver Search Input */}
-                                <div className="relative">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Search Driver (Staff)</label>
-                                    <input
-                                        className="w-full p-2 border rounded-lg text-sm"
-                                        placeholder="Search by ID or Name..."
-                                        autoComplete="off"
-                                        value={driverSearch}
-                                        onChange={(e) => {
-                                            const val = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '');
-                                            handleDriverSearch({ target: { value: val } });
-                                        }}
-                                    />
-                                    {driverResults.length > 0 && (
-                                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-40 overflow-y-auto">
-                                            {driverResults.map(s => (
-                                                <div
-                                                    key={s.id}
-                                                    onClick={() => selectDriver(s)}
-                                                    className="p-2 hover:bg-slate-50 cursor-pointer text-sm border-b border-slate-100 last:border-0"
-                                                >
-                                                    <div className="font-bold text-slate-700">{s.name}</div>
-                                                    <div className="text-xs text-slate-500">ID: {s.employee_id} | Ph: {s.phone}</div>
+                                {/* Driver Search Section */}
+                                <div className="space-y-2">
+                                    {vehicleForm.driver_name ? (
+                                        <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
+                                            <div>
+                                                <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-0.5">Assigned Driver</div>
+                                                <div className="font-bold text-slate-800">{vehicleForm.driver_name}</div>
+                                                <div className="text-xs text-slate-500">{vehicleForm.driver_phone}</div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setVehicleForm({ ...vehicleForm, driver_name: '', driver_phone: '' })}
+                                                className="text-xs bg-white border border-indigo-200 text-indigo-600 px-2 py-1 rounded-lg font-bold hover:bg-indigo-100 transition-colors"
+                                            >
+                                                Change
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Search Driver (Staff)</label>
+                                            <input
+                                                className="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                placeholder="Search by ID or Name..."
+                                                autoComplete="off"
+                                                value={driverSearch}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '');
+                                                    handleDriverSearch({ target: { value: val } });
+                                                }}
+                                            />
+                                            {driverResults.length > 0 && (
+                                                <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-40 overflow-y-auto">
+                                                    {driverResults.map(s => (
+                                                        <div
+                                                            key={s.id}
+                                                            onClick={() => selectDriver(s)}
+                                                            className="p-2 hover:bg-slate-50 cursor-pointer text-sm border-b border-slate-100 last:border-0"
+                                                        >
+                                                            <div className="font-bold text-slate-700">{s.name}</div>
+                                                            <div className="text-xs text-slate-500">ID: {s.employee_id} | Ph: {s.phone}</div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     )}
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Driver Name</label>
-                                        <input
-                                            className="w-full p-2 border rounded-lg text-sm bg-slate-50"
-                                            placeholder="Auto-filled"
-                                            value={vehicleForm.driver_name}
-                                            readOnly
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Driver Phone</label>
-                                        <input
-                                            className="w-full p-2 border rounded-lg text-sm bg-slate-50"
-                                            placeholder="Auto-filled"
-                                            value={vehicleForm.driver_phone}
-                                            readOnly
-                                        />
-                                    </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">GPS Device ID / IMEI</label>
+                                    <input
+                                        className="w-full p-2 border rounded-lg text-sm"
+                                        placeholder="Optional: Only for external GPS Hardware"
+                                        autoComplete="off"
+                                        value={vehicleForm.gps_device_id}
+                                        onChange={e => setVehicleForm({ ...vehicleForm, gps_device_id: e.target.value })}
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1">
+                                        * Leave this **EMPTY** if you are using the Mobile App Live Tracking.
+                                    </p>
                                 </div>
-                                <input
-                                    className="w-full p-2 border rounded-lg text-sm" placeholder="GPS Device ID / IMEI (Optional for Hardware Tracking)"
-                                    autoComplete="off"
-                                    value={vehicleForm.gps_device_id} onChange={e => setVehicleForm({ ...vehicleForm, gps_device_id: e.target.value })}
-                                />
                                 <input
                                     type="number" className="w-full p-2 border rounded-lg text-sm" placeholder="Capacity"
                                     autoComplete="off"
@@ -571,8 +579,8 @@ const TransportManagement = ({ initialTab }) => {
                                 <div className="h-full bg-slate-100 relative">
                                     <MapContainer center={[12.9716, 77.5946]} zoom={13} style={{ height: '100%', width: '100%' }}>
                                         <TileLayer
-                                            attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                         />
                                         <LocationPicker onLocationSelect={handleMapClick} />
 
