@@ -264,11 +264,9 @@ const StudentManagement = ({ config, prefillData }) => {
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 10%;">Roll No.</th>
-                            <th style="width: 25%;">Student Name</th>
-                            <th style="width: 20%;">Last Name</th>
-                            <th style="width: 22%;">Father's Name</th>
-                            <th style="width: 23%;">Mother's Name</th>
+                            <th style="width: 15%;">Roll No.</th>
+                            <th style="width: 50%;">Student Name</th>
+                            <th style="width: 35%;">Last Name</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -280,8 +278,6 @@ const StudentManagement = ({ config, prefillData }) => {
                                 <td>${student.roll_number || '-'}</td>
                                 <td>${student.name}</td>
                                 <td>${lastName}</td>
-                                <td>${student.father_name || '-'}</td>
-                                <td>${student.mother_name || '-'}</td>
                             </tr>
                         `}).join('')}
                     </tbody>
