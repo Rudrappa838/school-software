@@ -31,7 +31,6 @@ const Login = () => {
         { id: 'TEACHER', label: 'Teacher', icon: Users },
         { id: 'STUDENT', label: 'Student', icon: GraduationCap },
         { id: 'STAFF', label: 'Staff Member', icon: Briefcase },
-        { id: 'DRIVER', label: 'Bus Driver', icon: Bus },
     ].filter(r => !isMobileApp || r.id !== 'SCHOOL_ADMIN');
 
     const handleSubmit = async (e) => {
