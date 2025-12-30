@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
     Users, Calendar, BarChart3, LogOut, Check, ChevronRight, ChevronDown, User, DollarSign,
-    LayoutDashboard, Settings, Search, Menu, Book, Home, Clock, Megaphone, Bus, UserPlus, Shield, ScanLine, X, IndianRupee
+    LayoutDashboard, Settings, Search, Menu, Book, Home, Clock, Megaphone, Bus, UserPlus, Shield, ScanLine, X, IndianRupee, Navigation
 } from 'lucide-react';
 import NotificationBell from '../components/NotificationBell';
 import toast from 'react-hot-toast';
