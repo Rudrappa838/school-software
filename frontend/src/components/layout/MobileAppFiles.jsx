@@ -1,11 +1,19 @@
 import React from 'react';
-import { Home, Users, CreditCard, Menu, UserCheck, GraduationCap } from 'lucide-react';
+import { Home, Users, CreditCard, Menu, UserCheck, GraduationCap, ArrowLeft } from 'lucide-react';
 
-export const MobileHeader = ({ title, onMenuClick, schoolName }) => {
+export const MobileHeader = ({ title, onMenuClick, schoolName, onBack }) => {
     return (
         <div className="fixed top-0 left-0 right-0 bg-indigo-600 text-white z-[60] shadow-md safe-area-top flex flex-col justify-end md:hidden min-h-[5rem] pb-2">
             <div className="h-14 w-full flex items-center px-4 justify-between">
                 <div className="flex items-center gap-3">
+                    {onBack && (
+                        <button
+                            onClick={onBack}
+                            className="p-2 -ml-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                    )}
                     {/* Logo/Icon */}
                     <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
                         <GraduationCap size={20} className="text-white" />
@@ -15,6 +23,7 @@ export const MobileHeader = ({ title, onMenuClick, schoolName }) => {
                         <p className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider mt-1">{schoolName || 'Software'}</p>
                     </div>
                 </div>
+
                 {/* Right Side Actions could go here */}
             </div>
         </div>

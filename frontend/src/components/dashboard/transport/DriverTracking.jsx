@@ -178,13 +178,13 @@ const DriverTracking = () => {
     return (
         <div className="p-4 max-w-md mx-auto min-h-screen bg-slate-50">
             <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-                <div className="bg-indigo-600 p-6 text-white text-center relative pt-10">
+                <div className="bg-indigo-600 p-6 text-white text-center relative safe-area-top pb-6">
                     <button
                         onClick={() => window.history.back()}
-                        className="absolute left-4 top-4 p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors flex flex-col items-center"
+                        className="absolute left-4 bottom-6 p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors flex items-center gap-1"
                     >
                         <ArrowLeft size={20} />
-                        <span className="text-[10px] font-bold mt-0.5">BACK</span>
+                        <span className="text-[10px] font-bold">BACK</span>
                     </button>
                     <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm border border-white/20">
                         <Bus size={32} className="text-white" />
@@ -192,6 +192,7 @@ const DriverTracking = () => {
                     <h1 className="text-xl font-black italic tracking-tight">CONNECT TO CAMPUS</h1>
                     <p className="text-indigo-100 text-[10px] font-black uppercase tracking-[0.2em] mt-1 opacity-80">Live Driver GPS Mode</p>
                 </div>
+
 
                 <div className="p-6 space-y-6">
                     {!isTracking && (

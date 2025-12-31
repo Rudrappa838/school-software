@@ -19,6 +19,8 @@ import SchoolCalendar from '../components/dashboard/calendar/SchoolCalendar';
 import TeacherLibraryStatus from '../components/dashboard/teachers/TeacherLibraryStatus';
 import ViewAnnouncements from '../components/dashboard/calendar/ViewAnnouncements';
 import AdminLiveMap from '../components/dashboard/admin/AdminLiveMap';
+import { MobileHeader, MobileFooter } from '../components/layout/MobileAppFiles';
+import { Capacitor } from '@capacitor/core';
 
 const TeacherDashboard = () => {
     const { user, logout } = useAuth();
@@ -28,6 +30,22 @@ const TeacherDashboard = () => {
     const [teacherProfile, setTeacherProfile] = useState(null);
     const [schoolName, setSchoolName] = useState('');
     const [loading, setLoading] = useState(true);
+    const [isMobileApp, setIsMobileApp] = useState(false);
+
+    // Detect Mobile App context
+    useEffect(() => {
+        const checkMobile = () => {
+            const params = new URLSearchParams(window.location.search);
+            const isApp = params.get('is_mobile_app') === 'true';
+            if (isApp) {
+                setIsMobileApp(true);
+                localStorage.setItem('is_mobile_app', 'true');
+            } else if (localStorage.getItem('is_mobile_app') === 'true') {
+                setIsMobileApp(true);
+            }
+        };
+        checkMobile();
+    }, []);
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
@@ -155,32 +173,44 @@ const TeacherDashboard = () => {
 
             {/* Main Content Area - LIGHT THEME */}
             <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#f1f5f9] relative z-10">
+                {/* Mobile Header (App Mode Only) */}
+                {isMobileApp && (
+                    <MobileHeader
+                        title={getTabTitle(activeTab)}
+                        schoolName={schoolName}
+                        onMenuClick={() => setIsMobileMenuOpen(true)}
+                        onBack={activeTab !== 'overview' ? () => setActiveTab('overview') : null}
+                    />
+                )}
+
                 {/* Header */}
-                <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 min-h-[5rem] flex items-end justify-between px-6 sticky top-0 z-20 shadow-sm print:hidden safe-area-top pb-3">
-                    <div className="flex items-center gap-4 py-2">
-                        <button
-                            className="text-slate-800 hover:text-indigo-600 bg-slate-100 p-2.5 rounded-xl md:hidden"
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        >
-                            <Menu size={22} />
-                        </button>
-                        <div>
-                            <h2 className="text-xl font-bold text-slate-800">
-                                {getTabTitle(activeTab)}
-                            </h2>
-                            <p className="text-xs text-slate-500 md:block hidden">Manage your class and academic activities</p>
+                {!isMobileApp && (
+                    <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 min-h-[5rem] flex items-end justify-between px-6 sticky top-0 z-20 shadow-sm print:hidden safe-area-top pb-3">
+                        <div className="flex items-center gap-4 py-2">
+                            <button
+                                className="text-slate-800 hover:text-indigo-600 bg-slate-100 p-2.5 rounded-xl md:hidden"
+                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            >
+                                <Menu size={22} />
+                            </button>
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-800">
+                                    {getTabTitle(activeTab)}
+                                </h2>
+                                <p className="text-xs text-slate-500 md:block hidden">Manage your class and academic activities</p>
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-4 py-2">
-                        <NotificationBell />
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold border border-emerald-200">
-                            {user?.name?.[0]}
+                        <div className="flex items-center gap-4 py-2">
+                            <NotificationBell />
+                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold border border-emerald-200">
+                                {user?.name?.[0]}
+                            </div>
                         </div>
-                    </div>
-                </header>
+                    </header>
+                )}
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar pt-[calc(var(--sat)+1rem)]">
+                <div className={`flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar ${isMobileApp ? 'pt-[calc(4rem+var(--sat)+1rem)]' : 'pt-[calc(var(--sat)+1rem)]'}`}>
 
                     <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
                         {loading ? (
