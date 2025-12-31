@@ -218,44 +218,43 @@ const DriverTracking = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col relative">
-            {/* FIXED HEADER - Force on top of everything */}
-            <header className="fixed top-0 left-0 right-0 bg-indigo-600 text-white z-[999] shadow-2xl safe-area-top pb-3 px-4 transition-all">
-                <div className="h-16 flex items-center justify-between">
+        <div className="min-h-screen bg-white flex flex-col">
+            {/* 1. SIMPLE HEADER (Not Fixed) */}
+            <header className="bg-indigo-600 text-white safe-area-top shadow-lg">
+                <div className="px-4 h-16 flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 p-3 -ml-2 bg-white/20 rounded-2xl hover:bg-white/30 active:scale-90 border border-white/40 shadow-lg text-white font-black"
+                        className="flex items-center gap-2 p-2 px-4 bg-white/20 rounded-xl active:scale-95 border border-white/30 font-black text-xs"
                     >
-                        <ArrowLeft size={24} strokeWidth={3} />
-                        <span className="text-sm uppercase tracking-tighter">BACK</span>
+                        <ArrowLeft size={20} strokeWidth={3} />
+                        BACK
                     </button>
-                    <div className="flex flex-col items-end opacity-90">
-                        <h1 className="text-[10px] font-black tracking-widest leading-none uppercase text-white drop-shadow-sm">Connect to Campus</h1>
-                        <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-[0.2em] mt-1.5 underline decoration-indigo-400/50">Driver Mode</p>
+                    <div className="text-right">
+                        <h1 className="text-[10px] font-black uppercase tracking-widest leading-none">CONNECT TO CAMPUS</h1>
+                        <p className="text-[10px] text-indigo-200 font-bold uppercase mt-1">DRIVER GPS MODE</p>
                     </div>
                 </div>
             </header>
 
-            {/* Content Area - Added more top padding to clear the FIXED header */}
-            <main className="p-4 flex-1 pt-[calc(6rem+var(--sat))] overflow-y-auto">
+            {/* 2. MAIN CONTENT AREA */}
+            <main className="p-4 flex-1 bg-slate-50 overflow-y-auto">
                 <div className="max-w-md mx-auto space-y-4">
-                    {isTracking && (
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="w-full py-4 bg-white text-indigo-600 border-2 border-indigo-500/20 rounded-2xl font-black text-xs shadow-md flex items-center justify-center gap-2 animate-bounce mt-2 uppercase tracking-widest"
-                        >
-                            <ArrowLeft size={16} strokeWidth={3} /> Back to Dashboard
-                        </button>
-                    )}
 
-                    <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden ring-4 ring-slate-100/50">
-                        <div className="bg-slate-900 p-10 text-white text-center relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl animate-pulse"></div>
-                            <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4 rotate-3 shadow-2xl border-4 border-white/5 relative z-10">
-                                <Bus size={40} className="text-white" />
+                    {/* EMERGENCY BACK BUTTON (ALWAYS VISIBLE AT TOP OF CONTENT) */}
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="w-full py-3 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center gap-2 text-slate-600 font-black text-xs shadow-sm active:scale-95"
+                    >
+                        <ArrowLeft size={16} /> RETURN TO DASHBOARD
+                    </button>
+
+                    <div className="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden ring-1 ring-slate-200">
+                        <div className="bg-slate-900 p-8 text-white text-center relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                            <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3 shadow-2xl relative z-10">
+                                <Bus size={32} className="text-white" />
                             </div>
-                            <h2 className="text-3xl font-black italic tracking-tighter relative z-10">TRIP TRACKER</h2>
-                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-3 opacity-80 relative z-10">Live Broadcasting</p>
+                            <h2 className="text-2xl font-black italic tracking-tighter relative z-10">TRIP TRACKER</h2>
                         </div>
 
                         <div className="p-6 space-y-6">
