@@ -12,6 +12,7 @@ import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import StudentDashboard from '../screens/student/StudentDashboard';
 import StudentAttendance from '../screens/student/StudentAttendance';
 import StudentFees from '../screens/student/StudentFees';
+import NotificationsScreen from '../screens/common/NotificationsScreen';
 import StudentAcademics from '../screens/student/StudentAcademics';
 import StudentDoubts from '../screens/student/StudentDoubts';
 import StudentLeaves from '../screens/student/StudentLeaves';
@@ -35,6 +36,7 @@ import StaffDashboard from '../screens/staff/StaffDashboard';
 import StaffMyAttendance from '../screens/staff/StaffMyAttendance';
 import StaffSalary from '../screens/staff/StaffSalary';
 import StaffTransport from '../screens/staff/StaffTransport';
+import DriverTracking from '../screens/staff/DriverTracking';
 
 const Stack = createStackNavigator();
 
@@ -63,6 +65,7 @@ const AppNavigator = () => {
                         {user?.role === 'STUDENT' && (
                             <>
                                 <Stack.Screen name="StudentDashboard" component={StudentDashboard} />
+                                <Stack.Screen name="Notifications" component={NotificationsScreen} />
                                 <Stack.Screen name="StudentAttendance" component={StudentAttendance} />
                                 <Stack.Screen name="StudentAcademics" component={StudentAcademics} />
                                 <Stack.Screen name="StudentFees" component={StudentFees} />
@@ -82,13 +85,16 @@ const AppNavigator = () => {
                         {user?.role === 'TEACHER' && (
                             <>
                                 <Stack.Screen name="TeacherDashboard" component={TeacherDashboard} />
-                                <Stack.Screen name="TeacherMyAttendance" component={TeacherMyAttendance} />
+                                <Stack.Screen name="Notifications" component={NotificationsScreen} />
+                                <Stack.Screen name="TeacherAttendance" component={TeacherMyAttendance} />
                                 <Stack.Screen name="TeacherTimetable" component={TeacherTimetable} />
                                 <Stack.Screen name="TeacherSalary" component={TeacherSalary} />
                                 <Stack.Screen name="TeacherLeaves" component={TeacherLeaves} />
                                 <Stack.Screen name="TeacherDoubts" component={TeacherDoubts} />
                                 <Stack.Screen name="TeacherLibrary" component={TeacherLibrary} />
                                 <Stack.Screen name="TeacherTransport" component={TeacherTransport} />
+                                <Stack.Screen name="TeacherStudents" component={PlaceholderScreen} />
+                                <Stack.Screen name="TeacherDailyStatus" component={PlaceholderScreen} />
                                 <Stack.Screen name="TeacherAnnouncements" component={PlaceholderScreen} />
                                 <Stack.Screen name="TeacherCalendar" component={PlaceholderScreen} />
                             </>
@@ -98,9 +104,11 @@ const AppNavigator = () => {
                         {['STAFF', 'DRIVER'].includes(user?.role) && (
                             <>
                                 <Stack.Screen name="StaffDashboard" component={StaffDashboard} />
+                                <Stack.Screen name="Notifications" component={NotificationsScreen} />
                                 <Stack.Screen name="StaffMyAttendance" component={StaffMyAttendance} />
                                 <Stack.Screen name="StaffSalary" component={StaffSalary} />
                                 <Stack.Screen name="StaffTransport" component={StaffTransport} />
+                                <Stack.Screen name="DriverTracking" component={DriverTracking} />
                                 <Stack.Screen name="StaffAnnouncements" component={PlaceholderScreen} />
                                 <Stack.Screen name="StaffCalendar" component={PlaceholderScreen} />
                             </>

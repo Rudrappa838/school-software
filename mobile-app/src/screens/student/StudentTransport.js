@@ -131,11 +131,26 @@ const StudentTransport = ({ navigation }) => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>📍 Live Location</Text>
                     <View style={styles.mapPlaceholder}>
-                        <Text style={styles.mapIcon}>🗺️</Text>
-                        <Text style={styles.mapText}>Bus Tracking</Text>
-                        <Text style={styles.mapSubtext}>
-                            {transportData.is_tracking ? 'Bus is on route' : 'Tracking not available'}
-                        </Text>
+                        {transportData.current_lat ? (
+                            <>
+                                <Text style={styles.mapIcon}>🛰️</Text>
+                                <Text style={styles.mapText}>Real-time Location</Text>
+                                <Text style={styles.coordinates}>
+                                    Lat: {parseFloat(transportData.current_lat).toFixed(4)} | Lng: {parseFloat(transportData.current_lng).toFixed(4)}
+                                </Text>
+                                <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+                                    <Text style={styles.refreshText}>🔄 Refresh Status</Text>
+                                </TouchableOpacity>
+                            </>
+                        ) : (
+                            <>
+                                <Text style={styles.mapIcon}>🗺️</Text>
+                                <Text style={styles.mapText}>Bus Tracking</Text>
+                                <Text style={styles.mapSubtext}>
+                                    {transportData.is_tracking ? 'Waiting for GPS signal...' : 'Tracking not available'}
+                                </Text>
+                            </>
+                        )}
                     </View>
                 </View>
 
@@ -341,6 +356,23 @@ const styles = StyleSheet.create({
     mapSubtext: {
         fontSize: 14,
         color: '#666',
+    },
+    coordinates: {
+        fontSize: 16,
+        color: '#4facfe',
+        fontWeight: 'bold',
+        marginBottom: 15,
+    },
+    refreshButton: {
+        backgroundColor: '#f0f4ff',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+    },
+    refreshText: {
+        color: '#4facfe',
+        fontSize: 14,
+        fontWeight: '600',
     },
     feeCard: {
         backgroundColor: '#fff',

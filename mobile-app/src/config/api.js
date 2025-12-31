@@ -5,7 +5,7 @@
 // - For PRODUCTION: Set USE_LOCAL_SERVER = false (line 8)
 // - Then rebuild ONCE and it will work for that environment
 
-const USE_LOCAL_SERVER = true; // ← Change this to switch environments
+const USE_LOCAL_SERVER = false; // ← Change this to switch environments
 
 const LOCAL_IP = '172.23.101.71'; // Your computer's local IP
 const PRODUCTION_URL = 'https://school-software-backend-z86u.onrender.com';
@@ -42,6 +42,7 @@ export const ENDPOINTS = {
     STUDENT_LEAVES: '/leaves/my-leaves',
     STUDENT_DOUBTS: '/doubts',
     STUDENT_CALENDAR: '/calendar/events',
+    NOTIFICATIONS: '/notifications',
 
     // Teachers
     TEACHER_PROFILE: '/teachers/profile',
@@ -60,4 +61,5 @@ export const ENDPOINTS = {
     STAFF_SALARY: '/salary/my-salary',
     STAFF_LEAVES: '/staff/my-leaves',
     STAFF_DAILY_STATUS: '/staff/daily-status',
+    UPDATE_VEHICLE_LOCATION: (id) => `/transport/vehicles/${id}/location`,
 };

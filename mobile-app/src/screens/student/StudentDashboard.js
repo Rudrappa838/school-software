@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../contexts/AuthContext';
 import { studentService } from '../../services/student.service';
+import AppHeader from '../../components/AppHeader';
 
 const StudentDashboard = ({ navigation }) => {
     const { user, logout } = useAuth();
@@ -81,25 +82,12 @@ const StudentDashboard = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {/* Header - Matching Web Sidebar Theme */}
-            <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.header}>
-                <View style={styles.headerContent}>
-                    <View>
-                        <View style={styles.schoolBadge}>
-                            <Text style={styles.schoolName}>SCHOOL PORTAL</Text>
-                        </View>
-                        <Text style={styles.userName}>
-                            {dashboardData.profile?.name || user?.name || 'Student'}
-                        </Text>
-                        <Text style={styles.userDetails}>
-                            Class {dashboardData.profile?.class_name ? `${dashboardData.profile.class_name}-${dashboardData.profile.section_name}` : '...'} • ID: {dashboardData.profile?.admission_no || '...'}
-                        </Text>
-                    </View>
-                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                        <Text style={styles.logoutText}>Logout</Text>
-                    </TouchableOpacity>
-                </View>
-            </LinearGradient>
+            <AppHeader
+                userName={dashboardData.profile?.name || user?.name || 'Student'}
+                subtitle={`Class ${dashboardData.profile?.class_name || '...'} • ID: ${dashboardData.profile?.admission_no || '...'}`}
+                onLogout={handleLogout}
+                onNotification={() => navigation.navigate('Notifications')}
+            />
 
             <ScrollView
                 style={styles.scrollContainer}

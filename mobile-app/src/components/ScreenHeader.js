@@ -1,42 +1,44 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Bell } from 'lucide-react-native';
 
 const ScreenHeader = ({ title, subtitle, onBack, showNotification = false, notificationCount = 0, gradient = ['#0f172a', '#1e293b'] }) => {
+    const insets = useSafeAreaInsets();
+
     return (
-        <>
-            <StatusBar barStyle="light-content" />
-            <LinearGradient colors={gradient} style={styles.header}>
-                <View style={styles.headerContent}>
-                    <TouchableOpacity style={styles.backButton} onPress={onBack}>
-                        <ArrowLeft color="#fff" size={24} />
-                    </TouchableOpacity>
+        <LinearGradient
+            colors={gradient}
+            style={[styles.header, { paddingTop: insets.top + 10 }]}
+        >
+            <View style={styles.headerContent}>
+                <TouchableOpacity style={styles.backButton} onPress={onBack}>
+                    <ArrowLeft color="#fff" size={24} />
+                </TouchableOpacity>
 
-                    <View style={styles.titleContainer}>
-                        <Text style={styles.title}>{title}</Text>
-                        {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-                    </View>
-
-                    {showNotification && (
-                        <TouchableOpacity style={styles.notificationButton}>
-                            <Bell color="#fff" size={22} />
-                            {notificationCount > 0 && (
-                                <View style={styles.badge}>
-                                    <Text style={styles.badgeText}>{notificationCount}</Text>
-                                </View>
-                            )}
-                        </TouchableOpacity>
-                    )}
+                <View style={styles.titleContainer}>
+                    <Text style={styles.title} numberOfLines={1}>{title}</Text>
+                    {subtitle && <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>}
                 </View>
-            </LinearGradient>
-        </>
+
+                {showNotification && (
+                    <TouchableOpacity style={styles.notificationButton}>
+                        <Bell color="#fff" size={22} />
+                        {notificationCount > 0 && (
+                            <View style={styles.badge}>
+                                <Text style={styles.badgeText}>{notificationCount}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                )}
+            </View>
+        </LinearGradient>
     );
 };
 
 const styles = StyleSheet.create({
     header: {
-        paddingTop: 50,
         paddingBottom: 20,
         paddingHorizontal: 20,
         borderBottomLeftRadius: 25,
@@ -67,13 +69,13 @@ const styles = StyleSheet.create({
         marginLeft: 15,
     },
     title: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: '800',
         color: '#fff',
         letterSpacing: -0.5,
     },
     subtitle: {
-        fontSize: 13,
+        fontSize: 12,
         color: '#cbd5e1',
         marginTop: 2,
         fontWeight: '500',

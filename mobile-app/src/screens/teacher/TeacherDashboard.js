@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../contexts/AuthContext';
 import { teacherService } from '../../services/teacher.service';
+import AppHeader from '../../components/AppHeader';
 
 const TeacherDashboard = ({ navigation }) => {
     const { user, logout } = useAuth();
@@ -78,25 +79,12 @@ const TeacherDashboard = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {/* Header - Matching Web Sidebar Theme */}
-            <LinearGradient colors={['#4c1d95', '#6d28d9']} style={styles.header}>
-                <View style={styles.headerContent}>
-                    <View>
-                        <View style={styles.schoolBadge}>
-                            <Text style={styles.schoolName}>TEACHER PORTAL</Text>
-                        </View>
-                        <Text style={styles.userName}>
-                            {user?.name || 'Teacher'}
-                        </Text>
-                        <Text style={styles.userDetails}>
-                            {user?.subject || 'Faculty Member'} • ID: {user?.id || '...'}
-                        </Text>
-                    </View>
-                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                        <Text style={styles.logoutText}>Logout</Text>
-                    </TouchableOpacity>
-                </View>
-            </LinearGradient>
+            <AppHeader
+                userName={user?.name || 'Teacher'}
+                subtitle={`${user?.subject || 'Faculty Member'} • ID: ${user?.id || '...'}`}
+                onLogout={handleLogout}
+                onNotification={() => navigation.navigate('Notifications')}
+            />
 
             <ScrollView
                 style={styles.scrollContainer}

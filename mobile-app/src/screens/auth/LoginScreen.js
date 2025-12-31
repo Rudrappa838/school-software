@@ -12,10 +12,12 @@ import {
     ImageBackground,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const LoginScreen = ({ navigation }) => {
+    const insets = useSafeAreaInsets();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('STUDENT');
@@ -60,7 +62,7 @@ const LoginScreen = ({ navigation }) => {
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                 >
-                    <ScrollView contentContainerStyle={styles.content}>
+                    <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}>
                         <View style={styles.header}>
                             <View style={styles.logoContainer}>
                                 <Icon name="school" size={40} color="#fff" />

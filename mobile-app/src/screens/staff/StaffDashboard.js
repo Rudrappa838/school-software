@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../contexts/AuthContext';
 import { staffService } from '../../services/staff.service';
+import AppHeader from '../../components/AppHeader';
 
 const StaffDashboard = ({ navigation }) => {
     const { user, logout } = useAuth();
@@ -62,6 +63,7 @@ const StaffDashboard = ({ navigation }) => {
         { id: 'salary', title: 'Salary', icon: '💰', screen: 'StaffSalary', color: '#4facfe' },
         { id: 'leaves', title: 'Leave', icon: '📝', screen: 'StaffLeaves', color: '#43e97b' },
         { id: 'daily', title: 'Daily Status', icon: '📊', screen: 'StaffDailyStatus', color: '#fa709a' },
+        ...(user?.role === 'DRIVER' ? [{ id: 'gps', title: 'GPS Tracking', icon: '🛰️', screen: 'DriverTracking', color: '#059669' }] : []),
     ];
 
     if (isLoading) {
@@ -75,25 +77,12 @@ const StaffDashboard = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {/* Header - Matching Web Sidebar Theme */}
-            <LinearGradient colors={['#064e3b', '#059669']} style={styles.header}>
-                <View style={styles.headerContent}>
-                    <View>
-                        <View style={styles.schoolBadge}>
-                            <Text style={styles.schoolName}>STAFF PORTAL</Text>
-                        </View>
-                        <Text style={styles.userName}>
-                            {user?.name || 'Staff Member'}
-                        </Text>
-                        <Text style={styles.userDetails}>
-                            {user?.designation || 'Staff'} • ID: {user?.id || '...'}
-                        </Text>
-                    </View>
-                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                        <Text style={styles.logoutText}>Logout</Text>
-                    </TouchableOpacity>
-                </View>
-            </LinearGradient>
+            <AppHeader
+                userName={user?.name || 'Staff Member'}
+                subtitle={`${user?.role || 'Staff'} • ID: ${user?.id || '...'}`}
+                onLogout={handleLogout}
+                onNotification={() => navigation.navigate('Notifications')}
+            />
 
             <ScrollView
                 style={styles.scrollContainer}

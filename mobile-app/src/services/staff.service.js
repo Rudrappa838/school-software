@@ -71,4 +71,24 @@ export const staffService = {
             return { success: false, message: error.response?.data?.message || 'Failed to submit daily status' };
         }
     },
+
+    // Get transport route (for drivers)
+    getTransport: async () => {
+        try {
+            const response = await api.get(ENDPOINTS.STUDENT_TRANSPORT); // Same endpoint /transport/my-route
+            return { success: true, data: response.data };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || 'Failed to fetch transport route' };
+        }
+    },
+
+    // Update vehicle location
+    updateLocation: async (vehicleId, location) => {
+        try {
+            const response = await api.put(ENDPOINTS.UPDATE_VEHICLE_LOCATION(vehicleId), location);
+            return { success: true, data: response.data };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || 'Failed to update location' };
+        }
+    },
 };
