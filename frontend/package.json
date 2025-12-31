@@ -16,6 +16,7 @@
     "@capacitor/geolocation": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
     "@capacitor/push-notifications": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",

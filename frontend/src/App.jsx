@@ -16,6 +16,8 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import StaffDashboard from './pages/StaffDashboard';
 import DriverTracking from './components/dashboard/transport/DriverTracking';
 import NotificationRegistration from './components/NotificationRegistration';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, role }) => {
@@ -42,6 +44,20 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Welcome from './pages/Welcome';
 
 function App() {
+  React.useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        // Prevent content from overlapping status bar
+        StatusBar.setOverlaysWebView({ overlay: false });
+        // Set background color to match our primary theme (indigo-600)
+        StatusBar.setBackgroundColor({ color: '#4f46e5' });
+        StatusBar.setStyle({ style: Style.Dark });
+      } catch (err) {
+        console.error('StatusBar setup failed', err);
+      }
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <AuthProvider>
