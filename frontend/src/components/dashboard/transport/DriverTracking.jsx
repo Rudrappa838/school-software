@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { Bus, Navigation, StopCircle, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Bus, Navigation, StopCircle, RefreshCw, AlertTriangle, ArrowLeft } from 'lucide-react';
 import api from '../../../api/axios';
 import toast from 'react-hot-toast';
 import 'leaflet/dist/leaflet.css';
@@ -128,12 +128,19 @@ const DriverTracking = () => {
     return (
         <div className="p-4 max-w-md mx-auto min-h-screen bg-slate-50">
             <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-                <div className="bg-indigo-600 p-6 text-white text-center">
-                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
-                        <Navigation size={32} />
+                <div className="bg-indigo-600 p-6 text-white text-center relative pt-10">
+                    <button
+                        onClick={() => window.history.back()}
+                        className="absolute left-4 top-4 p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors flex flex-col items-center"
+                    >
+                        <ArrowLeft size={20} />
+                        <span className="text-[10px] font-bold mt-0.5">BACK</span>
+                    </button>
+                    <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm border border-white/20">
+                        <Bus size={32} className="text-white" />
                     </div>
-                    <h1 className="text-xl font-bold">Driver Live Tracking</h1>
-                    <p className="text-indigo-100 text-sm mt-1">Turn your phone into a GPS tracker</p>
+                    <h1 className="text-xl font-black italic tracking-tight">CONNECT TO CAMPUS</h1>
+                    <p className="text-indigo-100 text-[10px] font-black uppercase tracking-[0.2em] mt-1 opacity-80">Live Driver GPS Mode</p>
                 </div>
 
                 <div className="p-6 space-y-6">
@@ -196,9 +203,9 @@ const DriverTracking = () => {
                             {error === 'PERMISSION_DENIED' && (
                                 <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-slate-800 space-y-4">
                                     <div className="flex items-center gap-2 text-red-600 font-bold">
-                                        <AlertTriangle size={20} /> Permission Denied
+                                        <AlertTriangle size={20} /> PLEASE ENABLE GPS IN BROWSER SETTINGS
                                     </div>
-                                    <p className="text-sm">To track this bus, you must allow location access. Please follow these steps:</p>
+                                    <p className="text-sm">To track this bus, you must allow location access. Follow these steps if it's denied:</p>
                                     <div className="text-xs space-y-3">
                                         <div className="p-3 bg-white rounded-lg border border-red-100">
                                             <p className="font-bold text-slate-700 underline mb-1">Android / Chrome:</p>
