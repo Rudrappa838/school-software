@@ -295,6 +295,14 @@ exports.saveMarks = async (req, res) => {
         }
 
         await client.query('COMMIT');
+
+        // Notification Logic
+        const { sendPushNotification } = require('../services/notificationService');
+        const uniqueStudentIds = [...new Set(marks.map(m => m.student_id))];
+        for (const studentId of uniqueStudentIds) {
+            // We could fetch exam name here for better context, but generic is fine for now
+            await sendPushNotification(studentId, 'Exam Results', 'New marks have been updated in your report card.');
+        }
         res.json({ message: 'Marks saved successfully', count: marks.length });
     } catch (error) {
         await client.query('ROLLBACK');

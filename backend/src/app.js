@@ -68,6 +68,14 @@ app.use('/api/biometric', require('./routes/biometricRoutes'));
 app.use('/api/doubts', require('./routes/doubtRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 
+// --- ADMS / Biometric Device Default Routes ---
+// Many devices (Secureye, ZKTeco) hardcode these paths if "Request URL" isn't configurable.
+const { handleExternalDeviceLog } = require('./controllers/biometricController');
+app.all('/iclock/cdata', handleExternalDeviceLog);      // Main Attendance Log URL
+app.all('/iclock/getrequest', (req, res) => res.send('OK')); // Command checks
+app.all('/iclock/devicecmd', (req, res) => res.send('OK'));  // Device commands
+app.all('/iclock/options', (req, res) => res.send('OK'));    // Configuration checks
+
 // Download App Route
 app.get('/download-app', (req, res) => {
     const file = path.join(__dirname, '../public/app.apk');

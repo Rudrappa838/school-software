@@ -338,7 +338,19 @@ exports.recordPayment = async (req, res) => {
             [school_id, student_id, fee_structure_id, amount, method, remarks, receiptNo]
         );
 
+        const { sendPushNotification } = require('../services/notificationService');
+
+        // ... existing code ...
+
         await client.query('COMMIT');
+
+        // Notification
+        const studentRes = await client.query('SELECT name FROM students WHERE id = $1', [student_id]);
+        if (studentRes.rows.length > 0) {
+            const studentName = studentRes.rows[0].name;
+            await sendPushNotification(student_id, 'Fee Receipt', `Received payment of ₹${amount} for ${studentName}. Receipt: ${receiptNo}`);
+        }
+
         res.status(201).json(result.rows[0]);
     } catch (error) {
         await client.query('ROLLBACK');

@@ -156,7 +156,13 @@ exports.allocateRoom = async (req, res) => {
                 [roomId, student_id]
             );
 
+            const { sendPushNotification } = require('../services/notificationService');
+
+            // ... existing code ...
+
             await client.query('COMMIT');
+
+            await sendPushNotification(student_id, 'Hostel Allocation', 'You have been allocated a room in the hostel.');
             res.status(201).json(result.rows[0]);
 
         } catch (e) {
@@ -368,6 +374,10 @@ exports.addMessBill = async (req, res) => {
             "INSERT INTO hostel_mess_bills (student_id, month, year, amount) VALUES ($1, $2, $3, $4) RETURNING *",
             [student_id, month, year, amount]
         );
+
+        const { sendPushNotification } = require('../services/notificationService');
+        await sendPushNotification(student_id, 'Hostel Bill', `New Mess Bill of ₹${amount} generated for ${month} ${year}.`);
+
         res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error('Error adding mess bill:', error);

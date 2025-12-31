@@ -15,13 +15,13 @@ exports.getVehicles = async (req, res) => {
 // Add a new vehicle
 exports.addVehicle = async (req, res) => {
     try {
-        const { vehicle_number, vehicle_model, driver_name, driver_phone, capacity } = req.body;
+        const { vehicle_number, vehicle_model, driver_name, driver_phone, capacity, driver_id } = req.body;
         const school_id = req.user.schoolId;
 
         const result = await pool.query(
-            `INSERT INTO transport_vehicles (school_id, vehicle_number, vehicle_model, driver_name, driver_phone, capacity)
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [school_id, vehicle_number, vehicle_model, driver_name, driver_phone, capacity]
+            `INSERT INTO transport_vehicles (school_id, vehicle_number, vehicle_model, driver_name, driver_phone, capacity, driver_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+            [school_id, vehicle_number, vehicle_model, driver_name, driver_phone, capacity, driver_id]
         );
 
         res.status(201).json(result.rows[0]);
@@ -35,14 +35,14 @@ exports.addVehicle = async (req, res) => {
 exports.updateVehicle = async (req, res) => {
     try {
         const { id } = req.params;
-        const { vehicle_number, vehicle_model, driver_name, driver_phone, capacity, status } = req.body;
+        const { vehicle_number, vehicle_model, driver_name, driver_phone, capacity, status, driver_id } = req.body;
         const school_id = req.user.schoolId;
 
         const result = await pool.query(
             `UPDATE transport_vehicles 
-             SET vehicle_number = $1, vehicle_model = $2, driver_name = $3, driver_phone = $4, capacity = $5, status = $6
-             WHERE id = $7 AND school_id = $8 RETURNING *`,
-            [vehicle_number, vehicle_model, driver_name, driver_phone, capacity, status, id, school_id]
+             SET vehicle_number = $1, vehicle_model = $2, driver_name = $3, driver_phone = $4, capacity = $5, status = $6, driver_id = $7
+             WHERE id = $8 AND school_id = $9 RETURNING *`,
+            [vehicle_number, vehicle_model, driver_name, driver_phone, capacity, status, driver_id, id, school_id]
         );
 
         if (result.rows.length === 0) {
@@ -300,6 +300,22 @@ exports.getMyRoute = async (req, res) => {
                 if (studentRes.rows.length > 0) {
                     route_id = studentRes.rows[0].route_id;
                     pickup_point = studentRes.rows[0].pickup_point || 'School';
+                }
+            }
+        } else if (role === 'DRIVER') {
+            // Find staff record for this driver
+            const staffRes = await pool.query('SELECT id FROM staff WHERE email = $1 AND school_id = $2', [email, schoolId]);
+            if (staffRes.rows.length > 0) {
+                const staffId = staffRes.rows[0].id;
+                // Find vehicle assigned to this staff member
+                const vehicleRes = await pool.query('SELECT id FROM transport_vehicles WHERE driver_id = $1', [staffId]);
+                if (vehicleRes.rows.length > 0) {
+                    const vehicleId = vehicleRes.rows[0].id;
+                    // Find route for this vehicle
+                    const routeRes = await pool.query('SELECT id FROM transport_routes WHERE vehicle_id = $1', [vehicleId]);
+                    if (routeRes.rows.length > 0) {
+                        route_id = routeRes.rows[0].id;
+                    }
                 }
             }
         }

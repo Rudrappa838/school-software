@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Connect to Campus",
-    "slug": "connect-to-campus",
+    "slug": "school-management-app",
     "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

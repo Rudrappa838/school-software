@@ -236,7 +236,13 @@ exports.issueBook = async (req, res) => {
             [book.id]
         );
 
+        const { sendPushNotification } = require('../services/notificationService');
+
+        // ... existing code ...
+
         await client.query('COMMIT');
+
+        await sendPushNotification(patron_id, 'Library Update', `Book "${book.title}" Issued. Due: ${dueDate.toLocaleDateString()}`);
         res.json({ message: 'Book issued successfully', book: book.title, patron: patronName, due_date: dueDate });
 
     } catch (error) {

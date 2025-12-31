@@ -259,11 +259,13 @@ exports.markAttendance = async (req, res) => {
         // Send notifications asynchronously without blocking response
         // Note: For 100k scale, you'd usually push these to a background worker (Redis/BullMQ)
         attendanceData.forEach(async (record) => {
-            if (record.status === 'Absent') {
+            if (['Absent', 'Present', 'Late'].includes(record.status)) {
                 try {
-                    const studentRes = await pool.query('SELECT name, contact_number FROM students WHERE id = $1', [record.student_id]);
+                    const studentRes = await pool.query('SELECT name, contact_number, id, school_id FROM students WHERE id = $1', [record.student_id]);
                     if (studentRes.rows.length > 0) {
-                        sendAttendanceNotification(studentRes.rows[0], record.status);
+                        // Ensure we pass the full object needed by notificationService -> user object needs id, name, contact_number
+                        const studentObj = studentRes.rows[0];
+                        sendAttendanceNotification(studentObj, record.status);
                     }
                 } catch (e) { console.error('Notification error:', e); }
             }

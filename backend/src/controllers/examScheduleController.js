@@ -84,6 +84,29 @@ exports.saveExamSchedule = async (req, res) => {
         }
 
         await client.query('COMMIT');
+
+        // Notify Students in affected classes
+        try {
+            const { sendPushNotification } = require('../services/notificationService');
+            // Find unique class/section combinations
+            const combos = new Set(schedules.map(s => `${s.class_id}-${s.section_id}`));
+
+            for (const combo of combos) {
+                const [cid, sid] = combo.split('-');
+                const studentsRes = await pool.query( // Using pool here to avoid blocking client release if slow
+                    'SELECT id FROM students WHERE school_id = $1 AND class_id = $2 AND section_id = $3',
+                    [school_id, cid, sid]
+                );
+
+                for (const stu of studentsRes.rows) {
+                    await sendPushNotification(stu.id, 'Exam Schedule', 'The exam schedule for your class has been updated.');
+                }
+            }
+        } catch (notifyError) {
+            console.error('Notification error:', notifyError);
+            // Don't fail the request if notification fails
+        }
+
         res.json({ message: 'Exam schedule saved successfully' });
     } catch (error) {
         await client.query('ROLLBACK');

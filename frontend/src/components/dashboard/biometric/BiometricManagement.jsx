@@ -42,36 +42,63 @@ const EnrollmentPanel = () => {
     // Hardware State
     const [deviceStatus, setDeviceStatus] = useState('unknown'); // unknown, connected, disconnected, checking
     const [deviceInfo, setDeviceInfo] = useState(null);
+    const [connectionLogs, setConnectionLogs] = useState([]);
+    const [manualPort, setManualPort] = useState('');
+    const [activePort, setActivePort] = useState(null);
 
-    const checkDevice = async () => {
+    const addLog = (msg) => {
+        setConnectionLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 50));
+    };
+
+    const [showHelp, setShowHelp] = useState(false);
+
+    const checkDevice = async (specificPort = null) => {
         setDeviceStatus('checking');
-        const ports = [11100, 11101, 11102]; // Mantra, Morpho, Startek common RD service ports
+        setConnectionLogs([]);
+        setShowHelp(false);
+        addLog("Starting device discovery...");
+
+        // Extended common ports list including Securye/Mantra/Morpho defaults
+        const ports = specificPort ? [parseInt(specificPort)] : [11100, 11101, 11102, 11103, 11104, 11105, 8080, 8000, 9090];
+
+        let found = false;
 
         for (const port of ports) {
             try {
+                addLog(`Probing http://127.0.0.1:${port}...`);
+
                 // Probe device RD service
                 const controller = new AbortController();
                 setTimeout(() => controller.abort(), 1000);
 
+                // Try root, rd-service, or device info endpoints
                 const res = await fetch(`http://127.0.0.1:${port}/`, {
-                    method: 'OPTIONS',
+                    method: 'OPTIONS', // OPTIONS is safer/faster for probing
                     signal: controller.signal
                 }).catch(() => null);
 
-                // If we get ANY response (even 404/405), something is listenging on that port
-                // Real implementation would verify vendor headers here
+                // If we get ANY response (even 404/405), something is listening on that port
                 if (res) {
                     setDeviceStatus('connected');
-                    setDeviceInfo(`Biometric Scanner (Port ${port})`);
-                    toast.success("Biometric Device Detected!");
-                    return; // Found one, stop checking
+                    setDeviceInfo(`Device Detected on Port ${port}`);
+                    setActivePort(port);
+                    addLog(`SUCCESS: Service found on port ${port}`);
+                    toast.success(`Biometric Service Found (Port ${port})`);
+                    found = true;
+                    break;
                 }
             } catch (e) {
                 // Ignore connection errors
             }
         }
-        setDeviceStatus('disconnected');
-        toast.error("No compatible scanner found. Is RD Service running?");
+
+        if (!found) {
+            setDeviceStatus('disconnected');
+            setShowHelp(true);
+            addLog("FAILED: No active service found on scanned ports.");
+            addLog("Action Required: Install RD Service Driver.");
+            toast.error("Scanner service not found. See help below.");
+        }
     };
 
     const handleSearch = async (e) => {
@@ -167,6 +194,28 @@ const EnrollmentPanel = () => {
                     </button>
                 </div>
 
+                {/* Connection Debugger */}
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+                    <div className="flex gap-2 mb-2">
+                        <input
+                            placeholder="Manual Port (e.g. 11100)"
+                            className="p-1 px-2 border rounded w-32 text-xs"
+                            value={manualPort}
+                            onChange={(e) => setManualPort(e.target.value)}
+                        />
+                        <button
+                            onClick={() => checkDevice(manualPort)}
+                            className="text-xs bg-slate-200 px-2 py-1 rounded hover:bg-slate-300 font-bold text-slate-600"
+                        >
+                            Test Port
+                        </button>
+                    </div>
+                    <div className="h-24 overflow-y-auto bg-black text-green-400 p-2 rounded font-mono text-xs">
+                        {connectionLogs.map((log, i) => <div key={i}>{log}</div>)}
+                        {connectionLogs.length === 0 && <span className="opacity-50">Log waiting... Click 'Check Device'</span>}
+                    </div>
+                </div>
+
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                     <form onSubmit={handleSearch} className="flex gap-2">
                         <input
@@ -198,6 +247,30 @@ const EnrollmentPanel = () => {
                     ))}
                     {users.length === 0 && <div className="text-center text-slate-400 py-8">Search for a user to manage</div>}
                 </div>
+
+                {showHelp && (
+                    <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl text-amber-800 text-sm animate-fade-in-down">
+                        <div className="flex items-start gap-3">
+                            <Shield className="text-amber-600 mt-1" size={20} />
+                            <div>
+                                <h4 className="font-bold text-amber-900">Scanner Setup Required</h4>
+                                <p className="mt-1">To use the fingerprint scanner, you must install the <strong>RD Service (Registered Device) Driver</strong> on this computer.</p>
+                                <ul className="list-disc list-inside mt-2 space-y-1 text-xs opacity-90">
+                                    <li>Install <strong>Securye / Mantra RD Service</strong>.</li>
+                                    <li>Ensure the USB cable is connected.</li>
+                                    <li><strong>Restart</strong> the service if already installed.</li>
+                                    <li>Check taskbar for the Service icon.</li>
+                                </ul>
+                                <button
+                                    onClick={() => checkDevice()}
+                                    className="mt-3 bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-amber-700"
+                                >
+                                    Try Again
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Selection Panel */}
@@ -259,6 +332,7 @@ const EnrollmentPanel = () => {
                 )}
             </div>
         </div>
+
     );
 };
 

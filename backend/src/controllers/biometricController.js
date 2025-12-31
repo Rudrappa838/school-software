@@ -150,12 +150,25 @@ const handleExternalDeviceLog = async (req, res) => {
         // Support both JSON body (Modern IoT) and Query Params (Legacy ADMS)
         const data = Object.keys(req.body).length > 0 ? req.body : req.query;
 
-        const { user_id, device_id, timestamp } = data;
-        const schoolId = req.user?.schoolId || 1; // Default to 1 if device doesn't send school token, or map device_id to school_id
+        console.log('[DEVICE RAW DATA]', data);
+
+        // Map ADMS/Secureye fields to our internal fields
+        // ADMS uses: PIN (User ID), SN (Device ID), Time (Log Time)
+        const user_id = data.user_id || data.PIN || data.EnrollNumber;
+        const device_id = data.device_id || data.SN;
+        const timestamp = data.timestamp || data.Time;
+
+        const schoolId = req.user?.schoolId || 1; // Default to 1 if device doesn't send school token
 
         console.log(`[DEVICE PUSH] Device: ${device_id} | User: ${user_id} | Time: ${timestamp}`);
 
+        // If it's a handshake/heartbeat (often sends SN only), just return OK
+        if (device_id && !user_id) {
+            return res.send('OK');
+        }
+
         if (!user_id) {
+            console.warn('[DEVICE ERROR] Missing user_id/PIN in request');
             return res.status(400).send('Missing user_id');
         }
 

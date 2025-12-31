@@ -1,5 +1,4 @@
 const { pool } = require('../config/db');
-const { createNotification } = require('./notificationController');
 
 const getLeaves = async (req, res) => {
     const { schoolId } = req.user;
@@ -91,22 +90,13 @@ const updateLeaveStatus = async (req, res) => {
 
         // Trigger Notification
         try {
-            let userIdQuery = '';
-            if (leave.role === 'Student') {
-                userIdQuery = `SELECT u.id FROM users u JOIN students s ON (u.email = s.email OR u.email = CAST(s.admission_no AS TEXT) || '@student.school.com') WHERE s.id = $1`;
-            } else if (leave.role === 'Teacher') {
-                userIdQuery = `SELECT u.id FROM users u JOIN teachers t ON (u.email = t.email OR u.email = t.employee_id || '@teacher.school.com') WHERE t.id = $1`;
-            } else { // Staff
-                userIdQuery = `SELECT u.id FROM users u JOIN staff s ON (u.email = s.email OR u.email = s.employee_id || '@staff.school.com') WHERE s.id = $1`;
-            }
+            const { sendPushNotification } = require('../services/notificationService');
+            // We use the raw table ID (student.id, teacher.id) as the push target, consistent with other controllers
+            // Or we could use the User Table ID if that's how tokens are stored. 
+            // Given previous implementations used raw IDs (e.g. FeeController used student_id), we follow that.
 
-            if (userIdQuery) {
-                const userRes = await pool.query(userIdQuery, [leave.user_id]);
-                if (userRes.rows.length > 0) {
-                    const authUserId = userRes.rows[0].id;
-                    await createNotification(authUserId, 'Leave Status Update', `Your leave application from ${new Date(leave.start_date).toLocaleDateString()} has been ${status}.`, 'ALERT');
-                }
-            }
+            await sendPushNotification(leave.user_id, 'Leave Status Update', `Your leave application from ${new Date(leave.start_date).toLocaleDateString()} has been ${status}.`);
+
         } catch (notifErr) {
             console.error('Failed to trigger notification:', notifErr);
         }

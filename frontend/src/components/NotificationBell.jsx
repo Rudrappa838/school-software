@@ -31,14 +31,22 @@ const NotificationBell = () => {
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl overflow-hidden z-50 border border-gray-100 animate-fade-in-down">
                     <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
                         <h3 className="font-semibold text-gray-700">Notifications</h3>
-                        {unreadCount > 0 && (
+                        <div className="flex items-center gap-2">
+                            {unreadCount > 0 && (
+                                <button
+                                    onClick={markAllAsRead}
+                                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                                >
+                                    Mark all read
+                                </button>
+                            )}
                             <button
-                                onClick={markAllAsRead}
-                                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                                onClick={() => setIsOpen(false)}
+                                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition-colors"
                             >
-                                Mark all read
+                                <X size={18} />
                             </button>
-                        )}
+                        </div>
                     </div>
 
                     <div className="max-h-96 overflow-y-auto">

@@ -19,24 +19,107 @@ const sendSMS = async (phoneNumber, message) => {
     }
 };
 
-const sendAttendanceNotification = async (student, status) => {
+// Mock Push Notification Service (Firebase/FCM)
+// AND Save to DB for In-App Notification Center
+const sendPushNotification = async (recipientId, title, body, roleHint = null) => {
+    const client = await pool.connect();
     try {
-        if (!student.contact_number) return;
+        console.log(`[APP PUSH] Recipient: ${recipientId} | Title: ${title} | Body: ${body}`);
 
-        let message = '';
+        // 1. Resolve 'users' table ID for DB persistence
+        let dbUserId = null;
+        let finalRole = roleHint;
+
+        // Handle composite IDs from SalaryController (e.g. "Teacher_5")
+        if (!finalRole && typeof recipientId === 'string' && recipientId.includes('_')) {
+            const parts = recipientId.split('_');
+            if (['Teacher', 'Staff', 'Student'].includes(parts[0])) {
+                finalRole = parts[0];
+                recipientId = parts[1]; // Extract the numeric ID
+            }
+        }
+
+        // Default to Student if we assume numeric ID is a student (common case in this system)
+        if (!finalRole) finalRole = 'Student';
+
+        if (finalRole === 'Student') {
+            // Link via email or admission_no logic used in auth
+            // Simple join: users.email = students.email OR users.email = admission_no based email
+            const res = await client.query(`
+                SELECT u.id 
+                FROM users u 
+                JOIN students s ON (LOWER(u.email) = LOWER(s.email) OR u.email = LOWER(s.admission_no) || '@student.school.com')
+                WHERE s.id = $1
+             `, [recipientId]);
+            if (res.rows.length > 0) dbUserId = res.rows[0].id;
+
+        } else if (finalRole === 'Teacher') {
+            const res = await client.query(`
+                SELECT u.id 
+                FROM users u 
+                JOIN teachers t ON (LOWER(u.email) = LOWER(t.email) OR u.email = t.employee_id || '@teacher.school.com')
+                WHERE t.id = $1
+             `, [recipientId]);
+            if (res.rows.length > 0) dbUserId = res.rows[0].id;
+
+        } else if (finalRole === 'Staff') {
+            const res = await client.query(`
+                SELECT u.id 
+                FROM users u 
+                JOIN staff s ON (LOWER(u.email) = LOWER(s.email) OR u.email = s.employee_id || '@staff.school.com')
+                WHERE s.id = $1
+             `, [recipientId]);
+            if (res.rows.length > 0) dbUserId = res.rows[0].id;
+        }
+
+        // 2. Insert into Notifications Table
+        if (dbUserId) {
+            await client.query(
+                'INSERT INTO notifications (user_id, title, message, type) VALUES ($1, $2, $3, $4)',
+                [dbUserId, title, body, 'ALERT']
+            );
+            console.log(`[DB NOTIFICATION] Saved for User ID: ${dbUserId}`);
+        } else {
+            console.warn(`[NOTIFICATION WARNING] Could not resolve User Table ID for recipient: ${recipientId} (${finalRole})`);
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Failed to send Push Notification:', error);
+        return false;
+    } finally {
+        client.release();
+    }
+};
+
+const sendAttendanceNotification = async (user, status) => {
+    try {
         const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        let message = '';
+        let title = 'Attendance Update';
+
+        // Customized messages based on role (implicitly handled by user object structure or could be explicit)
+        // Here we assume student/parent usage primarily.
 
         if (status === 'Present') {
-            message = `Dear Parent, your ward ${student.name} has reached school at ${now}. - School Admin`;
+            message = `Reached school at ${now}`;
         } else if (status === 'Absent') {
-            message = `Dear Parent, your ward ${student.name} is marked ABSENT today (${new Date().toLocaleDateString()}). Please contact school if this is an error. - School Admin`;
+            message = `Marked ABSENT today (${new Date().toLocaleDateString()})`;
         } else if (status === 'Late') {
-            message = `Dear Parent, your ward ${student.name} has arrived late to school at ${now}. - School Admin`;
+            message = `Arrived late at ${now}`;
         }
 
-        if (message) {
-            await sendSMS(student.contact_number, message);
+        if (!message) return;
+
+        // 1. Send SMS (Legacy/Reliable)
+        if (user.contact_number) {
+            await sendSMS(user.contact_number, `Dear Parent, your ward ${user.name} has ${message.toLowerCase()}. - School Admin`);
         }
+
+        // 2. Send Mobile App Push Notification (Real-time)
+        // Assuming user.id or user.user_id is the link to the app login
+        await sendPushNotification(user.id, title, `${user.name} has ${message.toLowerCase()}.`);
+
     } catch (error) {
         console.error('Error sending attendance notification:', error);
     }
@@ -80,4 +163,4 @@ const checkAndSendAbsentNotifications = async () => {
     }
 };
 
-module.exports = { sendSMS, sendAttendanceNotification, checkAndSendAbsentNotifications };
+module.exports = { sendSMS, sendAttendanceNotification, checkAndSendAbsentNotifications, sendPushNotification };

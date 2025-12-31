@@ -96,7 +96,7 @@ const TransportManagement = ({ initialTab }) => {
     // Vehicle Form State
     const [showVehicleModal, setShowVehicleModal] = useState(false);
     const [vehicleForm, setVehicleForm] = useState({
-        vehicle_number: '', vehicle_model: '', driver_name: '', driver_phone: '', capacity: '', gps_device_id: ''
+        vehicle_number: '', vehicle_model: '', driver_name: '', driver_phone: '', capacity: '', gps_device_id: '', driver_id: ''
     });
 
     // Driver Search State
@@ -127,7 +127,8 @@ const TransportManagement = ({ initialTab }) => {
         setVehicleForm({
             ...vehicleForm,
             driver_name: staff.name,
-            driver_phone: staff.phone
+            driver_phone: staff.phone,
+            driver_id: staff.id
         });
         setDriverResults([]);
         setDriverSearch('');
@@ -181,7 +182,7 @@ const TransportManagement = ({ initialTab }) => {
 
             toast.success('Vehicle added successfully');
             setShowVehicleModal(false);
-            setVehicleForm({ vehicle_number: '', vehicle_model: '', driver_name: '', driver_phone: '', capacity: '', gps_device_id: '', assign_route_id: '' });
+            setVehicleForm({ vehicle_number: '', vehicle_model: '', driver_name: '', driver_phone: '', capacity: '', gps_device_id: '', assign_route_id: '', driver_id: '' });
             fetchData();
         } catch (error) {
             console.error(error);
