@@ -27,13 +27,15 @@ const StaffDashboard = () => {
     // Detect Mobile App context
     useEffect(() => {
         const checkMobile = () => {
+            if (Capacitor.isNativePlatform()) {
+                setIsMobileApp(true);
+                return;
+            }
             const params = new URLSearchParams(window.location.search);
-            const isApp = params.get('is_mobile_app') === 'true';
-            if (isApp) {
+            const isAppStr = params.get('is_mobile_app') === 'true';
+            if (isAppStr || localStorage.getItem('is_mobile_app') === 'true') {
                 setIsMobileApp(true);
-                localStorage.setItem('is_mobile_app', 'true');
-            } else if (localStorage.getItem('is_mobile_app') === 'true') {
-                setIsMobileApp(true);
+                if (isAppStr) localStorage.setItem('is_mobile_app', 'true');
             }
         };
         checkMobile();

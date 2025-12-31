@@ -83,7 +83,7 @@ const DriverTracking = () => {
         if (!selectedVehicle) return toast.error('Please select a vehicle first');
 
         try {
-            if (isApp) {
+            if (isMobileApp) { // Use isMobileApp here
                 const perm = await Geolocation.checkPermissions();
                 if (perm.location !== 'granted') {
                     const req = await Geolocation.requestPermissions();
@@ -204,44 +204,44 @@ const DriverTracking = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
-            {/* STICKY HEADER - Always Visible */}
-            <div className="sticky top-0 bg-indigo-600 text-white z-[80] shadow-xl safe-area-top pb-3 px-4">
-                <div className="h-14 flex items-center justify-between">
+        <div className="min-h-screen bg-slate-50 flex flex-col relative">
+            {/* FIXED HEADER - Force on top of everything */}
+            <header className="fixed top-0 left-0 right-0 bg-indigo-600 text-white z-[999] shadow-2xl safe-area-top pb-3 px-4 transition-all">
+                <div className="h-16 flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="p-3 -ml-2 bg-white/20 rounded-xl hover:bg-white/30 transition-all flex items-center gap-2 active:scale-95 border border-white/30 text-white font-bold"
+                        className="flex items-center gap-2 p-3 -ml-2 bg-white/20 rounded-2xl hover:bg-white/30 active:scale-90 border border-white/40 shadow-lg text-white font-black"
                     >
-                        <ArrowLeft size={24} />
-                        <span className="text-sm uppercase tracking-tight">BACK</span>
+                        <ArrowLeft size={24} strokeWidth={3} />
+                        <span className="text-sm uppercase tracking-tighter">BACK</span>
                     </button>
-                    <div className="flex flex-col items-end">
-                        <h1 className="text-[10px] font-black tracking-widest leading-none uppercase text-white">Connect to Campus</h1>
-                        <p className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider mt-1">Bus Tracker Live</p>
+                    <div className="flex flex-col items-end opacity-90">
+                        <h1 className="text-[10px] font-black tracking-widest leading-none uppercase text-white drop-shadow-sm">Connect to Campus</h1>
+                        <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-[0.2em] mt-1.5 underline decoration-indigo-400/50">Driver Mode</p>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            {/* Main Content Area */}
-            <div className="p-4 flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+            {/* Content Area - Added more top padding to clear the FIXED header */}
+            <main className="p-4 flex-1 pt-[calc(6rem+var(--sat))] overflow-y-auto">
                 <div className="max-w-md mx-auto space-y-4">
                     {isTracking && (
                         <button
                             onClick={() => navigate(-1)}
-                            className="w-full py-3 bg-white text-indigo-600 border-2 border-indigo-100 rounded-2xl font-bold text-sm shadow-sm flex items-center justify-center gap-2 animate-bounce mt-2"
+                            className="w-full py-4 bg-white text-indigo-600 border-2 border-indigo-500/20 rounded-2xl font-black text-xs shadow-md flex items-center justify-center gap-2 animate-bounce mt-2 uppercase tracking-widest"
                         >
-                            <ArrowLeft size={16} /> GO BACK TO DASHBOARD
+                            <ArrowLeft size={16} strokeWidth={3} /> Back to Dashboard
                         </button>
                     )}
 
-                    <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden ring-1 ring-slate-200">
-                        <div className="bg-slate-900 p-8 text-white text-center relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                            <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3 shadow-2xl relative">
-                                <Bus size={32} className="text-white" />
+                    <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden ring-4 ring-slate-100/50">
+                        <div className="bg-slate-900 p-10 text-white text-center relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl animate-pulse"></div>
+                            <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4 rotate-3 shadow-2xl border-4 border-white/5 relative z-10">
+                                <Bus size={40} className="text-white" />
                             </div>
-                            <h2 className="text-2xl font-black italic tracking-tighter">TRIP TRACKING</h2>
-                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">Active Live Mode</p>
+                            <h2 className="text-3xl font-black italic tracking-tighter relative z-10">TRIP TRACKER</h2>
+                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-3 opacity-80 relative z-10">Live Broadcasting</p>
                         </div>
 
                         <div className="p-6 space-y-6">
@@ -358,7 +358,7 @@ const DriverTracking = () => {
                         </p>
                     )}
                 </div>
-            </div>
+            </main>
         </div>
     );
 };
