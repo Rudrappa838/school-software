@@ -11,8 +11,8 @@ export const MobileHeader = ({ title, onMenuClick, schoolName }) => {
                         <GraduationCap size={20} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-sm font-bold leading-tight line-clamp-1">{schoolName || 'School App'}</h1>
-                        <p className="text-[10px] text-indigo-200 font-medium uppercase tracking-wider">{title || 'Dashboard'}</p>
+                        <h1 className="text-xs font-black text-white tracking-[0.2em] leading-none drop-shadow-md uppercase">Connect to Campus</h1>
+                        <p className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider mt-1">{schoolName || 'Software'}</p>
                     </div>
                 </div>
                 {/* Right Side Actions could go here */}

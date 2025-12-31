@@ -94,14 +94,14 @@ const TeacherDashboard = () => {
                 md:translate-x-0 md:sticky md:top-0 md:flex`}>
 
                 {/* Brand Area */}
-                <div className="p-6 flex items-center justify-between border-b border-white/20">
+                <div className="p-6 flex items-center justify-between border-b border-white/20 pt-10">
                     <div className="flex items-center gap-3">
                         <div className="bg-white/20 p-2.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-white/30 backdrop-blur-sm">
                             <GraduationCap className="text-white w-6 h-6" />
                         </div>
                         <div className="w-full">
-                            <h1 className="text-xl font-serif font-black italic text-white tracking-wide leading-tight drop-shadow-md">{schoolName || 'Teacher Portal'}</h1>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-100">Teacher Dashboard</p>
+                            <h1 className="text-sm font-black text-white tracking-widest leading-none drop-shadow-md uppercase">Connect to Campus</h1>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-100 mt-1 opacity-80">{schoolName || 'Software'}</p>
                         </div>
                     </div>
                     {/* Mobile Close Button */}
@@ -156,10 +156,10 @@ const TeacherDashboard = () => {
             {/* Main Content Area - LIGHT THEME */}
             <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#f1f5f9] relative z-10">
                 {/* Header */}
-                <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm print:hidden">
+                <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 h-24 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm print:hidden safe-area-top pt-4">
                     <div className="flex items-center gap-4">
                         <button
-                            className="md:hidden text-slate-600 hover:text-indigo-600 mr-2"
+                            className="md:hidden text-slate-800 hover:text-indigo-600 bg-slate-100 p-2 rounded-lg"
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         >
                             <Menu size={24} />
