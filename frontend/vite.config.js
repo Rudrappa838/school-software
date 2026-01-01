@@ -22,8 +22,8 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             if (id.includes('recharts')) return 'recharts';
             if (id.includes('lucide-react')) return 'lucide';
-            if (id.includes('leaflet') || id.includes('react-leaflet')) return 'maps';
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) return 'react-vendor';
+            // Keeping other vendor libraries in a single chunk to avoid circular dependencies
+            // especially with react-leaflet relying on react context which might be in another chunk
             return 'vendor';
           }
         }
