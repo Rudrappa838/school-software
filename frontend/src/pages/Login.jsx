@@ -175,7 +175,7 @@ const Login = () => {
                                 className="w-full flex items-center justify-center gap-2 text-gray-400 hover:text-yellow-400 transition-colors text-xs font-semibold group"
                             >
                                 <Smartphone size={16} className="group-hover:scale-110 transition-transform" />
-                                Click here to download app
+                                Download Android App
                             </button>
                         </div>
                     )}
@@ -200,7 +200,7 @@ const Login = () => {
                             <div className="flex flex-col md:flex-row gap-4 justify-center mb-6">
                                 <div className="bg-white p-3 rounded-xl shadow-inner border border-slate-100">
                                     <QRCode
-                                        value={`${window.location.protocol}//${window.location.host}/SchoolApp_Updated.apk`}
+                                        value={`${window.location.protocol}//${window.location.host}/SchoolApp.apk`}
                                         size={130}
                                         level="H"
                                     />
@@ -218,7 +218,7 @@ const Login = () => {
 
                             <div className="space-y-3">
                                 <a
-                                    href="/SchoolApp_Updated.apk"
+                                    href="/SchoolApp.apk"
                                     download
                                     className="w-full inline-flex justify-center items-center gap-3 bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-colors text-sm shadow-lg shadow-green-500/20"
                                 >
