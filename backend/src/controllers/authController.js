@@ -239,14 +239,14 @@ const forgotPassword = async (req, res) => {
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             try {
                 const transporter = nodemailer.createTransport({
-                    host: 'smtp.gmail.com',
-                    port: 587,
+                    host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+                    port: parseInt(process.env.SMTP_PORT) || 587,
                     secure: false, // Use STARTTLS
                     auth: {
                         user: process.env.EMAIL_USER,
                         pass: process.env.EMAIL_PASS
                     },
-                    connectionTimeout: 5000, // Fail after 5 seconds if cannot connect
+                    connectionTimeout: 5000,
                     greetingTimeout: 5000,
                     socketTimeout: 10000
                 });
