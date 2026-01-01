@@ -16,6 +16,7 @@ import StaffSalarySlips from '../components/dashboard/staff/StaffSalarySlips';
 import AdminLiveMap from '../components/dashboard/admin/AdminLiveMap';
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
+import { MobileHeader } from '../components/layout/MobileAppFiles';
 
 const StaffDashboard = () => {
     const { user, logout } = useAuth();
