@@ -4,6 +4,10 @@
   "webDir": "dist",
   "server": {
     "url": "https://school-backend-kepp.onrender.com/app-launch",
-    "cleartext": true
+    "cleartext": true,
+    "allowNavigation": [
+      "school-backend-kepp.onrender.com",
+      "connect2campus.netlify.app"
+    ]
   }
 }
