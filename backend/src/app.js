@@ -31,6 +31,13 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
+// Debug Middleware: Log Origin and Headers for troubleshooting
+app.use((req, res, next) => {
+    console.log(`📡 Request: ${req.method} ${req.url}`);
+    console.log(`   Origin: ${req.headers.origin || 'No Origin'}`);
+    next();
+});
+
 app.use(morgan('dev')); // Logger
 app.use(express.json()); // Parse JSON bodies
 
@@ -75,6 +82,13 @@ app.all('/iclock/cdata', handleExternalDeviceLog);      // Main Attendance Log U
 app.all('/iclock/getrequest', (req, res) => res.send('OK')); // Command checks
 app.all('/iclock/devicecmd', (req, res) => res.send('OK'));  // Device commands
 app.all('/iclock/options', (req, res) => res.send('OK'));    // Configuration checks
+
+// --- Mobile App "Switchboard" Route ---
+// The APK points here. We redirect it to wherever the frontend is currently hosted.
+// If we change hosting, we just update this URL. No APK rebuild needed!
+app.get('/app-launch', (req, res) => {
+    res.redirect('https://connect2campus.netlify.app');
+});
 
 // Download App Route
 app.get('/download-app', (req, res) => {
