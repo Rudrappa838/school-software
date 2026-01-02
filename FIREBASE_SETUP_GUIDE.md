@@ -29,6 +29,24 @@ To enable Push Notifications on Android, you MUST provide the `google-services.j
     1. If you added `google-services.json`, you must build the APK **ONE LAST TIME**.
     2. After that, most updates (UI, logic) will happen automatically via the web.
 
+## 4. The Database (CRITICAL READ)
+Your application is built on **PostgreSQL** (SQL). Firebase's native database (Firestore) is **NoSQL**. They are completely different languages.
+
+**DO NOT TRY TO MIGRATE DATA TO FIREBASE DATABASE.** It would require rewriting 100% of your backend code.
+
+### The Best Strategy: "Hybrid Cloud"
+1.  **Frontend**: Hosted on Firebase (Fast, CDN).
+2.  **Backend**: Hosted on Firebase Cloud Functions.
+3.  **Database**: Keep it on **Render, Supabase, or Neon** (External Postgres).
+
+### ⚠️ IMPORTANT REQUIREMENT ⚠️
+To let your Firebase Backend talk to an external database (like Render/Supabase), **you MUST upgrade your Firebase Project to the "Blaze" (Pay-as-you-go) Plan.**
+*   **Why?** The Free (Spark) plan blocks all outgoing network requests to non-Google services.
+*   **Cost:** For a school app, it is usually **$0 (Free)** because the free quota is huge, but Google *requires* a Credit Card on file to unlock the feature.
+
+**If you cannot add a Credit Card:**
+You cannot use Firebase for the Backend. You should keep the Backend on **Render** (which is free without card) and only use Firebase for the Frontend.
+
 ## Testing
 To test if your backend connects, run:
 `node backend/test_firebase.js` (make sure you have the key file for this test).
