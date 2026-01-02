@@ -134,8 +134,8 @@ const DriverTracking = () => {
             const id = await Geolocation.watchPosition(
                 {
                     enableHighAccuracy: useHighAccuracy,
-                    timeout: 15000, // Fail faster (15s) to switch to network mode if needed
-                    maximumAge: 0 // FORCE FRESH GPS DATA - NO CACHE
+                    timeout: 30000, // Give GPS 30s to warm up (increased from 15s)
+                    maximumAge: useHighAccuracy ? 0 : Infinity // High Accuracy = Fresh, Low Accuracy = Any (Instant)
                 },
                 async (position, err) => {
                     if (err) {
@@ -143,7 +143,7 @@ const DriverTracking = () => {
 
                         // If TIMEOUT (code 3) and we are using High Accuracy, fallback to Low Accuracy
                         if (err.code === 3 && useHighAccuracy === true) {
-                            toast.error("GPS Signal Weak. Switching to Network Mode...");
+                            toast("Optimizing Signal...", { icon: '📡' }); // Neutral message
                             startTracking(false);
                             return;
                         }
