@@ -13,12 +13,27 @@ if (fs.existsSync(serviceAccountPath)) {
             credential: admin.credential.cert(serviceAccount)
         });
         messaging = admin.messaging();
-        console.log('Firebase Admin initialized successfully');
+        console.log('Firebase Admin initialized from File');
     } catch (error) {
-        console.error('Failed to initialize Firebase Admin:', error);
+        console.error('Failed to initialize Firebase Admin from File:', error);
+    }
+} else if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+    try {
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                // Handle private key newlines for ENV
+                privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+            })
+        });
+        messaging = admin.messaging();
+        console.log('Firebase Admin initialized from Environment Variables');
+    } catch (error) {
+        console.error('Failed to initialize Firebase Admin from Env:', error);
     }
 } else {
-    console.log('Firebase Service Account Key not found. Push notifications will be logged to console only.');
+    console.log('Firebase Credentials not found (File or Env). Push notifications disabled.');
 }
 
 /**
