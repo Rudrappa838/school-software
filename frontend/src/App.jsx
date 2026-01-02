@@ -5,8 +5,12 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import SetupAdmin from './pages/SetupAdmin';
+import ChangePassword from './pages/ChangePassword';
+
+// ... (in Routes)
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/change-password" element={<ChangePassword />} />
+                <Route path="/setup-admin" element={<SetupAdmin />} />
 import SuperAdminLogin from './pages/SuperAdminLogin';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 

@@ -38,6 +38,13 @@ const Login = () => {
         setErrorMessage('');
         const result = await login(email, password, role);
         if (result.success) {
+            // Check for Default Password / First Login flag
+            if (result.user?.mustChangePassword || password === '123456') {
+                toast('Please set a new password for security.', { icon: '🔒' });
+                navigate('/change-password', { state: { email, role, oldPassword: password } }); // Pass data to pre-fill
+                return;
+            }
+
             toast.success('Welcome back!');
             switch (role) {
                 case 'SCHOOL_ADMIN': navigate('/school-admin'); break;
