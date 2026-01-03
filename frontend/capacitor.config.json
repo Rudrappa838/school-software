@@ -2,6 +2,10 @@
   "appId": "com.school.app",
   "appName": "SchoolApp",
   "webDir": "dist",
+  "server": {
+    "url": "https://connecttocampus-c98e4.web.app",
+    "cleartext": true
+  },
   "plugins": {
     "PushNotifications": {
       "presentationOptions": [

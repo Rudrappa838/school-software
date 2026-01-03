@@ -2,21 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plane, Cloud, Zap } from 'lucide-react';
 
+
 const Welcome = ({ onComplete }) => {
     const [schoolName, setSchoolName] = useState('Connect to Campus');
     const navigate = useNavigate();
+    const hasNavigated = React.useRef(false);
 
     const handleComplete = () => {
+        if (hasNavigated.current) return;
+        hasNavigated.current = true;
+
         if (onComplete) {
             onComplete();
         } else {
-            navigate('/login');
+            navigate('/login', { replace: true });
         }
     };
 
     useEffect(() => {
-        // Navigation after 10.5 seconds (Matches Bus Animation of 10s)
-        const timeout = setTimeout(handleComplete, 10500);
+        // Navigation after 5.5 seconds (Matches 5s Animation)
+        const timeout = setTimeout(handleComplete, 5500);
 
         // Fetch School Name
         const storedConfig = localStorage.getItem('school_config');
@@ -94,11 +99,11 @@ const Welcome = ({ onComplete }) => {
                     <div className="absolute bottom-20 right-0 w-4 h-64 bg-slate-700"></div>
                     <div className="absolute bottom-80 right-0 w-32 h-4 bg-slate-700 rounded-l-lg"></div>
                     <div className="absolute bottom-[280px] right-[100px] w-16 h-40 bg-slate-900 rounded-lg border-4 border-slate-800 shadow-2xl flex flex-col items-center justify-around py-2">
-                        <div className="w-10 h-10 bg-red-600 rounded-full shadow-inner" style={{ animation: 'signal-red 10s forwards' }}>
+                        <div className="w-10 h-10 bg-red-600 rounded-full shadow-inner" style={{ animation: 'signal-red 5s forwards' }}>
                             <div className="w-full h-full rounded-full animate-ping opacity-20"></div>
                         </div>
                         <div className="w-10 h-10 bg-yellow-600 rounded-full opacity-30"></div>
-                        <div className="w-10 h-10 bg-green-600 rounded-full shadow-inner" style={{ animation: 'signal-green 10s forwards' }}></div>
+                        <div className="w-10 h-10 bg-green-600 rounded-full shadow-inner" style={{ animation: 'signal-green 5s forwards' }}></div>
                     </div>
                 </div>
 
@@ -107,7 +112,7 @@ const Welcome = ({ onComplete }) => {
                     <div className="w-full h-0 border-t-4 border-dashed border-yellow-400 opacity-60"></div>
 
                     {/* Yellow School Bus */}
-                    <div className="absolute bottom-4 animate-drive-bus-sequence" style={{ animationDuration: '10s' }}>
+                    <div className="absolute bottom-4 animate-drive-bus-sequence" style={{ animationDuration: '5s' }}>
                         <div className="relative w-[400px] h-48 transform scale-[0.45] sm:scale-75 md:scale-100 origin-bottom">
                             {/* Body - Classic Yellow */}
                             <div className="w-full h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-[2rem] shadow-2xl relative overflow-hidden border-b-8 border-yellow-600">

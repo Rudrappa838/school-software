@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
             console.error("Login failed", error);
             return {
                 success: false,
-                message: error.response?.data?.message || 'Login failed'
+                message: error.response?.data?.message || error.message || 'Login failed (Check Network)'
             };
         }
     };
