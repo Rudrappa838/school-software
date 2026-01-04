@@ -25,14 +25,7 @@ app.use(helmet({
 
 // Configure CORS to allow all origins (for development and production)
 app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'https://connect2campus.netlify.app',
-        'https://school-software-frontend.vercel.app',
-        'https://connecttocampus-c98e4.web.app',
-        'http://localhost',      // Capacitor Android
-        'capacitor://localhost'  // Capacitor iOS
-    ],
+    origin: true, // Allow ALL origins (Fix for Mobile App)
     credentials: true, // Allow credentials
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
