@@ -38,19 +38,26 @@ exports.addTeacher = async (req, res) => {
             }
         }
 
-        // 2. Generate Employee ID - NEW FORMAT: [School First Letter]T[4 digits]
-        // Example: ABC School -> AT1234
+        // 2. Generate Employee ID - NEW FORMAT: [School First 2 Letters] + T + [4 Digits]
+        // Example: DAS4548
         const schoolRes = await client.query('SELECT name FROM schools WHERE id = $1', [school_id]);
-        const schoolName = schoolRes.rows[0]?.name || 'X';
-        const firstLetter = schoolName.replace(/[^a-zA-Z]/g, '').substring(0, 1).toUpperCase() || 'X';
+        const schoolName = schoolRes.rows[0]?.name || 'XX';
+        let prefix = schoolName.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase();
+        if (prefix.length < 2) prefix = (prefix + 'X').substring(0, 2);
 
         let employee_id;
-        let isUnique = false;
-        while (!isUnique) {
-            const rand4 = Math.floor(1000 + Math.random() * 9000); // 1000 to 9999
-            employee_id = `${firstLetter}T${rand4}`;
-            const check = await client.query('SELECT 1 FROM teachers WHERE employee_id = $1 AND school_id = $2', [employee_id, school_id]);
-            if (check.rows.length === 0) isUnique = true;
+        const providedId = req.body.employee_id; // Allow manual override if sent
+
+        if (providedId) {
+            employee_id = providedId.toUpperCase();
+        } else {
+            let isUnique = false;
+            while (!isUnique) {
+                const rand4 = Math.floor(1000 + Math.random() * 9000); // 1000 to 9999
+                employee_id = `${prefix}T${rand4}`; // XX + T + 1234 = 7 chars
+                const check = await client.query('SELECT 1 FROM teachers WHERE employee_id = $1 AND school_id = $2', [employee_id, school_id]);
+                if (check.rows.length === 0) isUnique = true;
+            }
         }
 
         // 2. Insert Teacher

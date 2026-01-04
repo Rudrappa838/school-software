@@ -38,24 +38,28 @@ exports.addStaff = async (req, res) => {
             }
         }
 
-        // 2. Generate Employee ID - NEW FORMAT: [School First Letter][Role First Letter][4 digits]
-        // Examples: 
-        // - Driver at ABC School -> AD1234
-        // - Librarian at ABC School -> AL5678
-        // - Accountant at ABC School -> AA9012
+        // 2. Generate Employee ID - NEW FORMAT: [School First 2 Letters] + [Role 1 Letter] + [4 Digits]
+        // Example: Driver at DAS School -> DAD1234
         const schoolRes = await client.query('SELECT name FROM schools WHERE id = $1', [school_id]);
-        const schoolName = schoolRes.rows[0]?.name || 'X';
-        const schoolLetter = schoolName.replace(/[^a-zA-Z]/g, '').substring(0, 1).toUpperCase() || 'X';
-        const roleLetter = (role || 'S').substring(0, 1).toUpperCase();
+        const schoolName = schoolRes.rows[0]?.name || 'XX';
+        let schoolPrefix = schoolName.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase();
+        if (schoolPrefix.length < 2) schoolPrefix = (schoolPrefix + 'X').substring(0, 2);
+
+        const roleLetter = (role || 'S').substring(0, 1).toUpperCase(); // D for Driver
 
         let employee_id;
-        let isUnique = false;
-        while (!isUnique) {
-            const rand4 = Math.floor(1000 + Math.random() * 9000); // 1000 to 9999
-            employee_id = `${schoolLetter}${roleLetter}${rand4}`;
-            // Check uniqueness in staff
-            const check = await client.query('SELECT 1 FROM staff WHERE employee_id = $1 AND school_id = $2', [employee_id, school_id]);
-            if (check.rows.length === 0) isUnique = true;
+        const providedId = req.body.employee_id;
+
+        if (providedId) {
+            employee_id = providedId.toUpperCase();
+        } else {
+            let isUnique = false;
+            while (!isUnique) {
+                const rand4 = Math.floor(1000 + Math.random() * 9000); // 1000 to 9999
+                employee_id = `${schoolPrefix}${roleLetter}${rand4}`; // XX + D + 1234 = 7 chars
+                const check = await client.query('SELECT 1 FROM staff WHERE employee_id = $1 AND school_id = $2', [employee_id, school_id]);
+                if (check.rows.length === 0) isUnique = true;
+            }
         }
 
         const result = await client.query(
