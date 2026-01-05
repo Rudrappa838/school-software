@@ -26,24 +26,28 @@ export const AuthProvider = ({ children }) => {
 
     // Broadcast Channel for Multi-tab management
     useEffect(() => {
-        const channel = new BroadcastChannel('school_auth_channel');
-
-        channel.onmessage = (event) => {
-            if (event.data.type === 'LOGIN_SUCCESS') {
-                if (user && event.data.userId === user.id) {
-                    logout(false, true);
-                    try { window.close(); } catch (e) { }
+        let channel = null;
+        try {
+            channel = new BroadcastChannel('school_auth_channel');
+            channel.onmessage = (event) => {
+                if (event.data.type === 'LOGIN_SUCCESS') {
+                    if (user && event.data.userId === user.id) {
+                        logout(false, true);
+                        try { window.close(); } catch (e) { }
+                    }
                 }
-            }
-            if (event.data.type === 'LOGOUT') {
-                if (user && event.data.userId === user.id) {
-                    logout(false, true);
+                if (event.data.type === 'LOGOUT') {
+                    if (user && event.data.userId === user.id) {
+                        logout(false, true);
+                    }
                 }
-            }
-        };
+            };
+        } catch (e) {
+            console.warn('BroadcastChannel not supported in this environment (likely mobile app). Tab sync disabled.');
+        }
 
         return () => {
-            channel.close();
+            if (channel) channel.close();
         };
     }, [user]);
 
@@ -105,9 +109,11 @@ export const AuthProvider = ({ children }) => {
     const logout = async (isAutoLogout = false, isRemote = false) => {
         try {
             if (!isRemote && !isAutoLogout) {
-                const channel = new BroadcastChannel('school_auth_channel');
-                channel.postMessage({ type: 'LOGOUT', userId: user?.id });
-                channel.close();
+                try {
+                    const channel = new BroadcastChannel('school_auth_channel');
+                    channel.postMessage({ type: 'LOGOUT', userId: user?.id });
+                    channel.close();
+                } catch (e) { console.warn('BroadcastChannel suppressed inside logout'); }
 
                 await api.post('/auth/logout');
             }
