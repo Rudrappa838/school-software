@@ -369,7 +369,10 @@ const forgotPassword = async (req, res) => {
             console.log('NOTE: Real email sending skipped. Add EMAIL_USER and EMAIL_PASS to .env to enable.');
         }
 
-        res.json({ message: 'Password reset link generated. Check your email (or server console for dev).' });
+        res.json({
+            message: 'Password reset link generated. Check your email.',
+            debug_link: process.env.NODE_ENV === 'development' || true ? resetLink : undefined // EXPOSED FOR DEBUGGING
+        });
 
     } catch (error) {
         console.error('Forgot Password Error:', error);
