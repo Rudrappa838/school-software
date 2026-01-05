@@ -13,7 +13,7 @@ const StudentManagement = ({ config, prefillData }) => {
     const [searchQuery, setSearchQuery] = useState(''); // Added Search State
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
-    const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
