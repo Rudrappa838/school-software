@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, BookOpen, Home, Bus, FileText, Calendar, DollarSign,
-    LogOut, User, Bell, GraduationCap, Clock, Award, MessageSquare, Menu, X, Navigation
+    LogOut, User, Bell, GraduationCap, Clock, Award, MessageSquare, Menu, X, Navigation, CheckSquare
 } from 'lucide-react';
 import NotificationBell from '../components/NotificationBell';
 import toast from 'react-hot-toast';
