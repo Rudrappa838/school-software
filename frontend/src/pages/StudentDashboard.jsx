@@ -354,6 +354,12 @@ const StudentDashboard = () => {
                         activeTab={activeTab}
                         onTabChange={setActiveTab}
                         onMenuToggle={() => setIsMobileMenuOpen(true)}
+                        tabs={[
+                            { id: 'overview', label: 'Home', icon: LayoutDashboard },
+                            { id: 'academics', label: 'Academics', icon: BookOpen },
+                            { id: 'attendance', label: 'Attendance', icon: CheckSquare },
+                            { id: 'doubts', label: 'Doubts', icon: MessageSquare },
+                        ]}
                     />
                 )}
             </main>

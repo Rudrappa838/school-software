@@ -122,8 +122,9 @@ const Login = () => {
                             <div className="space-y-1">
                                 <label className="text-[10px] font-semibold text-gray-400 ml-1 uppercase tracking-wider">
                                     {role === 'SCHOOL_ADMIN' ? 'Email or School ID' :
-                                        ['STUDENT', 'TEACHER', 'STAFF'].includes(role) ? 'Your ID (Admission/Employee ID)' :
-                                            'Email Address'}
+                                        role === 'STUDENT' ? 'Admission ID' :
+                                            ['TEACHER', 'STAFF'].includes(role) ? 'Employee ID' :
+                                                'Email Address'}
                                 </label>
                                 <input
                                     type="text"
@@ -131,8 +132,9 @@ const Login = () => {
                                     autoComplete="off"
                                     className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400 transition-all font-sans text-sm"
                                     placeholder={role === 'SCHOOL_ADMIN' ? 'admin@school.com or 123456' :
-                                        ['STUDENT', 'TEACHER', 'STAFF'].includes(role) ? 'e.g. STU1234 or 654321' :
-                                            'admin@school.com'}
+                                        role === 'STUDENT' ? 'e.g. STU1234' :
+                                            ['TEACHER', 'STAFF'].includes(role) ? 'e.g. EMP1234' :
+                                                'admin@school.com'}
                                     value={email}
                                     onChange={(e) => { setEmail(e.target.value); setErrorMessage(''); }}
                                 />
@@ -216,7 +218,7 @@ const Login = () => {
                             <div className="flex flex-col md:flex-row gap-4 justify-center mb-6">
                                 <div className="bg-white p-3 rounded-xl shadow-inner border border-slate-100">
                                     <QRCode
-                                        value="https://github.com/Rudrappa838/school-software/raw/main/release/schoolapp_v4.apk"
+                                        value="https://github.com/Rudrappa838/school-software/raw/main/release/schoolapp_v5.apk"
                                         size={130}
                                         level="H"
                                     />
@@ -234,8 +236,8 @@ const Login = () => {
 
                             <div className="space-y-3">
                                 <a
-                                    href="https://github.com/Rudrappa838/school-software/raw/main/release/schoolapp_v4.apk"
-                                    download="SchoolApp_v4.apk"
+                                    href="https://github.com/Rudrappa838/school-software/raw/main/release/schoolapp_v5.apk"
+                                    download="SchoolApp_v5.apk"
                                     className="w-full inline-flex justify-center items-center gap-3 bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-colors text-sm shadow-lg shadow-green-500/20"
                                 >
                                     <Smartphone size={20} />
