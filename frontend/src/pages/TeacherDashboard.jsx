@@ -222,7 +222,7 @@ const TeacherDashboard = () => {
                             <div className="text-center py-20 text-slate-400">Loading profile...</div>
                         ) : (
                             <>
-                                {activeTab === 'overview' && <TeacherOverview profile={teacherProfile} schoolName={schoolName} />}
+                                {activeTab === 'overview' && <TeacherOverview profile={teacherProfile} schoolName={schoolName} user={user} />}
 
                                 {activeTab === 'attendance' && (
                                     teacherProfile?.assigned_class_id ?
@@ -270,16 +270,34 @@ const TeacherDashboard = () => {
 
 // --- Sub Components ---
 
-const TeacherOverview = ({ profile, schoolName }) => (
+const TeacherOverview = ({ profile, schoolName, user }) => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="col-span-full mb-6">
-            <div className="overflow-hidden w-full bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative">
+            <div className="overflow-hidden w-full bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full mix-blend-multiply filter blur-3xl opacity-70 -translate-y-1/2 translate-x-1/2"></div>
-                <h3 className="text-3xl font-black text-slate-800 tracking-tight font-serif italic relative z-10">
-                    {schoolName}
-                </h3>
+                <div className="relative z-10">
+                    <h3 className="text-3xl font-black text-slate-800 tracking-tight font-serif italic mb-1">
+                        {schoolName}
+                    </h3>
+                    {user && (
+                        <div className="mt-4 flex flex-col gap-1">
+                            <h2 className="text-xl font-bold text-slate-700">{user.name}</h2>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 font-medium">
+                                <span className="flex items-center gap-1">
+                                    <BookOpen size={14} className="text-emerald-500" />
+                                    {profile?.subject_specialization || 'Teacher'}
+                                </span>
+                                {profile?.employee_id && (
+                                    <span className="flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                        ID: {profile.employee_id}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
-            <p className="text-slate-500 text-sm mt-2 ml-1">Overview of your academic responsibilities</p>
         </div>
         <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/20 transition-all"></div>

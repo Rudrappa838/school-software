@@ -333,7 +333,7 @@ const StudentDashboard = () => {
                 <div className={`flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar ${isMobileApp ? 'pt-[calc(4rem+var(--sat)+1rem)] pb-[calc(4rem+var(--sab)+1rem)]' : ''}`}>
 
                     <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
-                        {activeTab === 'overview' && <StudentOverview schoolName={schoolName} stats={overviewStats} />}
+                        {activeTab === 'overview' && <StudentOverview schoolName={schoolName} stats={overviewStats} student={studentData} user={user} />}
                         {activeTab === 'doubts' && <StudentDoubts />}
                         {activeTab === 'leaves' && <StudentLeaves />}
                         {activeTab === 'fleet-map' && <AdminLiveMap />}
@@ -363,16 +363,34 @@ const StudentDashboard = () => {
 
 // --- Sub Components (Placeholders for now, will expand) ---
 
-const StudentOverview = ({ schoolName, stats }) => (
+const StudentOverview = ({ schoolName, stats, student, user }) => (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="col-span-full mb-6">
-            <div className="overflow-hidden w-full bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative">
+            <div className="overflow-hidden w-full bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full mix-blend-multiply filter blur-3xl opacity-70 -translate-y-1/2 translate-x-1/2"></div>
-                <h3 className="text-3xl font-black text-slate-800 tracking-tight font-serif italic relative z-10">
-                    {schoolName}
-                </h3>
+                <div className="relative z-10">
+                    <h3 className="text-3xl font-black text-slate-800 tracking-tight font-serif italic mb-1">
+                        {schoolName}
+                    </h3>
+                    {user && (
+                        <div className="mt-4 flex flex-col gap-1">
+                            <h2 className="text-xl font-bold text-slate-700">{user.name}</h2>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 font-medium">
+                                <span className="flex items-center gap-1">
+                                    <GraduationCap size={14} className="text-indigo-500" />
+                                    {student?.class_name ? `Class ${student.class_name}-${student.section_name}` : 'Student'}
+                                </span>
+                                {student?.admission_no && (
+                                    <span className="flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                        Roll: {student.admission_no}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
-            <p className="text-slate-500 text-sm mt-2 ml-1">Your Personal Dashboard</p>
         </div>
         <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
             <h3 className="font-bold text-indigo-100 mb-1">Attendance</h3>

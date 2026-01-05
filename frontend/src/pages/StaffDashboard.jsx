@@ -325,7 +325,7 @@ const StaffDashboard = () => {
 
 
                     <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
-                        {activeTab === 'overview' && <StaffOverview isDriver={isDriver} schoolName={schoolName} />}
+                        {activeTab === 'overview' && <StaffOverview isDriver={isDriver} schoolName={schoolName} profile={staffProfile} user={user} />}
                         {activeTab === 'attendance' && <StaffMyAttendance />}
 
                         {/* Unified Transport View */}
@@ -370,18 +370,36 @@ const StaffDashboard = () => {
 
 // --- Sub Components ---
 
-const StaffOverview = ({ isDriver, schoolName }) => {
+const StaffOverview = ({ isDriver, schoolName, profile, user }) => {
     const navigate = useNavigate();
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="col-span-full mb-6">
-                <div className="overflow-hidden w-full bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative">
+                <div className="overflow-hidden w-full bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50 rounded-full mix-blend-multiply filter blur-3xl opacity-70 -translate-y-1/2 translate-x-1/2"></div>
-                    <h3 className="text-3xl font-black text-slate-800 tracking-tight font-serif italic relative z-10">
-                        {schoolName}
-                    </h3>
+                    <div className="relative z-10">
+                        <h3 className="text-3xl font-black text-slate-800 tracking-tight font-serif italic mb-1">
+                            {schoolName}
+                        </h3>
+                        {user && (
+                            <div className="mt-4 flex flex-col gap-1">
+                                <h2 className="text-xl font-bold text-slate-700">{profile?.name || user.name}</h2>
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 font-medium">
+                                    <span className="flex items-center gap-1">
+                                        <Briefcase size={14} className="text-indigo-500" />
+                                        {isDriver ? 'Driver' : (profile?.role || 'Staff Member')}
+                                    </span>
+                                    {profile?.employee_id && (
+                                        <span className="flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                            ID: {profile.employee_id}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <p className="text-slate-500 text-sm mt-2 ml-1">{isDriver ? 'Driver Dashboard' : 'Staff Dashboard'}</p>
             </div>
 
             {isDriver && (
