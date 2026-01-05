@@ -241,15 +241,18 @@ const StaffDashboard = () => {
 
                     <p className="px-4 text-xs font-bold text-blue-200 uppercase tracking-wider mb-2 mt-6">Transport</p>
                     <NavButton active={activeTab === 'fleet-map'} onClick={() => handleTabChange('fleet-map')} icon={Navigation} label="Live Fleet Map" />
-                    <div className="px-4 py-2">
-                        <button
-                            onClick={() => navigate('/driver-tracking')}
-                            className="w-full flex items-center justify-center gap-2 p-3 bg-white text-indigo-600 rounded-xl text-sm font-black shadow-lg hover:bg-indigo-50 transition-all border-b-4 border-indigo-200 active:border-b-0 active:translate-y-1"
-                        >
-                            <Navigation size={18} className="animate-pulse" />
-                            START GPS MODE
-                        </button>
-                    </div>
+// ... (Sidebar GPS Button)
+                    {isDriver && (
+                        <div className="px-4 py-2">
+                            <button
+                                onClick={() => navigate('/driver-tracking')}
+                                className="w-full flex items-center justify-center gap-2 p-3 bg-white text-indigo-600 rounded-xl text-sm font-black shadow-lg hover:bg-indigo-50 transition-all border-b-4 border-indigo-200 active:border-b-0 active:translate-y-1"
+                            >
+                                <Navigation size={18} className="animate-pulse" />
+                                START GPS MODE
+                            </button>
+                        </div>
+                    )}
 
                     <p className="px-4 text-xs font-bold text-blue-200 uppercase tracking-wider mb-2 mt-6">Finance</p>
                     <NavButton active={activeTab === 'salary'} onClick={() => handleTabChange('salary')} icon={FileText} label="Salary Slips" />
@@ -267,8 +270,10 @@ const StaffDashboard = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-white truncate">{staffProfile?.name || user?.name}</p>
-                            <p className="text-[10px] text-blue-100 uppercase font-bold tracking-tight">{isDriver ? 'Driver' : 'Staff Member'}: {staffProfile?.employee_id || '--'}</p>
-                            <p className="text-[10px] text-blue-200">School ID: {user?.schoolId}</p>
+                            <p className="text-[10px] text-blue-100 uppercase font-medium tracking-tight">
+                                {isDriver ? 'Driver' : (staffProfile?.role || 'Staff')} • {staffProfile?.employee_id || '--'}
+                            </p>
+                            <p className="text-[10px] text-blue-200 truncate">{schoolName}</p>
                         </div>
                         <button onClick={handleLogout} className="text-blue-200 hover:text-white transition-colors">
                             <LogOut size={18} />
@@ -379,24 +384,26 @@ const StaffOverview = ({ isDriver, schoolName }) => {
                 <p className="text-slate-500 text-sm mt-2 ml-1">{isDriver ? 'Driver Dashboard' : 'Staff Dashboard'}</p>
             </div>
 
-            <div className="col-span-full mb-6 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 transform hover:scale-[1.01] transition-all">
-                <div className="flex items-center gap-4">
-                    <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
-                        <Navigation size={40} className="animate-pulse" />
+            {isDriver && (
+                <div className="col-span-full mb-6 bg-gradient-to-r from-icon-600 to-indigo-600 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 transform hover:scale-[1.01] transition-all" style={{ background: 'linear-gradient(to right, #4f46e5, #2563eb)' }}>
+                    <div className="flex items-center gap-4">
+                        <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
+                            <Navigation size={40} className="animate-pulse" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold">Start Your Trip</h2>
+                            <p className="text-blue-100 text-sm">Turn on your GPS so students can track your bus.</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-2xl font-bold">Start Your Trip</h2>
-                        <p className="text-blue-100 text-sm">Turn on your GPS so students can track your bus.</p>
-                    </div>
+                    <button
+                        onClick={() => navigate('/driver-tracking')}
+                        className="w-full md:w-auto px-8 py-4 bg-white text-indigo-600 rounded-xl font-black text-lg shadow-lg hover:shadow-indigo-500/40 transition-all flex items-center justify-center gap-3 active:scale-95"
+                    >
+                        <Radio size={24} className="animate-bounce" />
+                        START GPS MODE
+                    </button>
                 </div>
-                <button
-                    onClick={() => navigate('/driver-tracking')}
-                    className="w-full md:w-auto px-8 py-4 bg-white text-indigo-600 rounded-xl font-black text-lg shadow-lg hover:shadow-indigo-500/40 transition-all flex items-center justify-center gap-3 active:scale-95"
-                >
-                    <Radio size={24} className="animate-bounce" />
-                    START GPS MODE
-                </button>
-            </div>
+            )}
 
             <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
                 <h3 className="font-bold text-slate-500 mb-1">Attendance</h3>

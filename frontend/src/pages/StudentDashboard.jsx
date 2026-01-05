@@ -279,8 +279,10 @@ const StudentDashboard = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-white truncate">{user?.name}</p>
-                            <p className="text-[10px] text-blue-100 uppercase font-bold tracking-tight">Admission No: {studentData?.admission_no || '--'}</p>
-                            <p className="text-[10px] text-blue-200">School ID: {user?.schoolId}</p>
+                            <p className="text-[10px] text-blue-100 uppercase font-medium tracking-tight">
+                                {studentData?.class_name ? `Class ${studentData.class_name}-${studentData.section_name}` : 'Student'} • {studentData?.admission_no || '--'}
+                            </p>
+                            <p className="text-[10px] text-blue-200 truncate">{schoolName}</p>
                         </div>
                         <button onClick={handleLogout} className="text-blue-200 hover:text-white transition-colors">
                             <LogOut size={18} />
