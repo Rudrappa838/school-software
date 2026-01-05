@@ -122,7 +122,7 @@ const Login = () => {
                             <div className="space-y-1">
                                 <label className="text-[10px] font-semibold text-gray-400 ml-1 uppercase tracking-wider">
                                     {role === 'SCHOOL_ADMIN' ? 'Email or School ID' :
-                                        role === 'STUDENT' ? 'Admission ID' :
+                                        role === 'STUDENT' ? 'Admission Number' :
                                             ['TEACHER', 'STAFF'].includes(role) ? 'Employee ID' :
                                                 'Email Address'}
                                 </label>
@@ -132,8 +132,8 @@ const Login = () => {
                                     autoComplete="off"
                                     className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400 transition-all font-sans text-sm"
                                     placeholder={role === 'SCHOOL_ADMIN' ? 'admin@school.com or 123456' :
-                                        role === 'STUDENT' ? 'e.g. STU1234' :
-                                            ['TEACHER', 'STAFF'].includes(role) ? 'e.g. EMP1234' :
+                                        role === 'STUDENT' ? 'Enter Admission Number' :
+                                            ['TEACHER', 'STAFF'].includes(role) ? 'Enter Employee ID' :
                                                 'admin@school.com'}
                                     value={email}
                                     onChange={(e) => { setEmail(e.target.value); setErrorMessage(''); }}
