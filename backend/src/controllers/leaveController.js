@@ -77,10 +77,11 @@ const updateLeaveStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    const { schoolId } = req.user;
     try {
         const result = await pool.query(
-            `UPDATE leaves SET status = $1 WHERE id = $2 RETURNING *`,
-            [status, id]
+            `UPDATE leaves SET status = $1 WHERE id = $2 AND school_id = $3 RETURNING *`,
+            [status, id, schoolId]
         );
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Leave not found' });
@@ -110,8 +111,13 @@ const updateLeaveStatus = async (req, res) => {
 
 const deleteLeave = async (req, res) => {
     const { id } = req.params;
+    const { schoolId } = req.user;
     try {
-        await pool.query('DELETE FROM leaves WHERE id = $1', [id]);
+        const result = await pool.query('DELETE FROM leaves WHERE id = $1 AND school_id = $2 RETURNING *', [id, schoolId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Leave not found or access denied' });
+        }
         res.json({ message: 'Leave record deleted' });
     } catch (error) {
         console.error('Error deleting leave:', error);

@@ -4,7 +4,10 @@ const { pool } = require('../config/db');
 
 exports.getAllHostels = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM hostels ORDER BY name');
+        const result = await pool.query(
+            'SELECT * FROM hostels WHERE school_id = $1 ORDER BY name',
+            [req.user.schoolId]
+        );
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching hostels:', error);
@@ -16,8 +19,8 @@ exports.createHostel = async (req, res) => {
     const { name, type, address, warden_name, contact_number } = req.body;
     try {
         const result = await pool.query(
-            'INSERT INTO hostels (name, type, address, warden_name, contact_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [name, type, address, warden_name, contact_number]
+            'INSERT INTO hostels (name, type, address, warden_name, contact_number, school_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [name, type, address, warden_name, contact_number, req.user.schoolId]
         );
         res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -31,8 +34,8 @@ exports.updateHostel = async (req, res) => {
     const { name, type, address, warden_name, contact_number } = req.body;
     try {
         const result = await pool.query(
-            'UPDATE hostels SET name = $1, type = $2, address = $3, warden_name = $4, contact_number = $5 WHERE id = $6 RETURNING *',
-            [name, type, address, warden_name, contact_number, id]
+            'UPDATE hostels SET name = $1, type = $2, address = $3, warden_name = $4, contact_number = $5 WHERE id = $6 AND school_id = $7 RETURNING *',
+            [name, type, address, warden_name, contact_number, id, req.user.schoolId]
         );
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Hostel not found' });
@@ -47,7 +50,10 @@ exports.updateHostel = async (req, res) => {
 exports.deleteHostel = async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pool.query('DELETE FROM hostels WHERE id = $1 RETURNING *', [id]);
+        const result = await pool.query(
+            'DELETE FROM hostels WHERE id = $1 AND school_id = $2 RETURNING *',
+            [id, req.user.schoolId]
+        );
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Hostel not found' });
         }
@@ -232,11 +238,12 @@ exports.getStudentHostelDetails = async (req, res) => {
             LEFT JOIN hostel_rooms r ON a.room_id = r.id
             LEFT JOIN hostels h ON r.hostel_id = h.id
 
-            WHERE s.admission_no ILIKE '%' || $1 || '%' 
+            WHERE (s.admission_no ILIKE '%' || $1 || '%' 
                OR s.name ILIKE '%' || $1 || '%' 
-               OR CAST(s.id AS TEXT) = $1
+               OR CAST(s.id AS TEXT) = $1)
+               AND s.school_id = $2
             LIMIT 1
-        `, [admissionNo]);
+        `, [admissionNo, req.user.schoolId]);
 
         if (studentRes.rows.length === 0) {
             return res.status(404).json({ error: 'Student not found' });
@@ -435,8 +442,13 @@ exports.getHostelStats = async (req, res) => {
     try {
         const stats = {};
 
-        // 1. Head Count (Active Allocations)
-        const headcountRes = await pool.query("SELECT COUNT(*) as count FROM hostel_allocations WHERE status = 'Active'");
+        // 1. Head Count (Active Allocations for this school)
+        const headcountRes = await pool.query(`
+            SELECT COUNT(a.id) as count 
+            FROM hostel_allocations a
+            JOIN students s ON a.student_id = s.id
+            WHERE a.status = 'Active' AND s.school_id = $1
+        `, [req.user.schoolId]);
         stats.headCount = parseInt(headcountRes.rows[0].count);
 
         // 2. Capacity
@@ -451,21 +463,23 @@ exports.getHostelStats = async (req, res) => {
         const currentMonthRes = await pool.query(`
             SELECT 
                 COUNT(*) as total_bills,
-                SUM(amount) as total_billed_amount,
-                SUM(CASE WHEN status = 'Paid' THEN 1 ELSE 0 END) as paid_bills_count,
-                SUM(CASE WHEN status = 'Paid' THEN amount ELSE 0 END) as paid_amount
-            FROM hostel_mess_bills 
-            WHERE month = $1 AND year = $2
-        `, [currentMonth, currentYear]);
+                SUM(b.amount) as total_billed_amount,
+                SUM(CASE WHEN b.status = 'Paid' THEN 1 ELSE 0 END) as paid_bills_count,
+                SUM(CASE WHEN b.status = 'Paid' THEN b.amount ELSE 0 END) as paid_amount
+            FROM hostel_mess_bills b
+            JOIN students s ON b.student_id = s.id
+            WHERE b.month = $1 AND b.year = $2 AND s.school_id = $3
+        `, [currentMonth, currentYear, req.user.schoolId]);
 
         // B. Global Pending Stats (Liability Focus)
         const globalPendingRes = await pool.query(`
              SELECT 
                 COUNT(*) as pending_bills_count,
-                SUM(amount) as pending_amount
-             FROM hostel_mess_bills
-             WHERE status = 'Pending'
-        `);
+                SUM(b.amount) as pending_amount
+             FROM hostel_mess_bills b
+             JOIN students s ON b.student_id = s.id
+             WHERE b.status = 'Pending' AND s.school_id = $1
+        `, [req.user.schoolId]);
 
         stats.mess = {
             // Current Month Specifics
@@ -485,8 +499,9 @@ exports.getHostelStats = async (req, res) => {
                 SUM(r.cost_per_term) as total_expected_rent
              FROM hostel_allocations a
              JOIN hostel_rooms r ON a.room_id = r.id
-             WHERE a.status = 'Active'
-        `);
+             JOIN students s ON a.student_id = s.id
+             WHERE a.status = 'Active' AND s.school_id = $1
+        `, [req.user.schoolId]);
         stats.rent = {
             expectedTermRent: parseFloat(activeAllocationsRes.rows[0].total_expected_rent || 0)
         };
@@ -510,8 +525,13 @@ exports.generateBulkMessBills = async (req, res) => {
 
         await client.query('BEGIN');
 
-        // Get all active students
-        const studentsRes = await client.query("SELECT student_id FROM hostel_allocations WHERE status = 'Active'");
+        // Get all active students for this school
+        const studentsRes = await client.query(`
+            SELECT a.student_id 
+            FROM hostel_allocations a
+            JOIN students s ON a.student_id = s.id
+            WHERE a.status = 'Active' AND s.school_id = $1
+        `, [req.user.schoolId]);
         const students = studentsRes.rows;
 
         let createdCount = 0;
@@ -558,13 +578,14 @@ exports.getPendingDues = async (req, res) => {
             SELECT b.id, b.student_id, s.name, s.admission_no, b.amount, b.month, b.year 
             FROM hostel_mess_bills b 
             JOIN students s ON b.student_id = s.id 
-            WHERE b.status = 'Pending'
+            WHERE b.status = 'Pending' AND s.school_id = $1
         `;
-        const messParams = [];
+        const messParams = [req.user.schoolId];
+
         if (filterMonth === 'current') {
             const currentMonth = new Date().toLocaleString('default', { month: 'long' });
             const currentYear = new Date().getFullYear();
-            messQuery += ` AND b.month = $1 AND b.year = $2`;
+            messQuery += ` AND b.month = $2 AND b.year = $3`;
             messParams.push(currentMonth, currentYear);
         }
         messQuery += ` ORDER BY b.year DESC, b.month DESC`;
@@ -590,11 +611,11 @@ exports.getPendingDues = async (req, res) => {
             JOIN hostel_allocations a ON s.id = a.student_id
             JOIN hostel_rooms r ON a.room_id = r.id
             LEFT JOIN hostel_payments p ON s.id = p.student_id AND p.payment_type = 'Room Rent'
-            WHERE a.status = 'Active'
-            GROUP BY s.id, r.id
+            WHERE a.status = 'Active' AND s.school_id = $1
+            GROUP BY s.id, r.id, r.cost_per_term
             HAVING COALESCE(SUM(p.amount), 0) < CAST(r.cost_per_term AS NUMERIC)
         `;
-        const rentRes = await pool.query(rentQuery);
+        const rentRes = await pool.query(rentQuery, [req.user.schoolId]);
 
         const rentDues = rentRes.rows.map(row => ({
             id: `rent_${row.id}`,

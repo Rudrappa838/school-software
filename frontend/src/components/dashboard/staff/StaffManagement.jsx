@@ -11,6 +11,7 @@ const StaffManagement = () => {
     const [selectedId, setSelectedId] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => { fetchStaff(); }, []);
 
@@ -38,6 +39,7 @@ const StaffManagement = () => {
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (formData.email && !emailRegex.test(formData.email)) return toast.error('Invalid email format');
 
+        setIsSubmitting(true);
         try {
             if (isEditing) { await api.put(`/staff/${selectedId}`, formData); toast.success('Staff updated'); }
             else { await api.post('/staff', formData); toast.success('Staff added'); }
@@ -51,6 +53,8 @@ const StaffManagement = () => {
             } else {
                 toast.error(msg);
             }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -282,8 +286,10 @@ const StaffManagement = () => {
                             </textarea>
 
                             <div className="flex justify-end gap-2 mt-4">
-                                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancel</button>
-                                <button type="submit" className="btn-primary">{isEditing ? 'Update Staff' : 'Add Staff'}</button>
+                                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary" disabled={isSubmitting}>Cancel</button>
+                                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                                    {isSubmitting ? 'Processing...' : (isEditing ? 'Update Staff' : 'Add Staff')}
+                                </button>
                             </div>
                         </form>
                     </div>

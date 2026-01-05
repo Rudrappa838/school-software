@@ -13,7 +13,9 @@ const StudentManagement = ({ config, prefillData }) => {
     const [searchQuery, setSearchQuery] = useState(''); // Added Search State
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+    const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
         admission_no: '',
@@ -322,6 +324,7 @@ const StudentManagement = ({ config, prefillData }) => {
             return toast.error('First Name and Last Name are required');
         }
 
+        setIsSubmitting(true);
         const payload = { ...formData, name: finalName };
 
         try {
@@ -336,6 +339,8 @@ const StudentManagement = ({ config, prefillData }) => {
             fetchStudents();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to save student');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -773,8 +778,10 @@ const StudentManagement = ({ config, prefillData }) => {
                             </div>
 
                             <div className="col-span-2 flex justify-end gap-3 mt-4">
-                                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancel</button>
-                                <button type="submit" className="btn-primary">{isEditing ? 'Save Changes' : 'Admit Student'}</button>
+                                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary" disabled={isSubmitting}>Cancel</button>
+                                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                                    {isSubmitting ? 'Saving...' : (isEditing ? 'Save Changes' : 'Admit Student')}
+                                </button>
                             </div>
                         </form>
                     </div>

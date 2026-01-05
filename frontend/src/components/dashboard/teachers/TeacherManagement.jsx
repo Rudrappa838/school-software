@@ -10,6 +10,7 @@ const TeacherManagement = ({ config }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isClassTeacher, setIsClassTeacher] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // State for field-specific errors
     const [fieldErrors, setFieldErrors] = useState({});
@@ -52,6 +53,7 @@ const TeacherManagement = ({ config }) => {
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (formData.email && !emailRegex.test(formData.email)) return toast.error('Invalid email format');
 
+        setIsSubmitting(true);
         try {
             const payload = { ...formData };
             if (!isClassTeacher) {
@@ -79,6 +81,8 @@ const TeacherManagement = ({ config }) => {
             } else {
                 toast.error(msg);
             }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -363,8 +367,10 @@ const TeacherManagement = ({ config }) => {
                             </div>
 
                             <div className="flex justify-end gap-2 mt-4">
-                                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancel</button>
-                                <button type="submit" className="btn-primary">Save</button>
+                                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary" disabled={isSubmitting}>Cancel</button>
+                                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                                    {isSubmitting ? 'Saving...' : 'Save'}
+                                </button>
                             </div>
                         </form>
                     </div>

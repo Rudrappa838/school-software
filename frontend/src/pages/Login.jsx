@@ -15,6 +15,7 @@ const Login = () => {
     const [role, setRole] = useState('SCHOOL_ADMIN');
     const [errorMessage, setErrorMessage] = useState('');
     const [showQR, setShowQR] = useState(false);
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -31,28 +32,38 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isLoggingIn) return; // Prevent double click
         setErrorMessage('');
-        const result = await login(email, password, role);
-        if (result.success) {
-            // Check for must_change_password flag from backend
-            if (result.user?.mustChangePassword) {
-                toast('Please set a new password for security.', { icon: '🔒' });
-                navigate('/change-password', { state: { email, role, oldPassword: password } });
-                return;
-            }
+        setIsLoggingIn(true);
 
-            toast.success('Welcome back!');
-            switch (role) {
-                case 'SCHOOL_ADMIN': navigate('/school-admin'); break;
-                case 'TEACHER': navigate('/teacher'); break;
-                case 'STUDENT': navigate('/student'); break;
-                case 'STAFF':
-                case 'DRIVER': navigate('/staff'); break;
-                default: navigate('/');
+        try {
+            const result = await login(email, password, role);
+            if (result.success) {
+                // Check for must_change_password flag from backend
+                if (result.user?.mustChangePassword) {
+                    toast('Please set a new password for security.', { icon: '🔒' });
+                    navigate('/change-password', { state: { email, role, oldPassword: password } });
+                    return;
+                }
+
+                toast.success('Welcome back!');
+                switch (role) {
+                    case 'SCHOOL_ADMIN': navigate('/school-admin'); break;
+                    case 'TEACHER': navigate('/teacher'); break;
+                    case 'STUDENT': navigate('/student'); break;
+                    case 'STAFF':
+                    case 'DRIVER': navigate('/staff'); break;
+                    default: navigate('/');
+                }
+            } else {
+                setErrorMessage(result.message);
+                toast.error(result.message);
+                setIsLoggingIn(false);
             }
-        } else {
-            setErrorMessage(result.message);
-            toast.error(result.message);
+        } catch (error) {
+            console.error(error);
+            setIsLoggingIn(false);
+            setErrorMessage('An unexpected error occurred');
         }
     };
 
@@ -155,9 +166,10 @@ const Login = () => {
 
                         <button
                             type="submit"
-                            className="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-bold rounded-xl shadow-lg shadow-yellow-400/20 transform transition-all hover:scale-[1.02] flex items-center justify-center gap-2 text-sm"
+                            disabled={isLoggingIn}
+                            className={`w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-black font-bold rounded-xl shadow-lg shadow-yellow-400/20 transform transition-all ${isLoggingIn ? 'opacity-70 cursor-not-allowed scale-[1.0]' : 'hover:scale-[1.02]'} flex items-center justify-center gap-2 text-sm`}
                         >
-                            Access Portal
+                            {isLoggingIn ? 'Verifying...' : 'Access Portal'}
                         </button>
 
                         {errorMessage && (
