@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
 
@@ -8,7 +8,7 @@ const NotificationContext = createContext();
 export const useNotifications = () => useContext(NotificationContext);
 
 export const NotificationProvider = ({ children }) => {
-    const { user, authenticated } = useAuth(); // Use 'authenticated' or 'user' to check login status
+    const { user } = useAuth();
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const lastNotificationIdRef = useRef(null);
@@ -17,12 +17,11 @@ export const NotificationProvider = ({ children }) => {
         if (!user) return;
 
         try {
-            // Adjust URL based on your environment helper or hardcode if standard
-            const res = await axios.get('http://localhost:5000/api/notifications', {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const res = await api.get('/notifications');
 
-            const sorted = res.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            // Handle response data safely
+            const data = Array.isArray(res.data) ? res.data : [];
+            const sorted = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             setNotifications(sorted);
 
             const unread = sorted.filter(n => !n.is_read).length;
@@ -50,9 +49,7 @@ export const NotificationProvider = ({ children }) => {
 
     const markAsRead = async (id) => {
         try {
-            await axios.put(`http://localhost:5000/api/notifications/${id}/read`, {}, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await api.put(`/notifications/${id}/read`);
 
             // Update local state optimistic
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
@@ -65,9 +62,7 @@ export const NotificationProvider = ({ children }) => {
 
     const markAllAsRead = async () => {
         try {
-            await axios.put(`http://localhost:5000/api/notifications/mark-all-read`, {}, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await api.put(`/notifications/mark-all-read`);
             setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
             setUnreadCount(0);
         } catch (error) {
@@ -77,16 +72,16 @@ export const NotificationProvider = ({ children }) => {
 
     // Poll for notifications
     useEffect(() => {
-        if (authenticated && user) {
+        if (user) {
             fetchNotifications(false); // Initial fetch
 
             const interval = setInterval(() => {
                 fetchNotifications(true); // Poll fetch
-            }, 10000); // Check every 10 seconds
+            }, 15000); // Check every 15 seconds
 
             return () => clearInterval(interval);
         }
-    }, [authenticated, user]);
+    }, [user]);
 
     return (
         <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications }}>
