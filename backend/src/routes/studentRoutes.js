@@ -25,6 +25,13 @@ router.get('/attendance', studentController.getAttendanceReport);
 
 router.get('/attendance/summary', studentController.getAttendanceSummary);
 router.get('/attendance/daily', studentController.getDailyAttendance);
+
+// Student Promotion Routes
+const promotionController = require('../controllers/promotionController');
+router.post('/promote', promotionController.promoteStudents);
+router.get('/:student_id/promotion-history', promotionController.getPromotionHistory);
+router.get('/academic-year/current', promotionController.getCurrentAcademicYear);
+
 router.post('/roll-numbers', studentController.reorderRollNumbers);
 
 module.exports = router;

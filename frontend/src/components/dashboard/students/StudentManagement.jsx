@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Filter, Plus, SortAsc, Edit2, Trash2, X, Printer } from 'lucide-react';
+import { Filter, Plus, SortAsc, Edit2, Trash2, X, Printer, GraduationCap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../api/axios';
+import StudentPromotionModal from './StudentPromotionModal';
 
 const StudentManagement = ({ config, prefillData }) => {
     const [students, setStudents] = useState([]);
@@ -13,6 +14,10 @@ const StudentManagement = ({ config, prefillData }) => {
     const [searchQuery, setSearchQuery] = useState(''); // Added Search State
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+
+    // Promotion States
+    const [selectedStudents, setSelectedStudents] = useState([]);
+    const [showPromotionModal, setShowPromotionModal] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -138,7 +143,9 @@ const StudentManagement = ({ config, prefillData }) => {
             toast.success('Student deleted');
             fetchStudents();
         } catch (error) {
-            toast.error('Failed to delete student');
+            console.error('Delete error:', error);
+            const errorMsg = error.response?.data?.message || error.message || 'Failed to delete student';
+            toast.error(errorMsg);
         }
     };
 
@@ -344,6 +351,8 @@ const StudentManagement = ({ config, prefillData }) => {
             setShowModal(false);
             fetchStudents();
         } catch (error) {
+            console.error('Save student error:', error);
+            console.error('Error response:', error.response);
             toast.error(error.response?.data?.message || 'Failed to save student');
         } finally {
             setIsSubmitting(false);
@@ -398,6 +407,14 @@ const StudentManagement = ({ config, prefillData }) => {
                     >
                         <Printer size={20} /> Print List
                     </button>
+                    {selectedStudents.length > 0 && (
+                        <button
+                            onClick={() => setShowPromotionModal(true)}
+                            className="bg-purple-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-purple-500/20 hover:bg-purple-700 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 animate-in fade-in slide-in-from-left-2"
+                        >
+                            <GraduationCap size={20} /> Promote ({selectedStudents.length})
+                        </button>
+                    )}
                     <button onClick={handleAdd} className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
                         <Plus size={20} /> Add Student
                     </button>
@@ -430,7 +447,21 @@ const StudentManagement = ({ config, prefillData }) => {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[11px] tracking-wider">
                             <tr>
-                                <th className="p-4 pl-6">Roll No.</th>
+                                <th className="p-4 pl-6 w-12">
+                                    <input
+                                        type="checkbox"
+                                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                        checked={selectedStudents.length === students.length && students.length > 0}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedStudents(students);
+                                            } else {
+                                                setSelectedStudents([]);
+                                            }
+                                        }}
+                                    />
+                                </th>
+                                <th className="p-4">Roll No.</th>
                                 <th className="p-4">Admission Date</th>
                                 <th className="p-4">Name & ID</th>
                                 <th className="p-4">Class</th>
@@ -473,6 +504,20 @@ const StudentManagement = ({ config, prefillData }) => {
                                     {students.map(student => (
                                         <tr key={student.id} className="group hover:bg-slate-50/50 transition-colors">
                                             <td className="p-4 pl-6">
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                    checked={selectedStudents.some(s => s.id === student.id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedStudents([...selectedStudents, student]);
+                                                        } else {
+                                                            setSelectedStudents(selectedStudents.filter(s => s.id !== student.id));
+                                                        }
+                                                    }}
+                                                />
+                                            </td>
+                                            <td className="p-4">
                                                 <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center font-bold font-mono text-xs border border-slate-200">
                                                     {student.roll_number || '-'}
                                                 </div>
@@ -794,6 +839,21 @@ const StudentManagement = ({ config, prefillData }) => {
                     </div>
                 </div>
             )}
+
+            {/* Student Promotion Modal */}
+            <StudentPromotionModal
+                isOpen={showPromotionModal}
+                onClose={() => {
+                    setShowPromotionModal(false);
+                    setSelectedStudents([]);
+                }}
+                selectedStudents={selectedStudents}
+                config={config}
+                onSuccess={() => {
+                    fetchStudents();
+                    setSelectedStudents([]);
+                }}
+            />
         </div>
     );
 };
