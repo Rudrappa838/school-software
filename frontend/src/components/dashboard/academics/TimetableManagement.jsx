@@ -40,7 +40,10 @@ const TimetableManagement = ({ config }) => {
     }, []);
 
     useEffect(() => {
-        if (selectedClass && selectedSection) {
+        if (selectedClass) {
+            // If class has sections, wait for section selection.
+            // If no sections, fetch immediately (section will be null/undefined)
+            if (sections.length > 0 && !selectedSection) return;
             fetchTimetable();
         }
     }, [selectedClass, selectedSection]);
@@ -57,7 +60,11 @@ const TimetableManagement = ({ config }) => {
     const fetchTimetable = async () => {
         setLoading(true);
         try {
-            const res = await api.get(`/timetable?class_id=${selectedClass}&section_id=${selectedSection}`);
+            let url = `/timetable?class_id=${selectedClass}`;
+            if (selectedSection) url += `&section_id=${selectedSection}`;
+            // If no section selected (and validly so), backend expects missing param => IS NULL check
+
+            const res = await api.get(url);
             setTimetable(res.data);
         } catch (error) {
             console.error(error);
@@ -83,8 +90,12 @@ const TimetableManagement = ({ config }) => {
     };
 
     const handleAutoGenerate = async () => {
-        if (!selectedClass || !selectedSection) {
-            toast.error('Please select class and section');
+        if (!selectedClass) {
+            toast.error('Please select class');
+            return;
+        }
+        if (sections.length > 0 && !selectedSection) {
+            toast.error('Please select section');
             return;
         }
 
@@ -92,7 +103,7 @@ const TimetableManagement = ({ config }) => {
         try {
             await api.post('/timetable/generate', {
                 class_id: selectedClass,
-                section_id: selectedSection
+                section_id: selectedSection || null
             });
             toast.success('Timetable generated successfully!');
             fetchTimetable();
@@ -234,7 +245,7 @@ const TimetableManagement = ({ config }) => {
                             className="px-4 py-2 border border-slate-300 rounded-lg font-medium text-sm focus:ring-2 focus:ring-purple-500 outline-none"
                             disabled={!selectedClass}
                         >
-                            <option value="">Select Section</option>
+                            <option value="">{sections.length === 0 && selectedClass ? 'No Sections' : 'Select Section'}</option>
                             {sections.map(s => (
                                 <option key={s.id} value={s.id}>{s.name}</option>
                             ))}
@@ -244,7 +255,7 @@ const TimetableManagement = ({ config }) => {
                     <div className="ml-auto flex gap-2">
                         <button
                             onClick={handleOpenAutoGen}
-                            disabled={!selectedClass || !selectedSection || loading}
+                            disabled={!selectedClass || (sections.length > 0 && !selectedSection) || loading}
                             className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all"
                         >
                             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -324,7 +335,7 @@ const TimetableManagement = ({ config }) => {
 
             {/* Auto-Generate Configuration Modal */}
             {showAutoGenModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-200 bg-purple-50 flex justify-between items-center">
                             <div>
@@ -480,7 +491,7 @@ const TimetableManagement = ({ config }) => {
 
             {/* Manual Edit Modal */}
             {showManualEditModal && editingSlot && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
                         <div className="px-6 py-4 border-b border-gray-200 bg-indigo-50">
                             <h3 className="text-lg font-bold text-indigo-900">Edit Timetable Slot</h3>

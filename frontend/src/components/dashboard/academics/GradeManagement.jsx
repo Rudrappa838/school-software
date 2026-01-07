@@ -6,14 +6,38 @@ import { Save, Plus, Trash2, Award } from 'lucide-react';
 const GradeManagement = () => {
     const [grades, setGrades] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [examTypes, setExamTypes] = useState([]);
+    const [selectedExam, setSelectedExam] = useState('');
 
     useEffect(() => {
-        fetchGrades();
+        fetchExamTypes();
     }, []);
 
-    const fetchGrades = async () => {
+    useEffect(() => {
+        if (selectedExam) {
+            fetchGrades();
+        } else {
+            setGrades([]);
+        }
+    }, [selectedExam]);
+
+    const fetchExamTypes = async () => {
         try {
-            const res = await api.get('/grades');
+            const res = await api.get('/marks/exam-types');
+            setExamTypes(res.data);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to fetch exam types');
+        }
+    };
+
+    const fetchGrades = async () => {
+        if (!selectedExam) return;
+
+        try {
+            const res = await api.get('/grades', {
+                params: { exam_type_id: selectedExam }
+            });
             if (res.data.length > 0) {
                 setGrades(res.data);
             } else {
@@ -49,6 +73,11 @@ const GradeManagement = () => {
     };
 
     const handleSave = async () => {
+        if (!selectedExam) {
+            toast.error('Please select an exam type first');
+            return;
+        }
+
         // Validation
         for (const g of grades) {
             if (!g.name) {
@@ -63,12 +92,15 @@ const GradeManagement = () => {
 
         setLoading(true);
         try {
-            await api.post('/grades', { grades });
+            await api.post('/grades', {
+                grades,
+                exam_type_id: selectedExam
+            });
             toast.success('Grades configuration saved successfully');
             fetchGrades();
         } catch (error) {
             console.error(error);
-            toast.error('Failed to save grades');
+            toast.error(error.response?.data?.message || 'Failed to save grades');
         } finally {
             setLoading(false);
         }
@@ -84,7 +116,27 @@ const GradeManagement = () => {
                 <p className="text-emerald-50 mt-1">Define grade ranges and points based on percentage</p>
             </div>
 
+            {/* Exam Type Selector */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <label className="block text-sm font-bold text-slate-700 mb-2">Select Exam Type</label>
+                <select
+                    value={selectedExam}
+                    onChange={(e) => setSelectedExam(e.target.value)}
+                    className="w-full md:w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                >
+                    <option value="">-- Select Exam Type --</option>
+                    {examTypes.map(type => (
+                        <option key={type.id} value={type.id}>{type.name}</option>
+                    ))}
+                </select>
+                {!selectedExam && (
+                    <p className="text-sm text-amber-600 mt-2 flex items-center gap-1">
+                        <span className="font-bold">⚠</span> Please select an exam type to configure grades
+                    </p>
+                )}
+            </div>
+
+            <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-6 ${!selectedExam ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-slate-50 text-slate-700 font-bold">
@@ -162,8 +214,8 @@ const GradeManagement = () => {
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={loading}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-emerald-200"
+                        disabled={loading || !selectedExam}
+                        className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-emerald-200"
                     >
                         <Save size={18} /> Save Configuration
                     </button>

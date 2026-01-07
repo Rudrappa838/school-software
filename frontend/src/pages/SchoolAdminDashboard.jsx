@@ -162,7 +162,8 @@ const SchoolAdminDashboard = () => {
             setAcademicConfig(res.data);
         } catch (error) {
             console.error(error);
-            toast.error('Failed to load school configuration');
+            const msg = error.response?.data?.message || error.message || 'Failed to load school configuration';
+            toast.error(`Config Load Error: ${msg}`);
         }
     };
 
@@ -323,9 +324,9 @@ const SchoolAdminDashboard = () => {
                         onToggle={() => toggleSection('academics')}
                     >
                         <NavSubButton active={activeTab === 'timetable'} onClick={() => handleTabChange('timetable')} label="Timetable" />
-                        <NavSubButton active={activeTab === 'marks'} onClick={() => handleTabChange('marks')} label="Marks" />
                         <NavSubButton active={activeTab === 'exam-schedule'} onClick={() => handleTabChange('exam-schedule')} label="Exam Schedule" />
                         <NavSubButton active={activeTab === 'grading'} onClick={() => handleTabChange('grading')} label="Grade Configuration" />
+                        <NavSubButton active={activeTab === 'marks'} onClick={() => handleTabChange('marks')} label="Marks" />
                         <NavSubButton active={activeTab === 'question-generator'} onClick={() => handleTabChange('question-generator')} label="AI Question Paper" />
                     </NavGroup>
 

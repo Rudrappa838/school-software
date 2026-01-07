@@ -15,9 +15,24 @@ const api = axios.create({
     timeout: 15000, // 15 seconds timeout
 });
 
-// Add a request interceptor to add the JWT token to headers
+// Loading state management (will be set by LoadingProvider)
+let loadingCallbacks = {
+    start: () => { },
+    stop: () => { }
+};
+
+// Export function to set loading callbacks
+export const setLoadingCallbacks = (start, stop) => {
+    loadingCallbacks.start = start;
+    loadingCallbacks.stop = stop;
+};
+
+// Add a request interceptor to add the JWT token to headers and start loading
 api.interceptors.request.use(
     (config) => {
+        // Start loading
+        loadingCallbacks.start();
+
         // Updated to use localStorage to adhere to new Mobile Auth standards
         const token = localStorage.getItem('token');
         if (token) {
@@ -25,13 +40,24 @@ api.interceptors.request.use(
         }
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => {
+        // Stop loading on request error
+        loadingCallbacks.stop();
+        return Promise.reject(error);
+    }
 );
 
 // Response interceptor for global error handling and retries
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Stop loading on successful response
+        loadingCallbacks.stop();
+        return response;
+    },
     async (error) => {
+        // Stop loading on error (will restart if retrying)
+        loadingCallbacks.stop();
+
         // Handle Session Expiry or Service Disabled
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
             const msg = error.response.data?.message;

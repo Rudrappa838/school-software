@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, IndianRupee, User, ChevronRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, IndianRupee, User, ChevronRight, CheckCircle, AlertCircle, Edit2 } from 'lucide-react';
 import api from '../../../api/axios';
 import toast from 'react-hot-toast';
 
@@ -18,6 +18,8 @@ const FeeConfiguration = ({ config }) => {
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [studentFees, setStudentFees] = useState([]);
     const [formData, setFormData] = useState({ title: '', amount: '', due_date: '' });
+    const [editMode, setEditMode] = useState(false);
+    const [editingFeeId, setEditingFeeId] = useState(null);
 
     // Computed
     const sections = config?.classes?.find(c => c.class_id === parseInt(selectedClass))?.sections || [];
@@ -48,6 +50,22 @@ const FeeConfiguration = ({ config }) => {
         } catch (e) { console.error(e); }
     };
 
+    const handleEditFee = (fee) => {
+        setEditMode(true);
+        setEditingFeeId(fee.fee_structure_id);
+        setFormData({
+            title: fee.title,
+            amount: fee.total_amount,
+            due_date: new Date(fee.due_date).toISOString().split('T')[0]
+        });
+    };
+
+    const handleCancelEdit = () => {
+        setEditMode(false);
+        setEditingFeeId(null);
+        setFormData({ title: '', amount: '', due_date: '' });
+    };
+
     const handleAddFee = async (e) => {
         e.preventDefault();
 
@@ -56,15 +74,28 @@ const FeeConfiguration = ({ config }) => {
         isSubmittingRef.current = true;
 
         try {
-            await api.post('/fees/student-structure', {
-                ...formData,
-                student_id: selectedStudent.id
-            });
-            toast.success('Fee Added to Student');
-            setFormData({ title: '', amount: '', due_date: '' });
+            if (editMode) {
+                // Update existing fee
+                await api.put(`/fees/structures/${editingFeeId}`, {
+                    ...formData,
+                    student_id: selectedStudent.id
+                });
+                toast.success('Fee Updated Successfully');
+                handleCancelEdit();
+            } else {
+                // Add new fee
+                await api.post('/fees/student-structure', {
+                    ...formData,
+                    student_id: selectedStudent.id
+                });
+                toast.success('Fee Added to Student');
+                setFormData({ title: '', amount: '', due_date: '' });
+            }
             fetchStudentFees();
             fetchStudents(); // Refresh main list stats
-        } catch (e) { toast.error('Failed to add fee'); }
+        } catch (e) {
+            toast.error(editMode ? 'Failed to update fee' : 'Failed to add fee');
+        }
         finally {
             setIsSubmitting(false);
             isSubmittingRef.current = false;
@@ -81,6 +112,9 @@ const FeeConfiguration = ({ config }) => {
         try {
             await api.delete(`/fees/structures/${id}`);
             toast.success('Fee Removed');
+            if (editMode && editingFeeId === id) {
+                handleCancelEdit();
+            }
             fetchStudentFees();
             fetchStudents();
         } catch (e) { toast.error('Delete failed'); }
@@ -175,40 +209,89 @@ const FeeConfiguration = ({ config }) => {
                             <div className="space-y-3">
                                 <h3 className="font-bold text-sm text-gray-500 uppercase">Current Fees</h3>
                                 {studentFees.map(f => (
-                                    <div key={f.fee_structure_id} className="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                                    <div key={f.fee_structure_id} className={`flex justify-between items-center p-3 border rounded-lg shadow-sm ${editMode && editingFeeId === f.fee_structure_id ? 'bg-amber-50 border-amber-300' : 'bg-white border-gray-200'}`}>
                                         <div>
                                             <p className="font-bold text-gray-800">{f.title}</p>
                                             <p className="text-xs text-gray-500">Due: {new Date(f.due_date).toLocaleDateString()}</p>
                                         </div>
-                                        <div className="text-right flex items-center gap-4">
+                                        <div className="text-right flex items-center gap-2">
                                             <span className="font-mono font-bold text-gray-700">₹{formatCurrency(f.total_amount)}</span>
-                                            <button onClick={() => handleDeleteFee(f.fee_structure_id)} className="text-red-400 hover:text-red-600 disabled:text-gray-300 disabled:cursor-not-allowed" disabled={isSubmitting}><Trash2 size={16} /></button>
+                                            <button
+                                                onClick={() => handleEditFee(f)}
+                                                className="text-blue-400 hover:text-blue-600 disabled:text-gray-300 disabled:cursor-not-allowed p-1"
+                                                disabled={isSubmitting || (editMode && editingFeeId !== f.fee_structure_id)}
+                                                title="Edit Fee"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteFee(f.fee_structure_id)}
+                                                className="text-red-400 hover:text-red-600 disabled:text-gray-300 disabled:cursor-not-allowed p-1"
+                                                disabled={isSubmitting}
+                                                title="Delete Fee"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
                                 {studentFees.length === 0 && <p className="text-center text-gray-400 italic">No fees assigned</p>}
                             </div>
 
-                            {/* Add Fee Form */}
-                            <div className="bg-indigo-50 p-5 rounded-xl border border-indigo-100">
-                                <h3 className="font-bold text-indigo-900 mb-4 flex items-center gap-2"><Plus size={18} /> Add Fee for {selectedStudent.name.split(' ')[0]}</h3>
+                            {/* Add/Edit Fee Form */}
+                            <div className={`p-5 rounded-xl border ${editMode ? 'bg-amber-50 border-amber-200' : 'bg-indigo-50 border-indigo-100'}`}>
+                                <h3 className={`font-bold mb-4 flex items-center gap-2 ${editMode ? 'text-amber-900' : 'text-indigo-900'}`}>
+                                    {editMode ? <Edit2 size={18} /> : <Plus size={18} />}
+                                    {editMode ? `Edit Fee for ${selectedStudent.name.split(' ')[0]}` : `Add Fee for ${selectedStudent.name.split(' ')[0]}`}
+                                </h3>
                                 <form onSubmit={handleAddFee} className="space-y-4">
                                     <div>
-                                        <label className="label text-indigo-900">Fee Title</label>
+                                        <label className={`label ${editMode ? 'text-amber-900' : 'text-indigo-900'}`}>Fee Title</label>
                                         <input className="input bg-white" placeholder="e.g. Tuition Fee" required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="label text-indigo-900">Amount</label>
-                                        <div className="relative">
-                                            <IndianRupee size={16} className="absolute left-3 top-3 text-gray-400" />
-                                            <input className="input pl-10 bg-white" type="number" placeholder="0.00" required value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} />
-                                        </div>
+                                        <label className={`label ${editMode ? 'text-amber-900' : 'text-indigo-900'}`}>Amount (₹)</label>
+                                        <input
+                                            className="input bg-white"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="Enter amount (e.g., 1500.00)"
+                                            required
+                                            value={formData.amount}
+                                            onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                                        />
                                     </div>
                                     <div>
-                                        <label className="label text-indigo-900">Due Date</label>
-                                        <input type="date" className="input bg-white" required value={formData.due_date} onChange={e => setFormData({ ...formData, due_date: e.target.value })} />
+                                        <label className={`label ${editMode ? 'text-amber-900' : 'text-indigo-900'}`}>Due Date</label>
+                                        <input
+                                            type="date"
+                                            className="input bg-white"
+                                            min={new Date().toISOString().split('T')[0]}
+                                            required
+                                            value={formData.due_date}
+                                            onChange={e => setFormData({ ...formData, due_date: e.target.value })}
+                                        />
                                     </div>
-                                    <button type="submit" className="btn-primary w-full bg-indigo-600 hover:bg-indigo-700" disabled={isSubmitting}>{isSubmitting ? 'Adding...' : 'Add Fee to Student'}</button>
+                                    <div className="flex gap-2">
+                                        {editMode && (
+                                            <button
+                                                type="button"
+                                                onClick={handleCancelEdit}
+                                                className="btn-secondary flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700"
+                                                disabled={isSubmitting}
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                        <button
+                                            type="submit"
+                                            className={`btn-primary flex-1 ${editMode ? 'bg-amber-600 hover:bg-amber-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? (editMode ? 'Updating...' : 'Adding...') : (editMode ? 'Update Fee' : 'Add Fee to Student')}
+                                        </button>
+                                    </div>
                                 </form>
                             </div>
                         </div>

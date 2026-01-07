@@ -154,13 +154,33 @@ const MarksManagement = ({ config }) => {
     const fetchExamTypes = async () => {
         try {
             const examsRes = await api.get('/marks/exam-types');
-            const gradesRes = await api.get('/grades');
             setExamTypes(examsRes.data);
-            setGrades(gradesRes.data);
         } catch (error) {
             console.error(error);
         }
     };
+
+    const fetchGrades = async () => {
+        if (!selectedExam) {
+            setGrades([]);
+            return;
+        }
+
+        try {
+            const gradesRes = await api.get('/grades', {
+                params: { exam_type_id: selectedExam }
+            });
+            setGrades(gradesRes.data);
+        } catch (error) {
+            console.error('Error fetching grades:', error);
+            setGrades([]);
+        }
+    };
+
+    // Fetch grades when exam type changes
+    useEffect(() => {
+        fetchGrades();
+    }, [selectedExam]);
 
     const fetchSubjects = async () => {
         if (!selectedClass) return;
@@ -346,6 +366,8 @@ const MarksManagement = ({ config }) => {
             subjects.forEach(sub => {
                 let subObtained = 0;
                 let subMax = 0;
+                let subMin = 0;
+                let componentBreakdown = [];
 
                 const key = `${student.id}-${sub.id}`;
                 const markEntry = marks[key];
@@ -353,10 +375,23 @@ const MarksManagement = ({ config }) => {
                 const componentsConfig = scheduleItem?.components || [];
                 const hasComponentsForSubject = componentsConfig.length > 0;
 
+                // Get min marks from schedule
+                subMin = scheduleItem?.min_marks || selectedExamType?.min_marks || 35;
+
                 if (hasComponentsForSubject) {
+                    // Calculate max marks by summing components
+                    subMax = componentsConfig.reduce((sum, comp) => sum + (parseFloat(comp.max_marks) || 0), 0);
+
                     if (markEntry && typeof markEntry === 'object' && markEntry.components) {
                         subObtained = parseFloat(markEntry.total) || 0;
-                        subMax = componentsConfig.reduce((sum, comp) => sum + comp.max_marks, 0);
+
+                        // Build component breakdown
+                        componentBreakdown = componentsConfig.map(comp => ({
+                            name: comp.name,
+                            max_marks: parseFloat(comp.max_marks) || 0,
+                            min_marks: parseFloat(comp.min_marks) || 0,
+                            marks_obtained: parseFloat(markEntry.components[comp.name]) || 0
+                        }));
                     }
                 } else {
                     subObtained = parseFloat(markEntry) || 0;
@@ -370,8 +405,11 @@ const MarksManagement = ({ config }) => {
                     id: sub.id,
                     subject_name: sub.name,
                     max_marks: subMax,
+                    min_marks: subMin,
                     marks_obtained: subObtained,
-                    exam_name: selectedExamType.name
+                    exam_name: selectedExamType.name,
+                    components: componentBreakdown,
+                    hasComponents: hasComponentsForSubject
                 });
             });
 
@@ -508,27 +546,38 @@ const MarksManagement = ({ config }) => {
                 <p className="text-amber-50 mt-1">Enter and manage student marks with component support</p>
             </div>
 
-            {/* Filters - Same as before */}
+            {/* Filters */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 print:hidden">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {/* Year, Month, Class, Section, Exam selectors - keeping existing code */}
-                    {/* REORDERED: Exam Type first */}
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Class</label>
+                        <select value={selectedClass} onChange={(e) => { setSelectedClass(e.target.value); setSelectedSection(''); setSelectedExam(''); }} className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm">
+                            <option value="">Select Class</option>
+                            {config?.classes?.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Section</label>
+                        <select value={selectedSection} onChange={(e) => { setSelectedSection(e.target.value); setSelectedExam(''); }} className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm" disabled={!selectedClass}>
+                            <option value="">{sections.length === 0 && selectedClass ? 'No Sections' : 'Select Section'}</option>
+                            {sections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                    </div>
+
                     <div className="md:col-span-2 lg:col-span-1">
                         <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
                             <span>Exam Type</span>
                         </label>
                         <select
                             value={selectedExam}
-                            onChange={(e) => {
-                                setSelectedExam(e.target.value);
-                                // On Exam Select, we should arguably clear class/section if we want STRICT flow,
-                                // but keeping them might be convenient.
-                                // However, fetchScheduledMonths(e.target.value) will run.
-                            }}
+                            onChange={(e) => setSelectedExam(e.target.value)}
                             className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm"
+                            disabled={!selectedClass}
                         >
-                            <option value="">Select Exam</option>
-                            {examTypes.map(e => (
+                            <option value="">{scheduledExams.length === 0 ? (selectedClass ? 'No Scheduled Exams' : 'Select Class First') : 'Select Exam'}</option>
+                            {scheduledExams.map(e => (
                                 <option key={e.id} value={e.id}>
                                     {e.name}
                                 </option>
@@ -537,37 +586,26 @@ const MarksManagement = ({ config }) => {
                     </div>
 
                     {/* Dynamic Scheduled Period (Month/Year) */}
-                    <div className="md:col-span-3 lg:col-span-1 bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-center">
+                    <div className="md:col-span-2 lg:col-span-1 bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex flex-col justify-center">
                         <label className="block text-[10px] font-bold text-indigo-500 uppercase">Scheduled Period</label>
                         <div className="text-sm font-bold text-indigo-700">
                             {selectedExam ? (
-                                // Logic to display fetched period or loading
                                 scheduledPeriod || 'Loading...'
                             ) : (
-                                <span className="text-slate-400 font-normal">Select Exam Type...</span>
+                                <span className="text-slate-400 font-normal">-</span>
                             )}
                         </div>
                     </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Class</label>
-                        <select value={selectedClass} onChange={(e) => { setSelectedClass(e.target.value); setSelectedSection(''); }} className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm">
-                            <option value="">Select Class</option>
-                            {config?.classes?.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Section</label>
-                        <select value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)} className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm" disabled={!selectedClass}>
-                            <option value="">Select Section</option>
-                            {sections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
+
+                    <div className="flex items-end gap-2">
+                        <button onClick={handleSave} disabled={loading || !selectedExam} className="bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 h-10 w-full justify-center">
+                            <Save size={16} /> Save
+                        </button>
                     </div>
 
                 </div>
                 <div className="flex gap-2 mt-4">
-                    <button onClick={handleSave} disabled={loading || !selectedExam} className="bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
-                        <Save size={16} /> Save Marks
-                    </button>
+                    {/* Reduced buttons here as Save moved up or keep additional actions */}
                     <button onClick={fetchMarks} disabled={!selectedExam} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
                         <Eye size={16} /> Reload Marks
                     </button>
@@ -837,20 +875,40 @@ const MarksManagement = ({ config }) => {
                                 <thead className="bg-slate-50">
                                     <tr>
                                         <th className="border border-slate-200 p-3 font-bold text-slate-700 text-left">Subject</th>
+                                        <th className="border border-slate-200 p-3 font-bold text-slate-700 text-center">Min Marks</th>
                                         <th className="border border-slate-200 p-3 font-bold text-slate-700 text-center">Max Marks</th>
                                         <th className="border border-slate-200 p-3 font-bold text-slate-700 text-center">Marks Obtained</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {marksheetData.marks.map(mark => (
-                                        <tr key={mark.id}>
-                                            <td className="border border-slate-200 p-3">{mark.subject_name}</td>
-                                            <td className="border border-slate-200 p-3 text-center">{mark.max_marks}</td>
-                                            <td className="border border-slate-200 p-3 text-center font-bold">{mark.marks_obtained}</td>
-                                        </tr>
+                                        <React.Fragment key={mark.id}>
+                                            <tr className={mark.hasComponents ? 'bg-slate-50' : ''}>
+                                                <td className="border border-slate-200 p-3 font-semibold">{mark.subject_name}</td>
+                                                <td className="border border-slate-200 p-3 text-center">{mark.min_marks}</td>
+                                                <td className="border border-slate-200 p-3 text-center">{mark.max_marks}</td>
+                                                <td className={`border border-slate-200 p-3 text-center font-bold ${mark.marks_obtained < mark.min_marks ? 'text-red-600' : 'text-green-600'}`}>
+                                                    {mark.marks_obtained}
+                                                </td>
+                                            </tr>
+                                            {/* Component Breakdown */}
+                                            {mark.hasComponents && mark.components.map((comp, idx) => (
+                                                <tr key={`${mark.id}-${idx}`} className="bg-blue-50">
+                                                    <td className="border border-slate-200 p-2 pl-8 text-xs text-slate-600">
+                                                        ↳ {comp.name}
+                                                    </td>
+                                                    <td className="border border-slate-200 p-2 text-center text-xs text-slate-600">{comp.min_marks}</td>
+                                                    <td className="border border-slate-200 p-2 text-center text-xs text-slate-600">{comp.max_marks}</td>
+                                                    <td className={`border border-slate-200 p-2 text-center text-xs font-semibold ${comp.marks_obtained < comp.min_marks ? 'text-red-600' : 'text-slate-700'}`}>
+                                                        {comp.marks_obtained}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </React.Fragment>
                                     ))}
                                     <tr className="bg-amber-50">
                                         <td className="border border-amber-200 p-3 font-bold">Total</td>
+                                        <td className="border border-amber-200 p-3 text-center font-bold">-</td>
                                         <td className="border border-amber-200 p-3 text-center font-bold">{marksheetData.summary.max_marks}</td>
                                         <td className="border border-amber-200 p-3 text-center font-bold">{marksheetData.summary.total_marks}</td>
                                     </tr>

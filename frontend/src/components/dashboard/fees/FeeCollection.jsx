@@ -174,7 +174,10 @@ const FeeCollection = ({ config: initialConfig }) => {
             fetchStudentFees(selectedStudent.id);
             fetchHistory(selectedStudent.id);
             fetchOverview();
-        } catch (e) { toast.error('Payment failed'); }
+        } catch (e) {
+            console.error(e);
+            toast.error(e.response?.data?.message || 'Payment failed');
+        }
         finally {
             setIsSubmitting(false);
             isSubmittingRef.current = false;
@@ -485,7 +488,24 @@ const FeeCollection = ({ config: initialConfig }) => {
                                 <div>
                                     <label className="label">Amount</label>
                                     <div className="relative">
-                                        <input className="input" type="number" step="0.01" autoComplete="off" value={amount} onChange={e => setAmount(e.target.value)} required max={payModal.balance} />
+                                        <input
+                                            className="input"
+                                            type="text"
+                                            autoComplete="off"
+                                            value={amount !== undefined && amount !== null ? (() => {
+                                                const valStr = String(amount);
+                                                const parts = valStr.split('.');
+                                                parts[0] = parseInt(parts[0] || 0).toLocaleString('en-IN');
+                                                return parts.join('.');
+                                            })() : ''}
+                                            onChange={e => {
+                                                const raw = e.target.value.replace(/,/g, '');
+                                                if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+                                                    setAmount(raw);
+                                                }
+                                            }}
+                                            required
+                                        />
                                     </div>
                                     <p className="text-xs text-right text-gray-500 mt-1">Max: ₹{formatCurrency(payModal.balance)}</p>
                                 </div>

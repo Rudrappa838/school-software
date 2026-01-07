@@ -110,6 +110,32 @@ exports.deleteFeeStructure = async (req, res) => {
     }
 };
 
+// Update Fee Structure
+exports.updateFeeStructure = async (req, res) => {
+    try {
+        const school_id = req.user.schoolId;
+        const { id } = req.params;
+        const { title, amount, due_date } = req.body;
+
+        const result = await pool.query(
+            `UPDATE fee_structures 
+             SET title = $1, amount = $2, due_date = $3 
+             WHERE id = $4 AND school_id = $5 
+             RETURNING *`,
+            [title, amount, due_date, id, school_id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Fee structure not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating fee structure' });
+    }
+};
+
 // Get Allocations for a Fee Structure (For INDIVIDUAL type)
 exports.getFeeAllocations = async (req, res) => {
     try {
@@ -317,20 +343,39 @@ exports.recordPayment = async (req, res) => {
         await client.query('BEGIN');
 
         const school_id = req.user.schoolId;
-        const { student_id, fee_structure_id, amount, method, remarks } = req.body;
+        let { student_id, fee_structure_id, amount, method, remarks } = req.body;
+
+        // Clean amount: remove commas if string
+        if (typeof amount === 'string') {
+            amount = amount.replace(/,/g, '');
+        }
+
+        console.log('Recording Payment Payload:', { school_id, student_id, fee_structure_id, amount, method });
 
         // Generate Receipt Number: Format RC-YYYYMMDD-XXXX
         const today = new Date();
         const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
 
-        // Get count of today's receipts for this school
-        const countRes = await client.query(
-            `SELECT COUNT(*) as count FROM fee_payments 
-             WHERE school_id = $1 AND DATE(created_at) = CURRENT_DATE`,
-            [school_id]
+        // Get the latest receipt number GLOBALLY for today
+        const latestRes = await client.query(
+            `SELECT receipt_no FROM fee_payments 
+             WHERE receipt_no LIKE $1
+             ORDER BY receipt_no DESC LIMIT 1`,
+            [`RC-${dateStr}-%`]
         );
-        const todayCount = parseInt(countRes.rows[0].count) + 1;
-        const receiptNo = `RC-${dateStr}-${String(todayCount).padStart(4, '0')}`;
+
+        let nextSeq = 1;
+        if (latestRes.rows.length > 0) {
+            const lastReceipt = latestRes.rows[0].receipt_no;
+            const parts = lastReceipt.split('-');
+            if (parts.length === 3) {
+                nextSeq = parseInt(parts[2]) + 1;
+            }
+        }
+
+        const receiptNo = `RC-${dateStr}-${String(nextSeq).padStart(4, '0')}`;
+
+        console.log('Generated Receipt No:', receiptNo);
 
         const result = await client.query(
             `INSERT INTO fee_payments (school_id, student_id, fee_structure_id, amount_paid, payment_method, remarks, receipt_no)
@@ -338,24 +383,27 @@ exports.recordPayment = async (req, res) => {
             [school_id, student_id, fee_structure_id, amount, method, remarks, receiptNo]
         );
 
-        const { sendPushNotification } = require('../services/notificationService');
-
-        // ... existing code ...
+        console.log('Payment Recorded Successfully, ID:', result.rows[0].id);
 
         await client.query('COMMIT');
 
-        // Notification
-        const studentRes = await client.query('SELECT name FROM students WHERE id = $1', [student_id]);
-        if (studentRes.rows.length > 0) {
-            const studentName = studentRes.rows[0].name;
-            await sendPushNotification(student_id, 'Fee Receipt', `Received payment of ₹${amount} for ${studentName}. Receipt: ${receiptNo}`);
+        // Notification - Isolated so it doesn't fail the request if it errors
+        try {
+            const { sendPushNotification } = require('../services/notificationService');
+            const studentRes = await pool.query('SELECT name FROM students WHERE id = $1', [student_id]);
+            if (studentRes.rows.length > 0) {
+                const studentName = studentRes.rows[0].name;
+                await sendPushNotification(student_id, 'Fee Receipt', `Received payment of ₹${amount} for ${studentName}. Receipt: ${receiptNo}`);
+            }
+        } catch (notifError) {
+            console.error('Notification failed (Payment Success):', notifError);
         }
 
         res.status(201).json(result.rows[0]);
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error(error);
-        res.status(500).json({ message: 'Error recording payment' });
+        console.error('ERROR RECORDING PAYMENT:', error);
+        res.status(500).json({ message: 'Error recording payment: ' + error.message });
     } finally {
         client.release();
     }

@@ -6,6 +6,8 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { LoadingProvider, useLoading } from './context/LoadingContext';
+import { setLoadingCallbacks } from './api/axios';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages
@@ -49,7 +51,15 @@ const ProtectedRoute = ({ children, role }) => {
   return children;
 };
 
-function App() {
+// Inner App Component to access LoadingContext
+const AppContent = () => {
+  const { startLoading, stopLoading } = useLoading();
+
+  React.useEffect(() => {
+    // Connect axios interceptors to loading context
+    setLoadingCallbacks(startLoading, stopLoading);
+  }, [startLoading, stopLoading]);
+
   React.useEffect(() => {
     // 1. Handle StatusBar
     const setupStatusBar = async () => {
@@ -94,78 +104,85 @@ function App() {
     setupNotifications();
   }, []);
 
+  return (
+    <AuthProvider>
+      <NotificationProvider>
+        <NotificationRegistration />
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Toaster position="top-center" />
+            <Routes>
+              <Route path="/" element={<Navigate to="/welcome" />} />
+              <Route path="/welcome" element={<Welcome />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/setup-admin" element={<SetupAdmin />} />
+              <Route path="/super-admin-login" element={<SuperAdminLogin />} />
+              <Route
+                path="/super-admin"
+                element={
+                  <ProtectedRoute role="SUPER_ADMIN">
+                    <SuperAdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/school-admin"
+                element={
+                  <ProtectedRoute role="SCHOOL_ADMIN">
+                    <SchoolAdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teacher"
+                element={
+                  <ProtectedRoute role="TEACHER">
+                    <TeacherDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student"
+                element={
+                  <ProtectedRoute role="STUDENT">
+                    <StudentDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/staff"
+                element={
+                  <ProtectedRoute role={["STAFF", "DRIVER"]}>
+                    <StaffDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/driver-tracking"
+                element={
+                  <ProtectedRoute role={["SCHOOL_ADMIN", "DRIVER", "STAFF"]}>
+                    <DriverTracking />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<Navigate to="/login" />} />
+            </Routes>
+          </div>
+        </Router>
+      </NotificationProvider>
+    </AuthProvider>
+  );
+};
 
+function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <NotificationProvider>
-          <NotificationRegistration />
-          <Router>
-            <div className="min-h-screen bg-gray-50">
-              <Toaster position="top-center" />
-              <Routes>
-                <Route path="/" element={<Navigate to="/welcome" />} />
-                <Route path="/welcome" element={<Welcome />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password/:token" element={<ResetPassword />} />
-                <Route path="/change-password" element={<ChangePassword />} />
-                <Route path="/setup-admin" element={<SetupAdmin />} />
-                <Route path="/super-admin-login" element={<SuperAdminLogin />} />
-                <Route
-                  path="/super-admin"
-                  element={
-                    <ProtectedRoute role="SUPER_ADMIN">
-                      <SuperAdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/school-admin"
-                  element={
-                    <ProtectedRoute role="SCHOOL_ADMIN">
-                      <SchoolAdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/teacher"
-                  element={
-                    <ProtectedRoute role="TEACHER">
-                      <TeacherDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/student"
-                  element={
-                    <ProtectedRoute role="STUDENT">
-                      <StudentDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/staff"
-                  element={
-                    <ProtectedRoute role={["STAFF", "DRIVER"]}>
-                      <StaffDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/driver-tracking"
-                  element={
-                    <ProtectedRoute role={["SCHOOL_ADMIN", "DRIVER", "STAFF"]}>
-                      <DriverTracking />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="*" element={<Navigate to="/login" />} />
-              </Routes>
-            </div>
-          </Router>
-        </NotificationProvider>
-      </AuthProvider>
+      <LoadingProvider>
+        <AppContent />
+      </LoadingProvider>
     </ErrorBoundary>
   );
 }

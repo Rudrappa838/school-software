@@ -34,14 +34,14 @@ exports.createExamType = async (req, res) => {
     const client = await pool.connect();
     try {
         const school_id = req.user.schoolId;
-        const { name, max_marks, weightage, components } = req.body;
+        const { name, max_marks, min_marks, start_month, end_month, weightage, components } = req.body;
 
         await client.query('BEGIN');
 
         const result = await client.query(
-            `INSERT INTO exam_types (school_id, name, max_marks, weightage)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [school_id, name, max_marks, weightage || 0]
+            `INSERT INTO exam_types (school_id, name, max_marks, min_marks, start_month, end_month, weightage)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+            [school_id, name, max_marks || 100, min_marks || 35, start_month || 1, end_month || 12, weightage || 0]
         );
 
         const examType = result.rows[0];
@@ -73,11 +73,14 @@ exports.updateExamType = async (req, res) => {
     try {
         const school_id = req.user.schoolId;
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, max_marks, min_marks, start_month, end_month } = req.body;
 
         const result = await pool.query(
-            'UPDATE exam_types SET name = $1 WHERE id = $2 AND school_id = $3 RETURNING *',
-            [name, id, school_id]
+            `UPDATE exam_types 
+             SET name = $1, max_marks = COALESCE($2, max_marks), min_marks = COALESCE($3, min_marks), 
+                 start_month = COALESCE($4, start_month), end_month = COALESCE($5, end_month)
+             WHERE id = $6 AND school_id = $7 RETURNING *`,
+            [name, max_marks, min_marks, start_month, end_month, id, school_id]
         );
 
         if (result.rows.length === 0) {

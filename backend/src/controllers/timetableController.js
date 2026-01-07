@@ -7,8 +7,8 @@ exports.generateTimetable = async (req, res) => {
         const school_id = req.user.schoolId;
         const { class_id, section_id } = req.body;
 
-        if (!class_id || !section_id) {
-            return res.status(400).json({ message: 'Class and Section are required' });
+        if (!class_id) {
+            return res.status(400).json({ message: 'Class ID is required' });
         }
 
         await client.query('BEGIN');
@@ -31,10 +31,17 @@ exports.generateTimetable = async (req, res) => {
         }
 
         // Delete existing timetable for this class-section
-        await client.query(
-            `DELETE FROM timetables WHERE school_id = $1 AND class_id = $2 AND section_id = $3`,
-            [school_id, class_id, section_id]
-        );
+        let deleteQuery = `DELETE FROM timetables WHERE school_id = $1 AND class_id = $2`;
+        const deleteParams = [school_id, class_id];
+
+        if (section_id) {
+            deleteQuery += ` AND section_id = $3`;
+            deleteParams.push(section_id);
+        } else {
+            deleteQuery += ` AND section_id IS NULL`;
+        }
+
+        await client.query(deleteQuery, deleteParams);
 
         // Generate timetable (6 days, 7 periods per day)
         const periods = [
@@ -57,12 +64,20 @@ exports.generateTimetable = async (req, res) => {
                 // Check for teacher conflict
                 let teacher_id = subject.teacher_id;
                 if (teacher_id) {
-                    const conflictCheck = await client.query(
-                        `SELECT id FROM timetables 
+                    let conflictQuery = `SELECT id FROM timetables 
                          WHERE teacher_id = $1 AND day_of_week = $2 AND period_number = $3 AND school_id = $4
-                         AND NOT (class_id = $5 AND section_id = $6)`,
-                        [teacher_id, day, period.number, school_id, class_id, section_id]
-                    );
+                         AND NOT (class_id = $5`;
+
+                    const conflictParams = [teacher_id, day, period.number, school_id, class_id];
+
+                    if (section_id) {
+                        conflictQuery += ` AND section_id = $6)`;
+                        conflictParams.push(section_id);
+                    } else {
+                        conflictQuery += ` AND section_id IS NULL)`;
+                    }
+
+                    const conflictCheck = await client.query(conflictQuery, conflictParams);
 
                     if (conflictCheck.rows.length > 0) {
                         // Teacher has conflict, assign null (unassigned)
@@ -73,7 +88,7 @@ exports.generateTimetable = async (req, res) => {
                 timetableEntries.push({
                     school_id,
                     class_id,
-                    section_id,
+                    section_id: section_id || null,
                     day_of_week: day,
                     period_number: period.number,
                     subject_id: subject.id,
@@ -114,22 +129,39 @@ exports.getTimetable = async (req, res) => {
         const school_id = req.user.schoolId;
         const { class_id, section_id } = req.query;
 
-        if (!class_id || !section_id) {
-            return res.status(400).json({ message: 'Class and Section are required' });
+        if (!class_id) {
+            return res.status(400).json({ message: 'Class ID is required' });
         }
 
-        const result = await pool.query(
-            `SELECT t.*, 
+        let query = `SELECT t.*, 
                     s.name as subject_name,
                     te.name as teacher_name,
                     te.id as teacher_id
              FROM timetables t
              LEFT JOIN subjects s ON t.subject_id = s.id
              LEFT JOIN teachers te ON t.teacher_id = te.id
-             WHERE t.school_id = $1 AND t.class_id = $2 AND t.section_id = $3
-             ORDER BY t.day_of_week, t.period_number`,
-            [school_id, class_id, section_id]
-        );
+             WHERE t.school_id = $1 AND t.class_id = $2`;
+
+        const params = [school_id, class_id];
+
+        if (section_id) {
+            query += ` AND t.section_id = $3`;
+            params.push(section_id);
+        } else {
+            // If section_id is NOT provided, explicitly allow NULL sections OR all sections? 
+            // In strict mode (class w/o sections), we want section_id IS NULL.
+            // If the user just didn't select a section (but sections exist), this might return mixed data.
+            // Frontend logic: If class has sections, frontend selects one. If no sections, frontend sends null.
+            // So we should enforce strict check: if null sent, check IS NULL.
+            // HOWEVER, req.query param missing means 'undefined'. 
+            // We should assume if it's missing, maybe we want IS NULL?
+            // Let's stick to strict check.
+            query += ` AND t.section_id IS NULL`;
+        }
+
+        query += ` ORDER BY t.day_of_week, t.period_number`;
+
+        const result = await pool.query(query, params);
 
         res.json(result.rows);
     } catch (error) {
@@ -138,50 +170,29 @@ exports.getTimetable = async (req, res) => {
     }
 };
 
-// Update Timetable Slot
+// Update Timetable Slot (Manual Edit)
 exports.updateTimetableSlot = async (req, res) => {
     try {
         const school_id = req.user.schoolId;
         const { id } = req.params;
-        const { subject_id, teacher_id } = req.body;
-
-        // Check for teacher conflict if teacher is being assigned
-        if (teacher_id) {
-            const slot = await pool.query('SELECT * FROM timetables WHERE id = $1', [id]);
-            if (slot.rows.length === 0) {
-                return res.status(404).json({ message: 'Timetable slot not found' });
-            }
-
-            const { day_of_week, period_number } = slot.rows[0];
-
-            const conflict = await pool.query(
-                `SELECT id FROM timetables 
-                 WHERE teacher_id = $1 AND day_of_week = $2 AND period_number = $3 
-                 AND school_id = $4 AND id != $5`,
-                [teacher_id, day_of_week, period_number, school_id, id]
-            );
-
-            if (conflict.rows.length > 0) {
-                return res.status(400).json({
-                    message: 'Teacher conflict: This teacher is already assigned to another class at this time'
-                });
-            }
-        }
+        const { subject_id, teacher_id, start_time, end_time } = req.body;
 
         const result = await pool.query(
-            `UPDATE timetables SET subject_id = $1, teacher_id = $2 
-             WHERE id = $3 AND school_id = $4 RETURNING *`,
-            [subject_id, teacher_id, id, school_id]
+            `UPDATE timetables 
+             SET subject_id = $1, teacher_id = $2, start_time = $3, end_time = $4
+             WHERE id = $5 AND school_id = $6
+             RETURNING *`,
+            [subject_id, teacher_id, start_time, end_time, id, school_id]
         );
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Timetable slot not found' });
         }
 
-        res.json(result.rows[0]);
+        res.json({ message: 'Slot updated successfully', slot: result.rows[0] });
     } catch (error) {
         console.error('Error updating timetable slot:', error);
-        res.status(500).json({ message: 'Server error updating timetable' });
+        res.status(500).json({ message: 'Server error updating slot' });
     }
 };
 
@@ -191,10 +202,17 @@ exports.deleteTimetable = async (req, res) => {
         const school_id = req.user.schoolId;
         const { class_id, section_id } = req.query;
 
-        await pool.query(
-            `DELETE FROM timetables WHERE school_id = $1 AND class_id = $2 AND section_id = $3`,
-            [school_id, class_id, section_id]
-        );
+        let query = `DELETE FROM timetables WHERE school_id = $1 AND class_id = $2`;
+        const params = [school_id, class_id];
+
+        if (section_id) {
+            query += ` AND section_id = $3`;
+            params.push(section_id);
+        } else {
+            query += ` AND section_id IS NULL`;
+        }
+
+        await pool.query(query, params);
 
         res.json({ message: 'Timetable deleted successfully' });
     } catch (error) {
