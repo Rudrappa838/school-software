@@ -137,7 +137,7 @@ const TransportManagement = ({ initialTab }) => {
     // Route Form State
     const [showRouteModal, setShowRouteModal] = useState(false);
     const [routeForm, setRouteForm] = useState({
-        route_name: '', start_point: '', end_point: '', start_time: '', vehicle_id: ''
+        route_name: '', start_point: '', end_point: '', start_time: ''
     });
     const [stops, setStops] = useState([{ name: '', time: '', lat: null, lng: null }]);
 
@@ -512,13 +512,6 @@ const TransportManagement = ({ initialTab }) => {
                                         autoComplete="off"
                                         value={routeForm.route_name} onChange={e => setRouteForm({ ...routeForm, route_name: e.target.value })}
                                     />
-                                    <select
-                                        className="w-full p-2 border rounded-lg text-sm"
-                                        value={routeForm.vehicle_id} onChange={e => setRouteForm({ ...routeForm, vehicle_id: e.target.value })}
-                                    >
-                                        <option value="">Select Vehicle</option>
-                                        {vehicles.map(v => <option key={v.id} value={v.id}>{v.vehicle_number} ({v.driver_name})</option>)}
-                                    </select>
                                     <div className="grid grid-cols-2 gap-4">
                                         <input
                                             className="w-full p-2 border rounded-lg text-sm" placeholder="Start Point"

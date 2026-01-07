@@ -170,10 +170,10 @@ const TeacherDashboard = () => {
                 <div className="p-4 border-t border-white/20 bg-black/10">
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors cursor-pointer group border border-white/10 hover:border-white/30">
                         <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 font-bold shadow-lg">
-                            {user?.name?.[0]?.toUpperCase()}
+                            {(teacherProfile?.name || user?.name || 'T')?.[0]?.toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white truncate">{user?.name}</p>
+                            <p className="text-sm font-bold text-white truncate">{teacherProfile?.name || user?.name || 'Teacher'}</p>
                             <p className="text-[10px] text-blue-100 uppercase font-medium tracking-tight">
                                 {teacherProfile?.subject_specialization || 'Teacher'} • {teacherProfile?.employee_id || '--'}
                             </p>
@@ -285,63 +285,97 @@ const TeacherDashboard = () => {
 
 // --- Sub Components ---
 
-const TeacherOverview = ({ profile, schoolName, user }) => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="col-span-full mb-6">
-            <div className="overflow-hidden w-full bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full mix-blend-multiply filter blur-3xl opacity-70 -translate-y-1/2 translate-x-1/2"></div>
-                <div className="relative z-10">
-                    <h3 className="text-3xl font-black text-slate-800 tracking-tight font-serif italic mb-1">
-                        {schoolName}
-                    </h3>
-                    {user && (
-                        <div className="mt-4 flex flex-col gap-1">
-                            <h2 className="text-xl font-bold text-slate-700">{user.name}</h2>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 font-medium">
-                                <span className="flex items-center gap-1">
-                                    <BookOpen size={14} className="text-emerald-500" />
-                                    {profile?.subject_specialization || 'Teacher'}
-                                </span>
-                                {profile?.employee_id && (
+const TeacherOverview = ({ profile, schoolName, user }) => {
+    const [attendancePercent, setAttendancePercent] = React.useState(0);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchAttendance = async () => {
+            setLoading(true);
+            try {
+                const now = new Date();
+                const res = await api.get('/teachers/attendance/my', {
+                    params: { month: now.getMonth() + 1, year: now.getFullYear() }
+                });
+
+                const data = res.data || [];
+                const presentCount = data.filter(r => r.status?.toLowerCase() === 'present').length;
+                const totalMarked = data.length;
+
+                if (totalMarked > 0) {
+                    setAttendancePercent(Math.round((presentCount / totalMarked) * 100));
+                } else {
+                    setAttendancePercent(0);
+                }
+            } catch (e) {
+                console.error("Failed to load attendance stats", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAttendance();
+    }, []);
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="col-span-full mb-6">
+                <div className="overflow-hidden w-full bg-white rounded-xl p-6 border border-slate-200 shadow-sm relative">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full mix-blend-multiply filter blur-3xl opacity-70 -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="relative z-10">
+                        <h3 className="text-3xl font-black text-slate-800 tracking-tight font-serif italic mb-1">
+                            {schoolName}
+                        </h3>
+                        {user && (
+                            <div className="mt-4 flex flex-col gap-1">
+                                <h2 className="text-xl font-bold text-slate-700">{user.name}</h2>
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 font-medium">
                                     <span className="flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-                                        ID: {profile.employee_id}
+                                        <BookOpen size={14} className="text-emerald-500" />
+                                        {profile?.subject_specialization || 'Teacher'}
                                     </span>
-                                )}
+                                    {profile?.employee_id && (
+                                        <span className="flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                                            ID: {profile.employee_id}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/20 transition-all"></div>
-            <h3 className="font-bold text-emerald-100 mb-1 relative z-10">My Assigned Class</h3>
-            {profile?.class_name ? (
-                <>
-                    <div className="text-3xl font-bold relative z-10">{profile.class_name} - {profile.section_name}</div>
-                    <div className="text-xs text-emerald-200 mt-2 relative z-10 font-medium bg-emerald-700/30 inline-block px-2 py-1 rounded">Class Teacher</div>
-                </>
-            ) : (
-                <div className="text-xl font-bold opacity-80 mt-2">No Class Assigned</div>
-            )}
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all">
-            <h3 className="font-bold text-slate-500 mb-1">Today's Attendance</h3>
-            <div className="text-3xl font-bold text-slate-800">-- / --</div>
-            <div className="text-xs text-slate-400 mt-2">View details in Attendance tab</div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all">
-            <h3 className="font-bold text-slate-500 mb-1">Subject Specialization</h3>
-            <div className="text-2xl font-bold text-slate-800 truncate" title={profile?.subject_specialization}>
-                {profile?.subject_specialization || 'General'}
+            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/20 transition-all"></div>
+                <h3 className="font-bold text-emerald-100 mb-1 relative z-10">My Assigned Class</h3>
+                {profile?.class_name ? (
+                    <>
+                        <div className="text-3xl font-bold relative z-10">{profile.class_name} - {profile.section_name}</div>
+                        <div className="text-xs text-emerald-200 mt-2 relative z-10 font-medium bg-emerald-700/30 inline-block px-2 py-1 rounded">Class Teacher</div>
+                    </>
+                ) : (
+                    <div className="text-xl font-bold opacity-80 mt-2">No Class Assigned</div>
+                )}
             </div>
-            <div className="text-xs text-slate-400 mt-2">Primary Subject</div>
+
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                <h3 className="font-bold text-slate-500 mb-1">This Month's Attendance</h3>
+                <div className="text-3xl font-bold text-slate-800">
+                    {loading ? <span className="text-sm text-slate-400">Loading...</span> : `${attendancePercent}%`}
+                </div>
+                <div className="text-xs text-slate-400 mt-2">Current month attendance rate</div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                <h3 className="font-bold text-slate-500 mb-1">Subject Specialization</h3>
+                <div className="text-2xl font-bold text-slate-800 truncate" title={profile?.subject_specialization}>
+                    {profile?.subject_specialization || 'General'}
+                </div>
+                <div className="text-xs text-slate-400 mt-2">Primary Subject</div>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 
 

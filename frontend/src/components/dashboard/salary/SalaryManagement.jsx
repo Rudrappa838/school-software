@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { DollarSign, Calendar, Download, CheckCircle, Clock, Filter, IndianRupee, Search } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { DollarSign, Calendar, Download, CheckCircle, Clock, Filter, IndianRupee, Search, Printer, X, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../api/axios';
+import { useReactToPrint } from 'react-to-print';
 
 const SalaryManagement = () => {
     const [salaryData, setSalaryData] = useState([]);
@@ -20,9 +21,30 @@ const SalaryManagement = () => {
         cheque_number: ''
     });
 
+    // Pay Slip Modal States
+    const [showSlipModal, setShowSlipModal] = useState(false);
+    const [selectedSlip, setSelectedSlip] = useState(null);
+    const [schoolName, setSchoolName] = useState('');
+    const slipRef = useRef();
+
+    const handlePrint = useReactToPrint({
+        contentRef: slipRef,
+        documentTitle: selectedSlip ? `Salary_Slip_${selectedSlip.name}_${selectedMonth}_${selectedYear}` : 'Salary_Slip',
+    });
+
     useEffect(() => {
         fetchSalaryData();
+        fetchSchoolName();
     }, [selectedMonth, selectedYear]);
+
+    const fetchSchoolName = async () => {
+        try {
+            const res = await api.get('/schools/my-school');
+            setSchoolName(res.data.name);
+        } catch (error) {
+            console.error('Failed to fetch school name', error);
+        }
+    };
 
     const fetchSalaryData = async () => {
         setLoading(true);
@@ -35,6 +57,11 @@ const SalaryManagement = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleViewSlip = (emp) => {
+        setSelectedSlip(emp);
+        setShowSlipModal(true);
     };
 
     const handleMarkPaid = async () => {
@@ -251,26 +278,40 @@ const SalaryManagement = () => {
                                             </div>
                                         </td>
                                         <td className="p-4 pr-6 text-right">
-                                            {emp.is_paid ? (
-                                                <div className="text-right">
-                                                    <div className="text-xs text-slate-500 mb-1">Paid on</div>
-                                                    <div className="text-xs font-bold text-emerald-600">
-                                                        {new Date(emp.payment_date).toLocaleDateString()}
-                                                    </div>
-                                                    <div className="text-[10px] text-slate-400">{emp.payment_mode}</div>
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedEmployee(emp);
-                                                        setShowPaymentModal(true);
-                                                    }}
-                                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ml-auto"
-                                                >
-                                                    <CheckCircle size={14} />
-                                                    Mark Paid
-                                                </button>
-                                            )}
+                                            <div className="flex items-center justify-end gap-2">
+                                                {emp.is_paid ? (
+                                                    <>
+                                                        <div className="text-right mr-2">
+                                                            <div className="text-xs text-slate-500 mb-1">Paid on</div>
+                                                            <div className="text-xs font-bold text-emerald-600">
+                                                                {new Date(emp.payment_date).toLocaleDateString()}
+                                                            </div>
+                                                            <div className="text-[10px] text-slate-400">{emp.payment_mode}</div>
+                                                        </div>
+
+                                                        {/* View Slip Button - Only for Paid Employees */}
+                                                        <button
+                                                            onClick={() => handleViewSlip(emp)}
+                                                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                                                            title="View Pay Slip"
+                                                        >
+                                                            <FileText size={14} />
+                                                            View Slip
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedEmployee(emp);
+                                                            setShowPaymentModal(true);
+                                                        }}
+                                                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                                                    >
+                                                        <CheckCircle size={14} />
+                                                        Mark Paid
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -392,6 +433,119 @@ const SalaryManagement = () => {
                                     Confirm Payment
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* PAY SLIP MODAL */}
+            {showSlipModal && selectedSlip && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        {/* Modal Header */}
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                            <h3 className="font-bold text-slate-700">Salary Slip Preview</h3>
+                            <button onClick={() => setShowSlipModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                                <X size={20} className="text-slate-500" />
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="flex-1 overflow-y-auto p-8 bg-slate-50">
+                            <div ref={slipRef} className="bg-white p-8 shadow-sm border border-slate-200 mx-auto max-w-lg print:shadow-none print:border-none print:p-0">
+                                {/* SLIP LAYOUT */}
+                                <div className="text-center mb-6 border-b-2 border-slate-800 pb-4">
+                                    <h1 className="text-2xl font-black text-slate-900 uppercase tracking-wide">{schoolName || 'SCHOOL NAME'}</h1>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Salary Slip</p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-y-4 text-sm mb-6">
+                                    <div>
+                                        <p className="text-[10px] uppercase text-slate-400 font-bold">Slip Number</p>
+                                        <p className="font-bold text-slate-800">SLIP-{selectedSlip.id.toString().padStart(6, '0')}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] uppercase text-slate-400 font-bold">Date</p>
+                                        <p className="font-bold text-slate-800">{selectedSlip.is_paid ? new Date(selectedSlip.payment_date).toLocaleDateString() : new Date().toLocaleDateString()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] uppercase text-slate-400 font-bold">Employee ID</p>
+                                        <p className="font-bold text-slate-800">{selectedSlip.employee_id || 'N/A'}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] uppercase text-slate-400 font-bold">Month / Year</p>
+                                        <p className="font-bold text-slate-800">{months[selectedMonth - 1]} {selectedYear}</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <p className="text-[10px] uppercase text-slate-400 font-bold">Employee Name</p>
+                                        <p className="font-bold text-slate-800">{selectedSlip.name}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] uppercase text-slate-400 font-bold">Type</p>
+                                        <p className="font-bold text-slate-800">{selectedSlip.type}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] uppercase text-slate-400 font-bold">Role</p>
+                                        <p className="font-bold text-slate-800">{selectedSlip.role || 'N/A'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 mb-6">
+                                    <div className="grid grid-cols-3 gap-4 text-center">
+                                        <div>
+                                            <p className="text-[10px] uppercase text-slate-400 font-bold mb-0.5">Working Days</p>
+                                            <p className="font-bold text-slate-800">{selectedSlip.total_marked_days || 0} Days</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase text-slate-400 font-bold mb-0.5">Present</p>
+                                            <p className="font-bold text-emerald-600">{selectedSlip.days_present || 0} Days</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase text-slate-400 font-bold mb-0.5">Absent</p>
+                                            <p className="font-bold text-rose-600">{selectedSlip.days_absent || 0} Days</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 border-t border-slate-100 pt-4">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-500 font-medium">Rate per Day</span>
+                                        <span className="font-bold text-slate-800">₹{selectedSlip.salary_per_day || 0}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-500 font-medium">Payment Mode</span>
+                                        <span className="font-bold text-slate-800 capitalize">{selectedSlip.payment_mode || 'Pending'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-500 font-medium">Status</span>
+                                        <span className={`font-bold px-2 py-0.5 rounded text-xs uppercase ${selectedSlip.is_paid ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                                            {selectedSlip.is_paid ? 'Paid' : 'Unpaid'}
+                                        </span>
+                                    </div>
+                                    <div className="border-t border-dashed border-slate-200 my-4"></div>
+                                    <div className="flex justify-between items-center text-lg">
+                                        <span className="font-black text-slate-700">NET PAY</span>
+                                        <span className="font-black text-emerald-600">₹{parseFloat(selectedSlip.calculated_salary || 0).toLocaleString()}</span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 text-center">
+                                    <p className="text-[10px] text-slate-400 uppercase font-medium">This is a system generated slip.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t border-slate-100 bg-white flex justify-end gap-3">
+                            <button onClick={() => setShowSlipModal(false)} className="px-5 py-2.5 text-slate-600 font-bold text-sm hover:bg-slate-50 rounded-xl transition-colors">
+                                Close
+                            </button>
+                            <button
+                                onClick={handlePrint}
+                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg transition-all flex items-center gap-2 active:scale-95"
+                            >
+                                <Printer size={18} /> Print / Save PDF
+                            </button>
                         </div>
                     </div>
                 </div>

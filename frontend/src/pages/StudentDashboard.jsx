@@ -103,8 +103,8 @@ const StudentDashboard = () => {
 
             try {
                 const [attResult, libResult, feeResult, hostelResult, busResult] = await Promise.allSettled([
-                    // remove params to get overall attendance stats (Academic Year)
-                    api.get('/students/attendance/my-report'),
+                    // Fetch current month's attendance only
+                    api.get('/students/attendance/my-report', { params: { month, year } }),
                     api.get('/library/my-books'),
                     api.get('/fees/my-status'),
                     api.get('/hostel/my-details'),
@@ -179,16 +179,29 @@ const StudentDashboard = () => {
         const fetchLeaveNotifications = async () => {
             try {
                 const res = await api.get('/leaves/my-leaves');
+
                 // Get the last time user checked leaves from localStorage
-                const lastChecked = localStorage.getItem('lastLeaveCheck');
-                const lastCheckedTime = lastChecked ? new Date(lastChecked) : new Date(0);
+                let lastChecked = localStorage.getItem('lastLeaveCheck');
+
+                // If this is the first time, set it to now (so old notifications don't show)
+                if (!lastChecked) {
+                    lastChecked = new Date().toISOString();
+                    localStorage.setItem('lastLeaveCheck', lastChecked);
+                }
+
+                const lastCheckedTime = new Date(lastChecked);
 
                 // Filter only recently approved/rejected leaves that are newer than last check
                 const recent = res.data.filter(leave => {
                     if (leave.status === 'Pending') return false;
+
+                    // Use updated_at if available, otherwise created_at
                     const updatedDate = new Date(leave.updated_at || leave.created_at);
-                    return updatedDate > lastCheckedTime;
+
+                    // Only show if updated AFTER last check
+                    return updatedDate.getTime() > lastCheckedTime.getTime();
                 });
+
                 setLeaveNotifications(recent);
             } catch (error) {
                 console.error('Failed to fetch leave notifications', error);
@@ -288,10 +301,10 @@ const StudentDashboard = () => {
                 <div className="p-4 border-t border-white/20 bg-black/10">
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors cursor-pointer group border border-white/10 hover:border-white/30">
                         <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 font-bold shadow-lg">
-                            {user?.name?.[0]?.toUpperCase()}
+                            {(studentData?.name || user?.name || 'S')?.[0]?.toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white truncate">{user?.name}</p>
+                            <p className="text-sm font-bold text-white truncate">{studentData?.name || user?.name || 'Student'}</p>
                             <p className="text-[10px] text-blue-100 uppercase font-medium tracking-tight">
                                 {studentData?.class_name ? `Class ${studentData.class_name.toString().replace(/class/i, '').trim()}${studentData.section_name ? `-${studentData.section_name}` : ''}` : 'Student'} • {studentData?.admission_no || '--'}
                             </p>

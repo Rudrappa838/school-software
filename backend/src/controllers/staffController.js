@@ -391,12 +391,12 @@ exports.getSalarySlips = async (req, res) => {
         if (staffRes.rows.length === 0) return res.json([]);
         const staff_id = staffRes.rows[0].id;
 
-        // 2. Fetch Salary Records (Assuming table exists, wrapped in try-catch to be safe)
+        // 2. Fetch Salary Records using the correct schema (employee_id + employee_type)
         const result = await pool.query(`
             SELECT * FROM salary_payments 
-            WHERE staff_id = $1 
+            WHERE employee_id = $1 AND employee_type = 'Staff' AND school_id = $2
             ORDER BY year DESC, month DESC
-        `, [staff_id]);
+        `, [staff_id, school_id]);
 
         res.json(result.rows);
 

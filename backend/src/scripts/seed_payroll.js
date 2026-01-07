@@ -5,30 +5,41 @@ async function seedPayroll() {
         const client = await pool.connect();
         console.log("Seeding data...");
 
-        const staffRes = await client.query("SELECT id FROM staff WHERE name ILIKE '%Rudrappa%' LIMIT 1");
-        if (staffRes.rows.length === 0) {
-            console.log("Rudrappa not found");
-            process.exit(0);
-        }
+        // Fetch ALL Staff and Teachers with School ID
+        const allStaff = await client.query("SELECT id, school_id FROM staff");
+        const allTeachers = await client.query("SELECT id, school_id FROM teachers");
 
-        const staffId = staffRes.rows[0].id;
-        // Hardcode school_id from staff table check or just 1
-        const schoolRes = await client.query("SELECT school_id FROM staff WHERE id = $1", [staffId]);
-        const schoolId = schoolRes.rows[0].school_id;
+        console.log(`Found ${allStaff.rows.length} Staff and ${allTeachers.rows.length} Teachers.`);
 
         const today = new Date();
         for (let i = 1; i <= 3; i++) {
             const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
             const month = d.getMonth() + 1;
             const year = d.getFullYear();
-            const amount = 15000 + (Math.random() * 1000);
 
-            await client.query(`
-                INSERT INTO salary_payments (school_id, staff_id, month, year, amount, status, remarks, payment_date)
-                VALUES ($1, $2, $3, $4, $5, 'Paid', 'Salary Credited', $6)
-                ON CONFLICT (staff_id, month, year) DO NOTHING
-            `, [schoolId, staffId, month, year, amount.toFixed(2), d]);
-            console.log(`Seeded ${month}/${year}`);
+            // Seed All Staff
+            for (const staff of allStaff.rows) {
+                const amount = 15000 + (Math.random() * 1000);
+                await client.query(`
+                    INSERT INTO salary_payments (school_id, employee_id, employee_type, month, year, amount, payment_mode, status, notes, payment_date)
+                    VALUES ($1, $2, 'Staff', $3, $4, $5, 'Bank Transfer', 'Paid', 'Salary Credited', $6)
+                    ON CONFLICT (school_id, employee_id, employee_type, month, year) DO UPDATE 
+                    SET amount = EXCLUDED.amount
+                `, [staff.school_id, staff.id, month, year, amount.toFixed(2), d]);
+            }
+
+            // Seed All Teachers
+            for (const teacher of allTeachers.rows) {
+                const amount = 25000 + (Math.random() * 2000);
+                await client.query(`
+                    INSERT INTO salary_payments (school_id, employee_id, employee_type, month, year, amount, payment_mode, status, notes, payment_date)
+                    VALUES ($1, $2, 'Teacher', $3, $4, $5, 'Bank Transfer', 'Paid', 'Salary Credited', $6)
+                    ON CONFLICT (school_id, employee_id, employee_type, month, year) DO UPDATE 
+                    SET amount = EXCLUDED.amount
+                `, [teacher.school_id, teacher.id, month, year, amount.toFixed(2), d]);
+            }
+
+            console.log(`Seeded Payroll for ${month}/${year}`);
         }
 
         client.release();

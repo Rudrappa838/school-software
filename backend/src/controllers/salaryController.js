@@ -211,16 +211,41 @@ exports.getMySalaryDetails = async (req, res) => {
         const { year } = req.query; // Optional filter by year
 
         // First find the teacher/staff ID
-        let employee_id, employee_type;
+        let employee_id, employee_type, profile_data;
 
         if (req.user.role === 'TEACHER') {
-            const tRes = await pool.query('SELECT id, employee_id, salary_per_day, join_date FROM teachers WHERE email = $1', [email]);
+            // Robust Teacher Lookup
+            let tRes = await pool.query(
+                'SELECT id, employee_id, salary_per_day, join_date FROM teachers WHERE LOWER(TRIM(email)) = LOWER(TRIM($1)) AND school_id = $2',
+                [email, school_id]
+            );
+            if (tRes.rows.length === 0 && email.endsWith('@teacher.school.com')) {
+                const potentialEmpId = email.split('@')[0].toUpperCase();
+                tRes = await pool.query(
+                    'SELECT id, employee_id, salary_per_day, join_date FROM teachers WHERE employee_id = $1 AND school_id = $2',
+                    [potentialEmpId, school_id]
+                );
+            }
+
             if (tRes.rows.length === 0) return res.status(404).json({ message: 'Teacher profile not found' });
             employee_id = tRes.rows[0].id;
             profile_data = tRes.rows[0];
             employee_type = 'Teacher';
+
         } else if (req.user.role === 'STAFF' || req.user.role === 'DRIVER') {
-            const sRes = await pool.query('SELECT id, employee_id, salary_per_day, join_date FROM staff WHERE email = $1', [email]);
+            // Robust Staff Lookup
+            let sRes = await pool.query(
+                'SELECT id, employee_id, salary_per_day, join_date FROM staff WHERE LOWER(TRIM(email)) = LOWER(TRIM($1)) AND school_id = $2',
+                [email, school_id]
+            );
+            if (sRes.rows.length === 0 && email.endsWith('@staff.school.com')) {
+                const potentialEmpId = email.split('@')[0].toUpperCase();
+                sRes = await pool.query(
+                    'SELECT id, employee_id, salary_per_day, join_date FROM staff WHERE employee_id = $1 AND school_id = $2',
+                    [potentialEmpId, school_id]
+                );
+            }
+
             if (sRes.rows.length === 0) return res.status(404).json({ message: 'Staff profile not found' });
             employee_id = sRes.rows[0].id;
             profile_data = sRes.rows[0];
