@@ -22,6 +22,11 @@ const StudentManagement = ({ config, prefillData }) => {
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Clear selection when filters change
+    useEffect(() => {
+        setSelectedStudents([]);
+    }, [filterClass, filterSection]);
+
     const [formData, setFormData] = useState({
         admission_no: '',
         first_name: '',
@@ -452,18 +457,21 @@ const StudentManagement = ({ config, prefillData }) => {
                         <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[11px] tracking-wider">
                             <tr>
                                 <th className="p-4 pl-6 w-12">
-                                    <input
-                                        type="checkbox"
-                                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                                        checked={selectedStudents.length === students.length && students.length > 0}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setSelectedStudents(students);
-                                            } else {
-                                                setSelectedStudents([]);
-                                            }
-                                        }}
-                                    />
+                                    {filterClass && (
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                            checked={selectedStudents.length === students.length && students.length > 0}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedStudents(students);
+                                                } else {
+                                                    setSelectedStudents([]);
+                                                }
+                                            }}
+                                            title="Select all students in this class"
+                                        />
+                                    )}
                                 </th>
                                 <th className="p-4">Roll No.</th>
                                 <th className="p-4">Admission Date</th>
@@ -508,18 +516,20 @@ const StudentManagement = ({ config, prefillData }) => {
                                     {students.map(student => (
                                         <tr key={student.id} className="group hover:bg-slate-50/50 transition-colors">
                                             <td className="p-4 pl-6">
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                                                    checked={selectedStudents.some(s => s.id === student.id)}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setSelectedStudents([...selectedStudents, student]);
-                                                        } else {
-                                                            setSelectedStudents(selectedStudents.filter(s => s.id !== student.id));
-                                                        }
-                                                    }}
-                                                />
+                                                {filterClass && (
+                                                    <input
+                                                        type="checkbox"
+                                                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                        checked={selectedStudents.some(s => s.id === student.id)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedStudents([...selectedStudents, student]);
+                                                            } else {
+                                                                setSelectedStudents(selectedStudents.filter(s => s.id !== student.id));
+                                                            }
+                                                        }}
+                                                    />
+                                                )}
                                             </td>
                                             <td className="p-4">
                                                 <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center font-bold font-mono text-xs border border-slate-200">
