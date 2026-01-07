@@ -585,7 +585,7 @@ const TransportManagement = ({ initialTab }) => {
                                                             {stop.lat && (
                                                                 <div className="text-[10px] text-slate-400 flex items-center bg-slate-50 px-2 rounded">
                                                                     <MapPin size={10} className="mr-1" />
-                                                                    {stop.lat.toFixed(4)}, {stop.lng.toFixed(4)}
+                                                                    {Number(stop.lat).toFixed(4)}, {Number(stop.lng).toFixed(4)}
                                                                 </div>
                                                             )}
                                                         </div>
