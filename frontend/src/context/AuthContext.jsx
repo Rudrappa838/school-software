@@ -1,31 +1,70 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../api/axios';
+import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
 
 const AuthContext = createContext(null);
+
+// Storage helper that works for both web and mobile
+const storage = {
+    async setItem(key, value) {
+        if (Capacitor.isNativePlatform()) {
+            await Preferences.set({ key, value });
+        } else {
+            localStorage.setItem(key, value);
+        }
+    },
+    async getItem(key) {
+        if (Capacitor.isNativePlatform()) {
+            const { value } = await Preferences.get({ key });
+            return value;
+        } else {
+            return localStorage.getItem(key);
+        }
+    },
+    async removeItem(key) {
+        if (Capacitor.isNativePlatform()) {
+            await Preferences.remove({ key });
+        } else {
+            localStorage.removeItem(key);
+        }
+    }
+};
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Initial load - Restore session from LocalStorage
+    // Initial load - Restore session from Storage
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-
-        if (token && storedUser) {
+        const restoreSession = async () => {
             try {
-                setUser(JSON.parse(storedUser));
-            } catch (e) {
-                console.error("Failed to parse stored user", e);
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                const token = await storage.getItem('token');
+                const storedUser = await storage.getItem('user');
+
+                if (token && storedUser) {
+                    try {
+                        setUser(JSON.parse(storedUser));
+                    } catch (e) {
+                        console.error("Failed to parse stored user", e);
+                        await storage.removeItem('token');
+                        await storage.removeItem('user');
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to restore session", error);
+            } finally {
+                setLoading(false);
             }
-        }
-        setLoading(false);
+        };
+
+        restoreSession();
     }, []);
 
-    // Broadcast Channel for Multi-tab management
+    // Broadcast Channel for Multi-tab management (Web only)
     useEffect(() => {
+        if (Capacitor.isNativePlatform()) return; // Skip for mobile app
+
         let channel = null;
         try {
             channel = new BroadcastChannel('school_auth_channel');
@@ -43,7 +82,7 @@ export const AuthProvider = ({ children }) => {
                 }
             };
         } catch (e) {
-            console.warn('BroadcastChannel not supported in this environment (likely mobile app). Tab sync disabled.');
+            console.warn('BroadcastChannel not supported');
         }
 
         return () => {
@@ -56,17 +95,20 @@ export const AuthProvider = ({ children }) => {
             const response = await api.post('/auth/login', { email, password, role });
             const { token, user } = response.data;
 
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
+            // Save to storage (works for both web and mobile)
+            await storage.setItem('token', token);
+            await storage.setItem('user', JSON.stringify(user));
             setUser(user);
 
-            try {
-                const channel = new BroadcastChannel('school_auth_channel');
-                channel.postMessage({ type: 'LOGIN_SUCCESS', userId: user.id });
-                channel.close();
-            } catch (bcError) {
-                // Ignore BroadcastChannel errors in mobile/background tabs
-                console.warn('BroadcastChannel suppressed:', bcError);
+            // Broadcast only on web
+            if (!Capacitor.isNativePlatform()) {
+                try {
+                    const channel = new BroadcastChannel('school_auth_channel');
+                    channel.postMessage({ type: 'LOGIN_SUCCESS', userId: user.id });
+                    channel.close();
+                } catch (bcError) {
+                    console.warn('BroadcastChannel suppressed:', bcError);
+                }
             }
 
             return { success: true, user };
@@ -109,49 +151,29 @@ export const AuthProvider = ({ children }) => {
     const logout = async (isAutoLogout = false, isRemote = false) => {
         try {
             if (!isRemote && !isAutoLogout) {
-                try {
-                    const channel = new BroadcastChannel('school_auth_channel');
-                    channel.postMessage({ type: 'LOGOUT', userId: user?.id });
-                    channel.close();
-                } catch (e) { console.warn('BroadcastChannel suppressed inside logout'); }
+                // Broadcast only on web
+                if (!Capacitor.isNativePlatform()) {
+                    try {
+                        const channel = new BroadcastChannel('school_auth_channel');
+                        channel.postMessage({ type: 'LOGOUT', userId: user?.id });
+                        channel.close();
+                    } catch (e) { console.warn('BroadcastChannel suppressed inside logout'); }
+                }
 
                 await api.post('/auth/logout');
             }
         } catch (error) {
             console.error("Logout API failed", error);
         } finally {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            await storage.removeItem('token');
+            await storage.removeItem('user');
             setUser(null);
             if (isAutoLogout) alert("Session timed out due to inactivity.");
         }
     };
 
-    // Auto-logout: INCREASED to 24 hours for Mobile usability
-    useEffect(() => {
-        if (!user) return;
-
-        // 24 Hours timeout (basically daily login required)
-        const TIMEOUT_DURATION = 24 * 60 * 60 * 1000;
-        let timeoutId;
-
-        const resetTimer = () => {
-            if (timeoutId) clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                logout(true);
-            }, TIMEOUT_DURATION);
-        };
-
-        const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove'];
-        events.forEach(event => document.addEventListener(event, resetTimer));
-
-        resetTimer();
-
-        return () => {
-            if (timeoutId) clearTimeout(timeoutId);
-            events.forEach(event => document.removeEventListener(event, resetTimer));
-        };
-    }, [user]);
+    // NO AUTO-LOGOUT - Users stay logged in until they manually logout
+    // This is better for mobile apps where users expect to stay logged in
 
     return (
         <AuthContext.Provider value={{ user, login, logout, loading }}>
