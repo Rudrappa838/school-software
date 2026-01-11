@@ -19,7 +19,7 @@ const TeacherManagement = ({ config }) => {
     const [formData, setFormData] = useState({
         name: '', email: '', phone: '', subject_specialization: '',
         gender: '', address: '', join_date: new Date().toISOString().split('T')[0],
-        assign_class_id: '', assign_section_id: '', salary_per_day: ''
+        assign_class_id: '', assign_section_id: '', salary_per_day: '', salary_per_month: ''
     });
     const [selectedId, setSelectedId] = useState(null);
 
@@ -67,6 +67,12 @@ const TeacherManagement = ({ config }) => {
                 delete payload.assign_class_id;
                 delete payload.assign_section_id;
             }
+
+            // Convert monthly salary to daily (monthly / 26 working days)
+            if (formData.salary_per_month) {
+                payload.salary_per_day = (parseFloat(formData.salary_per_month) / 26).toFixed(2);
+            }
+            delete payload.salary_per_month; // Don't send monthly to backend
 
             if (isEditing) {
                 await api.put(`/teachers/${selectedId}`, payload);
@@ -118,7 +124,7 @@ const TeacherManagement = ({ config }) => {
             gender: '', address: '', join_date: new Date().toISOString().split('T')[0],
             assign_class_id: prev.assign_class_id,
             assign_section_id: prev.assign_section_id,
-            salary_per_day: ''
+            salary_per_day: '', salary_per_month: ''
         }));
         setShowModal(true);
     };
@@ -144,7 +150,7 @@ const TeacherManagement = ({ config }) => {
                                 <th className="p-4 pl-6">ID</th>
                                 <th className="p-4">Name & Subject</th>
                                 <th className="p-4">Assigned Class</th>
-                                <th className="p-4">Salary/Day</th>
+                                <th className="p-4">Salary/Month</th>
                                 <th className="p-4">Contact</th>
                                 <th className="p-4 text-right pr-6">Actions</th>
                             </tr>
@@ -194,7 +200,7 @@ const TeacherManagement = ({ config }) => {
                                             </td>
                                             <td className="p-4">
                                                 <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-bold text-xs border border-emerald-100">
-                                                    ₹{t.salary_per_day || 0}
+                                                    ₹{t.salary_per_day ? (parseFloat(t.salary_per_day) * 26).toLocaleString() : 0}
                                                 </span>
                                             </td>
                                             <td className="p-4">
@@ -203,7 +209,7 @@ const TeacherManagement = ({ config }) => {
                                             </td>
                                             <td className="p-4 pr-6 text-right">
                                                 <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => { setIsEditing(true); setFieldErrors({}); setSelectedId(t.id); setFormData({ ...t, assign_class_id: t.assigned_class_id || '', assign_section_id: t.assigned_section_id || '' }); setIsClassTeacher(!!t.assigned_class_id); setShowModal(true); }} className="text-indigo-500 hover:bg-indigo-50 p-2 rounded-lg transition-colors"><Edit2 size={18} /></button>
+                                                    <button onClick={() => { setIsEditing(true); setFieldErrors({}); setSelectedId(t.id); setFormData({ ...t, assign_class_id: t.assigned_class_id || '', assign_section_id: t.assigned_section_id || '', salary_per_month: t.salary_per_day ? (parseFloat(t.salary_per_day) * 26).toString() : '' }); setIsClassTeacher(!!t.assigned_class_id); setShowModal(true); }} className="text-indigo-500 hover:bg-indigo-50 p-2 rounded-lg transition-colors"><Edit2 size={18} /></button>
                                                     <button onClick={() => handleDelete(t.id)} disabled={isSubmitting} className={`text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-colors ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}><Trash2 size={18} /></button>
                                                 </div>
                                             </td>
@@ -326,19 +332,20 @@ const TeacherManagement = ({ config }) => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-1">
-                                    <label className="label">Salary Per Day <span className="text-red-500">*</span></label>
+                                    <label className="label">Salary Per Month <span className="text-red-500">*</span></label>
                                     <input
                                         className="input"
                                         type="number"
                                         min="0"
                                         required
-                                        placeholder="0.00"
+                                        placeholder="30000"
                                         autoComplete="off"
-                                        value={formData.salary_per_day}
+                                        value={formData.salary_per_month}
                                         onCopy={e => e.preventDefault()}
                                         onPaste={e => e.preventDefault()}
-                                        onChange={e => setFormData({ ...formData, salary_per_day: e.target.value })}
+                                        onChange={e => setFormData({ ...formData, salary_per_month: e.target.value })}
                                     />
+                                    <p className="text-xs text-slate-500 mt-1">Daily rate: ₹{formData.salary_per_month ? (parseFloat(formData.salary_per_month) / 26).toFixed(2) : '0'}/day</p>
                                 </div>
                             </div>
                             <textarea

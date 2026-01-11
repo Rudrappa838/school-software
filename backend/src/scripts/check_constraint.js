@@ -1,24 +1,19 @@
-const { Pool } = require('pg');
 require('dotenv').config();
-
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-});
+const { pool } = require('../config/db');
 
 async function checkConstraint() {
     try {
-        const res = await pool.query("SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conname = 'users_role_check'");
-        console.log('Constraint Definition:');
-        console.log(res.rows[0]?.pg_get_constraintdef);
-    } catch (err) {
-        console.error(err);
+        console.log('Checking constraints on school_holidays...');
+        const res = await pool.query(`
+            SELECT conname, pg_get_constraintdef(oid) 
+            FROM pg_constraint 
+            WHERE conrelid = 'school_holidays'::regclass
+        `);
+        console.log(res.rows);
+    } catch (e) {
+        console.error(e);
     } finally {
-        await pool.end();
+        pool.end();
     }
 }
-
 checkConstraint();

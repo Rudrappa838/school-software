@@ -8,7 +8,7 @@ router.use(authenticateToken);
 // Timetable Routes
 router.post('/generate', timetableController.generateTimetable);
 router.get('/teacher', timetableController.getTeacherTimetable);
-router.put('/:id', timetableController.updateTimetableSlot);
+// router.put('/:id', timetableController.updateTimetableSlot); // Function not implemented yet
 router.delete('/', timetableController.deleteTimetable);
 router.get('/my-schedule', timetableController.getMyTimetable);
 router.get('/', timetableController.getTimetable);

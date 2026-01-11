@@ -26,6 +26,18 @@ const SchoolCalendar = () => {
 
     useEffect(() => {
         fetchEvents();
+
+        // Listen for holiday updates from Holiday Management
+        const handleHolidayUpdate = () => {
+            console.log('Holiday updated, refreshing calendar...');
+            fetchEvents();
+        };
+
+        window.addEventListener('holidayUpdated', handleHolidayUpdate);
+
+        return () => {
+            window.removeEventListener('holidayUpdated', handleHolidayUpdate);
+        };
     }, []);
 
     const fetchEvents = async () => {
@@ -85,47 +97,12 @@ const SchoolCalendar = () => {
         }
     };
 
-    // Karnataka Festivals & Holidays (Mixed recurring and 2026 specific)
-    const karnatakaFestivals = [
-        // Fixed Date Holidays (Recurring)
-        { date: '01-01', title: 'New Year Day', type: 'Holiday', recurring: true },
-        { date: '01-26', title: 'Republic Day', type: 'Holiday', recurring: true },
-        { date: '04-14', title: 'Dr. Ambedkar Jayanti', type: 'Holiday', recurring: true },
-        { date: '05-01', title: 'May Day', type: 'Holiday', recurring: true },
-        { date: '08-15', title: 'Independence Day', type: 'Holiday', recurring: true },
-        { date: '10-02', title: 'Gandhi Jayanti', type: 'Holiday', recurring: true },
-        { date: '11-01', title: 'Kannada Rajyotsava', type: 'Holiday', recurring: true },
-        { date: '12-25', title: 'Christmas', type: 'Holiday', recurring: true },
-
-        // 2026 Specific Holidays
-        { date: '2026-01-14', title: 'Makara Sankranti', type: 'Holiday' },
-        { date: '2026-02-15', title: 'Maha Shivaratri', type: 'Holiday' },
-        { date: '2026-03-19', title: 'Ugadi', type: 'Holiday' },
-        { date: '2026-03-20', title: 'Khutub-E-Ramzan', type: 'Holiday' },
-        { date: '2026-03-31', title: 'Mahaveera Jayanti', type: 'Holiday' },
-        { date: '2026-04-03', title: 'Good Friday', type: 'Holiday' },
-        { date: '2026-04-20', title: 'Basava Jayanti', type: 'Holiday' },
-        { date: '2026-05-27', title: 'Bakrid', type: 'Holiday' },
-        { date: '2026-06-25', title: 'Last Day of Moharam', type: 'Holiday' },
-        { date: '2026-08-21', title: 'Varamahalakshmi Vrata', type: 'Holiday' },
-        { date: '2026-08-26', title: 'Eid-Milad', type: 'Holiday' },
-        { date: '2026-09-14', title: 'Ganesh Chaturthi', type: 'Holiday' },
-        { date: '2026-10-19', title: 'Maha Navami / Ayudha Puja', type: 'Holiday' },
-        { date: '2026-10-20', title: 'Vijaya Dashami', type: 'Holiday' },
-        { date: '2026-11-08', title: 'Deepavali', type: 'Holiday' },
-    ];
-
+    // Karnataka Festivals & Holidays are now loaded from Database via 'events'
     const getHolidaysForDate = (dateString) => {
-        // dateString is YYYY-MM-DD
-        const [y, m, d] = dateString.split('-');
-        const monthDay = `${m}-${d}`;
-        return karnatakaFestivals.filter(h => {
-            if (h.recurring) {
-                return h.date === monthDay;
-            }
-            return h.date === dateString;
-        });
+        return [];
     };
+
+
 
     // Calendar rendering logic
     const renderCalendar = () => {
@@ -149,8 +126,19 @@ const SchoolCalendar = () => {
             const isSunday = date.getDay() === 0;
 
             const dayEvents = events.filter(e => {
-                const eventDate = new Date(e.start_date).toISOString().split('T')[0];
-                return eventDate === dateString;
+                // Robust date matching: comparison based on Local Date parts to match the Calendar grid
+                const eDate = new Date(e.start_date);
+                const eYear = eDate.getFullYear();
+                const eMonth = String(eDate.getMonth() + 1).padStart(2, '0');
+                const eDay = String(eDate.getDate()).padStart(2, '0');
+
+                // If the event string format coming from backend is YYYY-MM-DD (preferred)
+                if (typeof e.start_date === 'string' && e.start_date.length === 10) {
+                    return e.start_date === dateString;
+                }
+
+                const eventDateString = `${eYear}-${eMonth}-${eDay}`;
+                return eventDateString === dateString;
             });
 
             // Get static holidays
@@ -165,16 +153,12 @@ const SchoolCalendar = () => {
                             }`}>
                             {i}
                         </span>
-                        {isSunday && <span className="text-[10px] font-bold text-rose-400 uppercase">Sunday</span>}
+                        {/* {isSunday && <span className="text-[10px] font-bold text-rose-400 uppercase">Sunday</span>} */}
                     </div>
 
                     <div className="mt-1 space-y-1 overflow-y-auto max-h-[calc(100%-24px)] custom-scrollbar">
                         {/* Static Holidays */}
-                        {holidays.map((h, idx) => (
-                            <div key={`hol-${idx}`} className="text-[10px] md:text-xs p-1 rounded border border-rose-100 bg-rose-50 text-rose-700 truncate font-bold" title={h.title}>
-                                🎉 {h.title}
-                            </div>
-                        ))}
+                        {/* Static Holidays - Removed in favor of DB Events */}
 
                         {/* Dynamic Events */}
                         {dayEvents.map(ev => (

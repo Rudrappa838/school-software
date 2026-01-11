@@ -19,11 +19,10 @@ export const MobileHeader = ({ title, onMenuClick, schoolName, onBack, userName,
                         <GraduationCap size={22} className="text-white" />
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <h1 className="text-[10px] font-black text-white tracking-[0.2em] leading-none drop-shadow-md uppercase truncate">Connect to Campus</h1>
-                        <p className="text-[11px] text-indigo-100 font-bold uppercase tracking-wider mt-0.5 truncate">{schoolName || 'Software'}</p>
+                        <p className="text-sm text-white font-bold tracking-wide leading-tight truncate">{schoolName || 'School Portal'}</p>
                         {userName && (
-                            <p className="text-[11px] font-medium text-white mt-0.5 leading-tight truncate">
-                                <span className="font-bold">{userName}</span> {subtitle && <span className="opacity-80 text-[10px]"> • {subtitle}</span>}
+                            <p className="text-[11px] font-medium text-indigo-100 mt-0.5 leading-tight truncate">
+                                <span className="font-bold">{userName}</span> {subtitle && <span className="opacity-80 text-[10px]">• {subtitle}</span>}
                             </p>
                         )}
                     </div>

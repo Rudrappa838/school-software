@@ -12,7 +12,16 @@ const StudentAttendanceMarking = ({ config }) => {
     const [attendance, setAttendance] = useState({}); // { studentId: 'Present' | 'Absent' | 'Late' }
     const [loading, setLoading] = useState(false);
 
-    const availableSections = config.classes?.find(c => c.class_id === parseInt(filterClass))?.sections || [];
+    // Sort classes numerically
+    const sortedClasses = React.useMemo(() => {
+        return [...(config.classes || [])].sort((a, b) => {
+            const numA = parseInt(a.class_name.replace(/\D/g, '') || '0', 10);
+            const numB = parseInt(b.class_name.replace(/\D/g, '') || '0', 10);
+            return numA === numB ? a.class_name.localeCompare(b.class_name) : numA - numB;
+        });
+    }, [config.classes]);
+
+    const availableSections = sortedClasses.find(c => c.class_id === parseInt(filterClass))?.sections || [];
 
     // Auto-select section
     useEffect(() => {
@@ -25,10 +34,10 @@ const StudentAttendanceMarking = ({ config }) => {
 
     // Auto-select Class if only one is available (e.g. Class Teacher)
     useEffect(() => {
-        if (config.classes && config.classes.length === 1) {
-            setFilterClass(config.classes[0].class_id);
+        if (sortedClasses && sortedClasses.length === 1) {
+            setFilterClass(sortedClasses[0].class_id);
         }
-    }, [config.classes]);
+    }, [sortedClasses]);
 
     useEffect(() => {
         // If class is selected, we fetch data. 
@@ -99,7 +108,7 @@ const StudentAttendanceMarking = ({ config }) => {
                 </div>
                 <select className="input max-w-[200px] bg-slate-50 border-slate-200" value={filterClass} onChange={e => setFilterClass(e.target.value)}>
                     <option value="">Select Class</option>
-                    {config.classes?.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
+                    {sortedClasses.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
                 </select>
                 <select
                     className="input max-w-[200px] disabled:bg-slate-100 disabled:text-slate-400 bg-slate-50 border-slate-200"

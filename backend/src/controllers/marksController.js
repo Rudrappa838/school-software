@@ -4,12 +4,24 @@ const { pool } = require('../config/db');
 exports.getExamTypes = async (req, res) => {
     try {
         const school_id = req.user.schoolId;
+        const { class_id, student_id } = req.query;
 
-        // Get exam types
-        const examTypesResult = await pool.query(
-            `SELECT * FROM exam_types WHERE school_id = $1 ORDER BY name`,
-            [school_id]
-        );
+        let query = `SELECT DISTINCT et.* FROM exam_types et WHERE et.school_id = $1`;
+        const params = [school_id];
+
+        if (class_id) {
+            // Smart Filter: Show if defined in Schedule (Current Class) OR has Marks (History)
+            query += ` AND (
+                EXISTS (SELECT 1 FROM exam_schedules es WHERE es.exam_type_id = et.id AND es.class_id = $2)
+                ${student_id ? `OR EXISTS (SELECT 1 FROM marks m WHERE m.exam_type_id = et.id AND m.student_id = $3)` : ''}
+            )`;
+            params.push(class_id);
+            if (student_id) params.push(student_id);
+        }
+
+        query += ` ORDER BY et.name`;
+
+        const examTypesResult = await pool.query(query, params);
 
         // Get components for each exam type
         const examTypes = await Promise.all(examTypesResult.rows.map(async (examType) => {

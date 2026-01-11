@@ -31,13 +31,14 @@ exports.getExamSchedule = async (req, res) => {
 
         if (class_id) {
             query += ` AND es.class_id = $${paramIndex}`;
-            params.push(class_id);
+            params.push(parseInt(class_id)); // Ensure integer
             paramIndex++;
         }
 
         if (section_id) {
-            query += ` AND es.section_id = $${paramIndex}`;
-            params.push(section_id);
+            // Intelligent Section Filtering: Match specific section OR global class exams (NULL section)
+            query += ` AND (es.section_id = $${paramIndex} OR es.section_id IS NULL)`;
+            params.push(parseInt(section_id)); // Ensure integer
             paramIndex++;
         }
 

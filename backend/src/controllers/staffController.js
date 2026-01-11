@@ -267,10 +267,22 @@ exports.getAttendanceReport = async (req, res) => {
         const endDate = new Date(year, month, 0).toISOString().split('T')[0];
 
         const query = `
-            SELECT t.id as staff_id, t.name, a.date, a.status
+            WITH month_holidays AS (
+                SELECT holiday_date, holiday_name
+                FROM school_holidays
+                WHERE school_id = $1 AND holiday_date >= $2 AND holiday_date <= $3
+            )
+            SELECT 
+                t.id as staff_id, 
+                t.name, 
+                TO_CHAR(d.date, 'YYYY-MM-DD') as date,
+                COALESCE(a.status, CASE WHEN mh.holiday_date IS NOT NULL THEN 'Holiday' ELSE 'Unmarked' END) as status
             FROM staff t
-            LEFT JOIN staff_attendance a ON t.id = a.staff_id AND a.date >= $2 AND a.date <= $3
+            CROSS JOIN generate_series($2::date, $3::date, '1 day'::interval) d(date)
+            LEFT JOIN staff_attendance a ON t.id = a.staff_id AND a.date = d.date::date
+            LEFT JOIN month_holidays mh ON mh.holiday_date = d.date::date
             WHERE t.school_id = $1
+            ORDER BY t.name ASC, d.date ASC
         `;
         const result = await pool.query(query, [school_id, startDate, endDate]);
         res.json(result.rows);

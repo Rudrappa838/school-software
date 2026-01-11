@@ -15,6 +15,15 @@ exports.getSalaryOverview = async (req, res) => {
 
         // Get Teachers with attendance and salary
         const teachersQuery = `
+            WITH month_holidays AS (
+                SELECT holiday_date
+                FROM school_holidays
+                WHERE school_id = $1 
+                  AND holiday_date >= $2 
+                  AND holiday_date <= $3
+                  AND holiday_date <= CURRENT_DATE  -- Only count holidays up to today
+                  AND EXTRACT(DOW FROM holiday_date) != 0  -- Exclude Sundays
+            )
             SELECT 
                 t.id,
                 t.name,
@@ -25,8 +34,12 @@ exports.getSalaryOverview = async (req, res) => {
                 COUNT(CASE WHEN a.status = 'Present' THEN 1 END) as days_present,
                 COUNT(CASE WHEN a.status = 'Absent' THEN 1 END) as days_absent,
                 COUNT(CASE WHEN a.status = 'Leave' THEN 1 END) as days_leave,
+                COUNT(CASE WHEN a.status = 'Holiday' AND a.date IN (SELECT holiday_date FROM month_holidays) THEN 1 END) as days_holiday,
                 COUNT(a.date) as total_marked_days,
-                (COUNT(CASE WHEN a.status = 'Present' THEN 1 END) * t.salary_per_day) as calculated_salary,
+                (
+                    COUNT(CASE WHEN a.status = 'Present' THEN 1 END) + 
+                    COUNT(CASE WHEN a.status = 'Holiday' AND a.date IN (SELECT holiday_date FROM month_holidays) THEN 1 END)
+                ) * t.salary_per_day as calculated_salary,
                 CASE WHEN sp.id IS NOT NULL THEN true ELSE false END as is_paid,
                 sp.payment_date,
                 sp.payment_mode
@@ -44,6 +57,15 @@ exports.getSalaryOverview = async (req, res) => {
 
         // Get Staff with attendance and salary
         const staffQuery = `
+            WITH month_holidays AS (
+                SELECT holiday_date
+                FROM school_holidays
+                WHERE school_id = $1 
+                  AND holiday_date >= $2 
+                  AND holiday_date <= $3
+                  AND holiday_date <= CURRENT_DATE  -- Only count holidays up to today
+                  AND EXTRACT(DOW FROM holiday_date) != 0  -- Exclude Sundays
+            )
             SELECT 
                 s.id,
                 s.name,
@@ -54,8 +76,12 @@ exports.getSalaryOverview = async (req, res) => {
                 COUNT(CASE WHEN a.status = 'Present' THEN 1 END) as days_present,
                 COUNT(CASE WHEN a.status = 'Absent' THEN 1 END) as days_absent,
                 COUNT(CASE WHEN a.status = 'Leave' THEN 1 END) as days_leave,
+                COUNT(CASE WHEN a.status = 'Holiday' AND a.date IN (SELECT holiday_date FROM month_holidays) THEN 1 END) as days_holiday,
                 COUNT(a.date) as total_marked_days,
-                (COUNT(CASE WHEN a.status = 'Present' THEN 1 END) * s.salary_per_day) as calculated_salary,
+                (
+                    COUNT(CASE WHEN a.status = 'Present' THEN 1 END) + 
+                    COUNT(CASE WHEN a.status = 'Holiday' AND a.date IN (SELECT holiday_date FROM month_holidays) THEN 1 END)
+                ) * s.salary_per_day as calculated_salary,
                 CASE WHEN sp.id IS NOT NULL THEN true ELSE false END as is_paid,
                 sp.payment_date,
                 sp.payment_mode

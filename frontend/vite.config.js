@@ -12,7 +12,14 @@ export default defineConfig({
     host: true,
   },
   build: {
-    sourcemap: true, // Enable for debugging
+    sourcemap: false,
     chunkSizeWarningLimit: 1000,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    }
   }
 })

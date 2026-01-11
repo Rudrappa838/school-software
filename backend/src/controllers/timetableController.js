@@ -5,7 +5,7 @@ exports.generateTimetable = async (req, res) => {
     const client = await pool.connect();
     try {
         const school_id = req.user.schoolId;
-        const { class_id, section_id } = req.body;
+        const { class_id, section_id, subjects: customSubjects, periods: customPeriods } = req.body;
 
         if (!class_id) {
             return res.status(400).json({ message: 'Class ID is required' });
@@ -13,24 +13,34 @@ exports.generateTimetable = async (req, res) => {
 
         await client.query('BEGIN');
 
-        // Get subjects for this class
-        const subjectsResult = await client.query(
-            `SELECT s.id, s.name, t.id as teacher_id, t.name as teacher_name
-             FROM subjects s
-             LEFT JOIN teachers t ON t.subject_specialization = s.name AND t.school_id = $1
-             WHERE s.class_id = $2
-             ORDER BY s.name`,
-            [school_id, class_id]
-        );
-
-        const subjects = subjectsResult.rows;
+        // 1. Get Subjects (Prefer custom config from frontend)
+        let subjects = [];
+        if (customSubjects && customSubjects.length > 0) {
+            subjects = customSubjects.map(s => ({
+                id: s.subject_id, // Map frontend subject_id to id
+                name: s.subject_name,
+                teacher_id: s.teacher_id,
+                teacher_name: s.teacher_name
+            }));
+        } else {
+            // Fallback to DB defaults
+            const subjectsResult = await client.query(
+                `SELECT s.id, s.name, t.id as teacher_id, t.name as teacher_name
+                 FROM subjects s
+                 LEFT JOIN teachers t ON t.subject_specialization = s.name AND t.school_id = $1
+                 WHERE s.class_id = $2
+                 ORDER BY s.name`,
+                [school_id, class_id]
+            );
+            subjects = subjectsResult.rows;
+        }
 
         if (subjects.length === 0) {
             await client.query('ROLLBACK');
-            return res.status(400).json({ message: 'No subjects found for this class' });
+            return res.status(400).json({ message: 'No subjects found/selected for this class' });
         }
 
-        // Delete existing timetable for this class-section
+        // 2. Delete existing timetable
         let deleteQuery = `DELETE FROM timetables WHERE school_id = $1 AND class_id = $2`;
         const deleteParams = [school_id, class_id];
 
@@ -43,16 +53,21 @@ exports.generateTimetable = async (req, res) => {
 
         await client.query(deleteQuery, deleteParams);
 
-        // Generate timetable (6 days, 7 periods per day)
-        const periods = [
-            { number: 1, start: '08:00', end: '08:45' },
-            { number: 2, start: '08:45', end: '09:30' },
-            { number: 3, start: '09:30', end: '10:15' },
-            { number: 4, start: '10:30', end: '11:15' }, // After break
-            { number: 5, start: '11:15', end: '12:00' },
-            { number: 6, start: '12:00', end: '12:45' },
-            { number: 7, start: '13:30', end: '14:15' }  // After lunch
-        ];
+        // 3. Define Periods (Prefer custom config)
+        let periods = [];
+        if (customPeriods && customPeriods.length > 0) {
+            periods = customPeriods;
+        } else {
+            periods = [
+                { number: 1, start: '08:00', end: '08:45' },
+                { number: 2, start: '08:45', end: '09:30' },
+                { number: 3, start: '09:30', end: '10:15' },
+                { number: 4, start: '10:30', end: '11:15' },
+                { number: 5, start: '11:15', end: '12:00' },
+                { number: 6, start: '12:00', end: '12:45' },
+                { number: 7, start: '13:30', end: '14:15' }
+            ];
+        }
 
         let subjectIndex = 0;
         const timetableEntries = [];
@@ -290,7 +305,7 @@ exports.getMyTimetable = async (req, res) => {
              FROM timetables t
              LEFT JOIN subjects s ON t.subject_id = s.id
              LEFT JOIN teachers te ON t.teacher_id = te.id
-             WHERE t.school_id = $1 AND t.class_id = $2 AND t.section_id = $3
+             WHERE t.school_id = $1 AND t.class_id = $2 AND (t.section_id = $3 OR t.section_id IS NULL)
              ORDER BY t.day_of_week, t.period_number`,
             [schoolId, class_id, section_id]
         );

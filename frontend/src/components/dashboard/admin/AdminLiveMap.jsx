@@ -77,23 +77,23 @@ const AdminLiveMap = () => {
         try {
             const res = await api.get('/transport/vehicles');
 
-            const allVehicles = res.data.map(v => ({
+            // Use ALL vehicles from API, do not filter by status
+            const mappedVehicles = res.data.map(v => ({
                 id: v.id,
                 lat: v.current_lat ? parseFloat(v.current_lat) : null,
                 lng: v.current_lng ? parseFloat(v.current_lng) : null,
                 number: v.vehicle_number,
                 driver: v.driver_name,
                 status: v.status || 'Active',
-                isLive: !!(v.current_lat && v.current_lng)
+                // Ensure strictly not 0 and not null
+                isLive: !!(v.current_lat && v.current_lng && parseFloat(v.current_lat) !== 0 && parseFloat(v.current_lng) !== 0)
             }));
 
-            // Only update if data changed to avoid re-renders? 
-            // Better to just set it to ensure latest positions are reflected
             // Fetch Routes
             const routesRes = await api.get('/transport/routes');
             setRoutes(routesRes.data);
 
-            setVehicles(allVehicles);
+            setVehicles(mappedVehicles);
         } catch (error) {
             console.error("Failed to load map data", error);
         } finally {
@@ -101,45 +101,50 @@ const AdminLiveMap = () => {
         }
     };
 
-    // Polling every 3 seconds for smoother updates
+    // Polling every 5 seconds (slightly relaxed)
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 3000);
+        const interval = setInterval(fetchData, 5000);
         return () => clearInterval(interval);
     }, []);
 
-    // Default center (Bangalore/India generic) if no vehicles found
+    // Default center (Bangalore)
     const defaultCenter = [12.9716, 77.5946];
 
     return (
-        <div className="h-full flex flex-col space-y-4">
-            <div className="flex justify-between items-center">
+        <div className="flex flex-col space-y-4 relative w-full">
+            {/* Sticky Header to prevent disappearing on zoom/scroll */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/95 backdrop-blur-sm p-4 rounded-xl border border-slate-100 shadow-lg sticky top-0 z-[1000]">
                 <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                     <Navigation className="text-indigo-600" /> Live Fleet Tracking
                 </h2>
-                <div className="flex gap-4">
-                    <div className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                        Live Signal: {vehicles.filter(v => v.isLive).length}
+                <div className="flex flex-wrap gap-2">
+                    <div className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 shadow-sm flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        Live Tracking: {vehicles.filter(v => v.isLive).length}
                     </div>
-                    <div className="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
-                        Total Fleet: {vehicles.length}
-                    </div>
-                    <div className="text-xs font-bold text-indigo-500 bg-white px-3 py-1 rounded-full border border-indigo-200">
-                        Auto-updating every 3s
+                    <div className="text-xs font-bold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                        Total Buses: {vehicles.length} <span className="text-slate-400 font-normal">({vehicles.filter(v => v.status === 'Active').length} Active)</span>
                     </div>
                 </div>
             </div>
 
-            <div className="flex-1 rounded-2xl overflow-hidden border border-slate-300 shadow-xl relative z-0 min-h-[500px]">
+            <div className="w-full h-[600px] rounded-2xl overflow-hidden border border-slate-300 shadow-xl relative z-0 bg-slate-50">
                 {loading && vehicles.length === 0 ? (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-100">
-                        <p className="text-slate-400 font-bold animate-pulse">Establishing Satellite Link...</p>
+                    <div className="w-full h-full flex items-center justify-center bg-slate-50">
+                        <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
+                            <p className="text-slate-400 font-bold text-sm">Connecting to GPS Network...</p>
+                        </div>
                     </div>
                 ) : (
                     <MapContainer
                         center={vehicles.find(v => v.isLive) ? [vehicles.find(v => v.isLive).lat, vehicles.find(v => v.isLive).lng] : defaultCenter}
                         zoom={13}
-                        style={{ height: '600px', width: '100%' }}
+                        style={{ height: '100%', width: '100%' }}
                     >
                         <TileLayer
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

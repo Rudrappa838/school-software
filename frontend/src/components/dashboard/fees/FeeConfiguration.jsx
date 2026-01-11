@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, IndianRupee, User, ChevronRight, CheckCircle, AlertCircle, Edit2 } from 'lucide-react';
+import { Plus, Trash2, IndianRupee, User, ChevronRight, CheckCircle, AlertCircle, Edit2, ArrowLeft } from 'lucide-react';
 import api from '../../../api/axios';
 import toast from 'react-hot-toast';
 
@@ -227,9 +227,18 @@ const FeeConfiguration = ({ config }) => {
             <div className="w-1/2 bg-white rounded-xl shadow-lg border border-gray-200 flex flex-col overflow-hidden">
                 {selectedStudent ? (
                     <>
-                        <div className="p-6 border-b border-gray-100 bg-gray-50">
-                            <h2 className="text-xl font-bold text-gray-800">{selectedStudent.name}</h2>
-                            <p className="text-gray-500">{selectedStudent.admission_no}</p>
+                        <div className="p-6 border-b border-gray-100 bg-gray-50 flex items-center gap-4">
+                            <button
+                                onClick={() => setSelectedStudent(null)}
+                                className="p-2 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center"
+                                title="Back to student list"
+                            >
+                                <ArrowLeft size={20} className="text-gray-600" />
+                            </button>
+                            <div className="flex-1">
+                                <h2 className="text-xl font-bold text-gray-800">{selectedStudent.name}</h2>
+                                <p className="text-gray-500">{selectedStudent.admission_no}</p>
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">

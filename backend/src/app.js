@@ -62,6 +62,7 @@ app.use('/api/staff', require('./routes/staffRoutes'));
 app.use('/api/fees', require('./routes/feeRoutes'));
 app.use('/api/library', require('./routes/libraryRoutes'));
 app.use('/api/salary', require('./routes/salaryRoutes'));
+app.use('/api/holidays', require('./routes/holidayRoutes'));
 app.use('/api/timetable', require('./routes/timetableRoutes'));
 app.use('/api/marks', require('./routes/marksRoutes'));
 app.use('/api/exam-schedule', require('./routes/examScheduleRoutes'));

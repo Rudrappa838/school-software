@@ -13,7 +13,16 @@ const StudentAttendanceReports = ({ config }) => {
     const daysInMonth = new Date(year, month, 0).getDate();
     const dates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-    const availableSections = config.classes?.find(c => c.class_id === parseInt(filterClass))?.sections || [];
+    // Sort classes numerically
+    const sortedClasses = React.useMemo(() => {
+        return [...(config.classes || [])].sort((a, b) => {
+            const numA = parseInt(a.class_name.replace(/\D/g, '') || '0', 10);
+            const numB = parseInt(b.class_name.replace(/\D/g, '') || '0', 10);
+            return numA === numB ? a.class_name.localeCompare(b.class_name) : numA - numB;
+        });
+    }, [config.classes]);
+
+    const availableSections = sortedClasses.find(c => c.class_id === parseInt(filterClass))?.sections || [];
 
     // Auto-select section
     useEffect(() => {
@@ -55,8 +64,11 @@ const StudentAttendanceReports = ({ config }) => {
                     const d = parseInt(dateParts[2]);
                     processed[row.student_id].attendance[d] = row.status;
                     if (row.status === 'Present') processed[row.student_id].totalP++;
-                    if (row.status === 'Absent') processed[row.student_id].totalA++;
-                    processed[row.student_id].workingDays++;
+                    else if (row.status === 'Absent') processed[row.student_id].totalA++;
+
+                    if (row.status !== 'Holiday') {
+                        processed[row.student_id].workingDays++;
+                    }
                 }
             });
 
@@ -93,6 +105,7 @@ const StudentAttendanceReports = ({ config }) => {
                     .l { background-color: #fef3c7; color: #92400e; font-weight: bold; }
                     .total-p { background-color: #d1fae5; font-weight: bold; }
                     .total-a { background-color: #fee2e2; font-weight: bold; }
+                    .h { background-color: #f3f4f6; color: #374151; font-weight: bold; }
                     @media print {
                         body { padding: 10px; }
                         @page { margin: 0.5cm; size: landscape; }
@@ -122,6 +135,7 @@ const StudentAttendanceReports = ({ config }) => {
             if (status === 'Present') { cls = 'p'; content = 'P'; }
             else if (status === 'Absent') { cls = 'a'; content = 'A'; }
             else if (status === 'Late') { cls = 'l'; content = 'L'; }
+            else if (status === 'Holiday') { cls = 'h'; content = 'H'; }
             return `<td class="${cls}">${content}</td>`;
         }).join('')}
                                 <td class="total-p">${student.totalP}</td>
@@ -160,7 +174,7 @@ const StudentAttendanceReports = ({ config }) => {
 
                 <select className="input max-w-[200px] bg-slate-50 border-slate-200" value={filterClass} onChange={e => setFilterClass(e.target.value)}>
                     <option value="">Select Class</option>
-                    {config.classes?.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
+                    {sortedClasses.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
                 </select>
                 <select
                     className="input max-w-[200px] disabled:bg-slate-100 disabled:text-slate-400 bg-slate-50 border-slate-200"
@@ -221,6 +235,10 @@ const StudentAttendanceReports = ({ config }) => {
                                                 bg = 'bg-amber-100/70';
                                                 text = 'text-amber-700';
                                                 content = 'L';
+                                            } else if (status === 'Holiday') {
+                                                bg = 'bg-slate-100/70';
+                                                text = 'text-slate-700';
+                                                content = 'H';
                                             } else {
                                                 content = '-';
                                                 text = 'text-slate-200';

@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { Bus, MapPin, Navigation, Plus, Edit2, Trash2, Map as MapIcon, RotateCw } from 'lucide-react';
 import api from '../../../api/axios';
 import toast from 'react-hot-toast';
-import LiveMap from './LiveMap';
+// LiveMap import removed as it is now handled by AdminLiveMap component in dashboard Sidebar
+// import LiveMap from './LiveMap';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -114,11 +115,7 @@ const TimePicker12H = ({ value, onChange, className = "" }) => {
 };
 
 const TransportManagement = ({ initialTab }) => {
-    const [activeTab, setActiveTab] = useState(initialTab || 'vehicles');
-
-    useEffect(() => {
-        if (initialTab) setActiveTab(initialTab);
-    }, [initialTab]);
+    // activeTab logic removed, using initialTab directly
 
     const [vehicles, setVehicles] = useState([]);
     const [routes, setRoutes] = useState([]);
@@ -359,28 +356,11 @@ const TransportManagement = ({ initialTab }) => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800">Transport Management</h2>
-                    <p className="text-slate-500">Manage fleet, routes and track vehicles live</p>
+                    <p className="text-slate-500">
+                        {initialTab === 'vehicles' ? 'Manage fleet and vehicle details' : 'Manage routes and stops'}
+                    </p>
                 </div>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => setActiveTab('vehicles')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'vehicles' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-slate-600'}`}
-                    >
-                        <Bus className="inline-block mr-2" size={16} /> Vehicles
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('routes')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'routes' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-slate-600'}`}
-                    >
-                        <Navigation className="inline-block mr-2" size={16} /> Routes
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('live-map')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'live-map' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-slate-600'}`}
-                    >
-                        <MapIcon className="inline-block mr-2" size={16} /> Live Map
-                    </button>
-                </div>
+                {/* Internal tabs removed to fix sidebar sync */}
             </div>
 
             {
@@ -388,7 +368,7 @@ const TransportManagement = ({ initialTab }) => {
                     <div className="text-center py-20 text-slate-500">Loading transport data...</div>
                 ) : (
                     <>
-                        {activeTab === 'vehicles' && (
+                        {initialTab === 'vehicles' && (
                             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                                 <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                                     <h3 className="font-bold text-slate-700">Fleet List</h3>
@@ -433,13 +413,20 @@ const TransportManagement = ({ initialTab }) => {
                                                     </td>
                                                 </tr>
                                             ))}
+                                            {vehicles.length === 0 && (
+                                                <tr>
+                                                    <td colSpan="6" className="px-6 py-8 text-center text-slate-400 italic">
+                                                        No vehicles found. Add your first vehicle to get started.
+                                                    </td>
+                                                </tr>
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         )}
 
-                        {activeTab === 'routes' && (
+                        {initialTab === 'routes' && (
                             <div className="space-y-6">
                                 <div className="flex justify-end">
                                     <button
@@ -496,13 +483,14 @@ const TransportManagement = ({ initialTab }) => {
                                             </div>
                                         </div>
                                     ))}
+                                    {routes.length === 0 && (
+                                        <div className="col-span-full py-12 text-center text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed">
+                                            <Navigation size={48} className="mx-auto mb-4 opacity-20" />
+                                            <p>No routes created yet.</p>
+                                            <button onClick={handleCreateRoute} className="mt-4 text-indigo-600 hover:underline font-bold text-sm">Create your first route</button>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'live-map' && (
-                            <div className="h-[600px] bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative z-0">
-                                <LiveMap vehicles={vehicles} routes={routes} />
                             </div>
                         )}
                     </>

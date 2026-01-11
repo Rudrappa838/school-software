@@ -36,8 +36,8 @@ const StaffAttendanceReports = () => {
 
                     processed[row.staff_id].attendance[d] = row.status;
                     if (row.status === 'Present') processed[row.staff_id].totalP++;
-                    if (row.status === 'Absent') processed[row.staff_id].totalA++;
-                    if (row.status === 'Late') processed[row.staff_id].totalL++;
+                    else if (row.status === 'Absent') processed[row.staff_id].totalA++;
+                    else if (row.status === 'Late') processed[row.staff_id].totalL++;
                 }
             });
             setReport(Object.values(processed));
@@ -108,6 +108,10 @@ const StaffAttendanceReports = () => {
                                             bg = 'bg-blue-100/70';
                                             text = 'text-blue-700';
                                             content = 'LV';
+                                        } else if (status === 'Holiday') {
+                                            bg = 'bg-slate-100/70';
+                                            text = 'text-slate-700';
+                                            content = 'H';
                                         } else {
                                             content = '-';
                                             text = 'text-slate-200';

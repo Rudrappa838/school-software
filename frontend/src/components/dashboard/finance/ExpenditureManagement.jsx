@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { DollarSign, Plus, Trash2, Edit, Calendar, PieChart, TrendingUp, TrendingDown, ArrowUp, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../api/axios';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const ExpenditureManagement = () => {
     const [expenditures, setExpenditures] = useState([]);

@@ -81,17 +81,26 @@ const StudentManagement = ({ config, prefillData, isPromotionView, defaultViewMo
     }, [prefillData, config.classes]);
 
     // Derived sections based on selected class
-    const availableSections = config.classes?.find(c => c.class_id === parseInt(filterClass))?.sections || [];
+    // Sort classes numerically if they follow "Class X" pattern, otherwise keep original
+    const sortedClasses = React.useMemo(() => {
+        return [...(config.classes || [])].sort((a, b) => {
+            const numA = parseInt(a.class_name.replace(/\D/g, '') || '0', 10);
+            const numB = parseInt(b.class_name.replace(/\D/g, '') || '0', 10);
+            return numA === numB ? a.class_name.localeCompare(b.class_name) : numA - numB;
+        });
+    }, [config.classes]);
+
+    const availableSections = sortedClasses.find(c => c.class_id === parseInt(filterClass))?.sections || [];
     const formSections = config.classes?.find(c => c.class_id === parseInt(formData.class_id))?.sections || [];
 
     // Auto-select filter section
     useEffect(() => {
-        if (filterClass && availableSections.length > 0) {
+        if (filterClass && availableSections.length > 0 && !isPromotionView) {
             setFilterSection(availableSections[0].id);
         } else {
             setFilterSection('');
         }
-    }, [filterClass]);
+    }, [filterClass, isPromotionView]);
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -121,8 +130,8 @@ const StudentManagement = ({ config, prefillData, isPromotionView, defaultViewMo
     }, [formData.dob]);
 
     const fetchStudents = async (targetPage = page) => {
-        // In Promotion View, enforce Class & Section selection first
-        if (isPromotionView && (!filterClass || !filterSection)) {
+        // In Promotion View, enforce Class selection first (Section is optional)
+        if (isPromotionView && !filterClass) {
             setStudents([]);
             setPagination({ total: 0, totalPages: 1 });
             setLoading(false);
@@ -382,22 +391,17 @@ const StudentManagement = ({ config, prefillData, isPromotionView, defaultViewMo
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 15%;">Roll No.</th>
-                            <th style="width: 50%;">Student Name</th>
-                            <th style="width: 35%;">Last Name</th>
+                            <th style="width: 20%;">Roll No.</th>
+                            <th style="width: 80%;">Student Name</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${students.map(student => {
-            const nameParts = (student.name || '').split(' ');
-            const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-            return `
+                        ${students.map(student => `
                             <tr>
                                 <td>${student.roll_number || '-'}</td>
                                 <td>${student.name}</td>
-                                <td>${lastName}</td>
                             </tr>
-                        `}).join('')}
+                        `).join('')}
                     </tbody>
                 </table>
                 <div class="footer">
@@ -503,7 +507,7 @@ const StudentManagement = ({ config, prefillData, isPromotionView, defaultViewMo
                                     onChange={e => { setFilterClass(e.target.value); setFilterSection(''); }}
                                 >
                                     <option value="">All Classes</option>
-                                    {config.classes?.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
+                                    {sortedClasses.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
                                 </select>
                             </div>
                             {filterClass && (
@@ -590,15 +594,16 @@ const StudentManagement = ({ config, prefillData, isPromotionView, defaultViewMo
                 </div>
             </div>
 
-            {!isPromotionView && filterClass && filterSection && (
+            {!isPromotionView && filterClass && (
                 <div className="flex justify-end px-2">
                     <button
                         onClick={async () => {
                             if (isSubmitting) return;
-                            if (!window.confirm('This will reassign roll numbers alphabetically for the selected section. Continue?')) return;
+                            const sectionText = filterSection ? 'the selected section' : 'this class';
+                            if (!window.confirm(`This will reassign roll numbers alphabetically (by student name) for ${sectionText}. Students with the same name will keep their current roll number order. Continue?`)) return;
                             setIsSubmitting(true);
                             try {
-                                await api.post('/students/roll-numbers', { class_id: filterClass, section_id: filterSection });
+                                await api.post('/students/roll-numbers', { class_id: filterClass, section_id: filterSection || null });
                                 toast.success('Roll numbers updated');
                                 fetchStudents();
                             } catch (error) {
@@ -759,13 +764,13 @@ const StudentManagement = ({ config, prefillData, isPromotionView, defaultViewMo
                                         <tr>
                                             <td colSpan={8} className="p-12 text-center text-slate-400">
                                                 <div className="flex flex-col items-center justify-center">
-                                                    {isPromotionView && (!filterClass || !filterSection) ? (
+                                                    {isPromotionView && !filterClass ? (
                                                         <>
                                                             <div className="bg-indigo-50 p-4 rounded-full mb-3">
                                                                 <Filter size={24} className="text-indigo-500" />
                                                             </div>
-                                                            <p className="font-bold text-slate-700 mb-1">Select Class & Section</p>
-                                                            <p className="text-xs text-slate-500">Please select a class and section to view students for promotion.</p>
+                                                            <p className="font-bold text-slate-700 mb-1">Select Class</p>
+                                                            <p className="text-xs text-slate-500">Please select a class to view students for promotion.</p>
                                                         </>
                                                     ) : (
                                                         <>
@@ -935,7 +940,7 @@ const StudentManagement = ({ config, prefillData, isPromotionView, defaultViewMo
                                 <label className="label">Class <span className="text-red-500">*</span></label>
                                 <select className="input" required value={formData.class_id} onChange={e => setFormData({ ...formData, class_id: e.target.value, section_id: '' })}>
                                     <option value="">Select Class</option>
-                                    {config.classes?.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
+                                    {sortedClasses.map(c => <option key={c.class_id} value={c.class_id}>{c.class_name}</option>)}
                                 </select>
                             </div>
                             <div className="col-span-1">
@@ -1062,7 +1067,7 @@ const StudentManagement = ({ config, prefillData, isPromotionView, defaultViewMo
                     setSelectedStudents([]);
                 }}
                 selectedStudents={selectedStudents}
-                config={config}
+                config={{ ...config, classes: sortedClasses }}
                 onSuccess={() => {
                     fetchStudents();
                     setSelectedStudents([]);

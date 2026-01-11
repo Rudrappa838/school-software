@@ -21,6 +21,7 @@ const SalaryManagement = () => {
         transaction_id: '',
         cheque_number: ''
     });
+    const fetchedRef = useRef(false);
 
     // Pay Slip Modal States
     const [showSlipModal, setShowSlipModal] = useState(false);
@@ -34,8 +35,15 @@ const SalaryManagement = () => {
     });
 
     useEffect(() => {
+        // Prevent duplicate calls in React StrictMode
+        if (fetchedRef.current) return;
+        fetchedRef.current = true;
         fetchSalaryData();
         fetchSchoolName();
+
+        return () => {
+            fetchedRef.current = false;
+        };
     }, [selectedMonth, selectedYear]);
 
     const fetchSchoolName = async () => {
@@ -53,7 +61,9 @@ const SalaryManagement = () => {
             const res = await api.get(`/salary/overview?month=${selectedMonth}&year=${selectedYear}`);
             setSalaryData(res.data);
         } catch (error) {
-            toast.error('Failed to load salary data');
+            if (!fetchedRef.current) {
+                toast.error('Failed to load salary data');
+            }
             console.error(error);
         } finally {
             setLoading(false);
@@ -146,7 +156,9 @@ const SalaryManagement = () => {
                             <IndianRupee size={28} />
                             Salary Management
                         </h2>
-                        <p className="text-emerald-50 mt-1">Manage monthly salaries for Teachers and Staff</p>
+                        <p className="text-emerald-50 mt-1">
+                            Manage monthly salaries for {filterType === 'all' ? 'Teachers and Staff' : filterType === 'teacher' ? 'Teachers' : 'Staff'}
+                        </p>
                     </div>
                     <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-4 text-center">
                         <div className="text-emerald-50 text-xs uppercase tracking-wide">Total Payable</div>
@@ -228,12 +240,15 @@ const SalaryManagement = () => {
                             <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[11px] tracking-wider border-b border-slate-100">
                                 <tr>
                                     <th className="p-4 pl-6">Employee</th>
-                                    <th className="p-4">Type</th>
-                                    <th className="p-4">Role/Subject</th>
+                                    {filterType === 'all' && <th className="p-4">Type</th>}
+                                    <th className="p-4">
+                                        {filterType === 'teacher' ? 'Subject' : filterType === 'staff' ? 'Role' : 'Role/Subject'}
+                                    </th>
                                     <th className="p-4">Rate/Day</th>
                                     <th className="p-4">Present</th>
                                     <th className="p-4">Absent</th>
                                     <th className="p-4">Leave</th>
+                                    <th className="p-4">Holidays</th>
                                     <th className="p-4">Calculated Salary</th>
                                     <th className="p-4 text-right pr-6">Action</th>
                                 </tr>
@@ -254,12 +269,14 @@ const SalaryManagement = () => {
                                                 <div className="text-xs text-slate-400 font-mono">{emp.employee_id || '-'}</div>
                                             </div>
                                         </td>
-                                        <td className="p-4">
-                                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${emp.type === 'Teacher' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'
-                                                }`}>
-                                                {emp.type}
-                                            </span>
-                                        </td>
+                                        {filterType === 'all' && (
+                                            <td className="p-4">
+                                                <span className={`px-2 py-1 rounded-lg text-xs font-bold ${emp.type === 'Teacher' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'
+                                                    }`}>
+                                                    {emp.type}
+                                                </span>
+                                            </td>
+                                        )}
                                         <td className="p-4 text-slate-600">{emp.role || '-'}</td>
                                         <td className="p-4 font-semibold text-slate-700">₹{emp.salary_per_day || 0}</td>
                                         <td className="p-4">
@@ -275,6 +292,11 @@ const SalaryManagement = () => {
                                         <td className="p-4">
                                             <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg font-bold text-xs">
                                                 {emp.days_leave || 0}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded-lg font-bold text-xs">
+                                                {emp.days_holiday || 0}
                                             </span>
                                         </td>
                                         <td className="p-4">
@@ -497,7 +519,7 @@ const SalaryManagement = () => {
                                 </div>
 
                                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 mb-6">
-                                    <div className="grid grid-cols-3 gap-4 text-center">
+                                    <div className="grid grid-cols-2 gap-4 text-center mb-3">
                                         <div>
                                             <p className="text-[10px] uppercase text-slate-400 font-bold mb-0.5">Working Days</p>
                                             <p className="font-bold text-slate-800">{selectedSlip.total_marked_days || 0} Days</p>
@@ -506,9 +528,19 @@ const SalaryManagement = () => {
                                             <p className="text-[10px] uppercase text-slate-400 font-bold mb-0.5">Present</p>
                                             <p className="font-bold text-emerald-600">{selectedSlip.days_present || 0} Days</p>
                                         </div>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-4 text-center">
                                         <div>
                                             <p className="text-[10px] uppercase text-slate-400 font-bold mb-0.5">Absent</p>
                                             <p className="font-bold text-rose-600">{selectedSlip.days_absent || 0} Days</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase text-slate-400 font-bold mb-0.5">Leave</p>
+                                            <p className="font-bold text-blue-600">{selectedSlip.days_leave || 0} Days</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase text-slate-400 font-bold mb-0.5">Holidays</p>
+                                            <p className="font-bold text-purple-600">{selectedSlip.days_holiday || 0} Days</p>
                                         </div>
                                     </div>
                                 </div>

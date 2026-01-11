@@ -74,6 +74,8 @@ import AdmissionCRM from '../components/dashboard/admissions/AdmissionCRM';
 import BiometricManagement from '../components/dashboard/biometric/BiometricManagement';
 // Live Map Component
 import AdminLiveMap from '../components/dashboard/admin/AdminLiveMap';
+// Holiday Management Component
+import HolidayManagement from '../components/dashboard/admin/HolidayManagement';
 
 const SchoolAdminDashboard = () => {
     const { logout, user } = useAuth();
@@ -353,6 +355,7 @@ const SchoolAdminDashboard = () => {
                         onToggle={() => toggleSection('calendar')}
                     >
                         <NavSubButton active={activeTab === 'school-calendar'} onClick={() => handleTabChange('school-calendar')} label="School Calendar" />
+                        <NavSubButton active={activeTab === 'holiday-management'} onClick={() => handleTabChange('holiday-management')} label="Holiday Management" />
                     </NavGroup>
 
                     <div className="mt-2 space-y-1">
@@ -496,6 +499,7 @@ const SchoolAdminDashboard = () => {
                         {activeTab === 'library-issue-return' && <IssueReturn />}
 
                         {activeTab === 'salary-management' && <SalaryManagement />}
+                        {activeTab === 'holiday-management' && <HolidayManagement />}
 
                         {activeTab === 'timetable' && <TimetableManagement config={academicConfig} />}
                         {activeTab === 'marks' && <MarksManagement config={academicConfig} />}
